@@ -1,0 +1,27 @@
+# OS / Editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Local user config (never commit paths or secrets)
+.env
+*.local
+config.local.*
+
+# Logs and temp
+*.log
+/tmp/
+
+# Archives / binaries (we do not distribute game or fix files)
+*.dll
+*.exe
+*.rar
+*.zip
+*.7z
+
+# Cursor / AI assistant files (keep out of public repo)
+CLAUDE.md
+.cursor/
+AGENTS.md
