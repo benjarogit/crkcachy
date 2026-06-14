@@ -1,19 +1,20 @@
-# CRKCACHY – Installation in 3 Schritten
+# CRKCACHY – So geht’s (einfach)
 
-**Ein Befehl.** Der Installer fragt dich, was du willst. Du antwortest mit **1, 2, 3 oder 4**.
+**CRKCACHY** hilft dir, **Standalone- und Portable-Spiele** über **Steam + Proton** zu nutzen – ohne Bottles oder Wineboot.  
+Kein Spiel im Paket: Anleitung, Checks, Mods und Community-Fixes.
 
-> Kein Spiel, kein Crack – nur Einrichtung. [Rechtliches](docs/legal.md)  
+> Nur Hilfe, kein Crack. [Rechtliches](docs/legal.md)  
 > **English:** [README.en.md](README.en.md)
 
 ---
 
-## Schritt 1 – Terminal öffnen
+## Schritt 1 – Konsole öffnen
 
-`Ctrl+Alt+T` oder Startmenü → **Konsole**
+**Ctrl + Alt + T** oder im Menü **Konsole** suchen.
 
 ---
 
-## Schritt 2 – CRKCACHY holen (einmalig)
+## Schritt 2 – CRKCACHY holen (einmal)
 
 ```bash
 git clone https://github.com/benjarogit/crkcachy.git
@@ -23,39 +24,23 @@ chmod +x install.sh lib/*.sh tools/*/install.sh tools/*/checks.sh
 
 ---
 
-## Schritt 3 – Installer starten
+## Schritt 3 – Starten
 
 ```bash
 ./install.sh
 ```
 
-### Du siehst diese Auswahl:
+Das Programm:
 
-| Eingabe | Was passiert |
-|---------|----------------|
-| **1** | **Alles** – PC vorbereiten + Spiel aus Liste wählen *(empfohlen)* |
-| **2** | Nur PC (Pakete, Proton, Spacewar) |
-| **3** | Nur Spiel – wenn PC schon fertig ist |
-| **4** | Nur prüfen – nichts installieren |
+1. richtet bei Bedarf **Pfeil-Menü** und **Anleitung-Leser** ein (einmal, mit deiner Erlaubnis)  
+2. prüft deinen **PC**  
+3. hilft beim **Spiel in Steam**
 
-Danach folgst du den **Nummern und Fragen** im Terminal.
-
-**Sprache:** automatisch (DE/EN). Manuell: `./install.sh --lang en`
+**Pfeiltasten** = auswählen · **Enter** = bestätigen
 
 ---
 
-## Wie der Installer „weiß“ was du willst
-
-1. **Du wählst** ob PC oder Spiel (Menü 1–4).
-2. **Spiele-Liste ist dynamisch** – alles unter `tools/` mit `install.sh` erscheint automatisch.
-3. **Mehrere Spiele?** Nach einem Spiel: „Noch ein weiteres Spiel?“ → **j**
-4. **Alle Spiele?** In der Liste: **a** = alle der Reihe durchgehen.
-
-Neues Spiel später: jemand legt `tools/neues-spiel/install.sh` an → erscheint in der Liste.
-
----
-
-## Nur prüfen (ohne Install)
+## Nur ansehen (ohne Spiel-Setup)
 
 ```bash
 ./install.sh --status
@@ -63,9 +48,15 @@ Neues Spiel später: jemand legt `tools/neues-spiel/install.sh` an → erscheint
 
 ---
 
+## House of Ashes
+
+[tools/house-of-ashes/README.md](tools/house-of-ashes/README.md)
+
+---
+
 ## Hilfe
 
-- Spiel-Anleitung: `tools/house-of-ashes/README.md`
+- [Voraussetzungen](docs/prerequisites.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 ## Lizenz

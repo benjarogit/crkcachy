@@ -1,66 +1,64 @@
-# CRKCACHY
+# CRKCACHY – How to (simple)
 
-[![CachyOS](https://img.shields.io/badge/CachyOS-ready-blue)](https://cachyos.org/)
-[![Steam](https://img.shields.io/badge/Steam-required-1b2838)](https://store.steampowered.com/)
-[![Proton-GE](https://img.shields.io/badge/Proton-GE-supported-4c1)](https://github.com/GloriousEggroll/proton-ge-custom)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+**CRKCACHY** helps you run **standalone and portable games** via **Steam + Proton** – without Bottles or Wineboot.  
+No game in the package: guides, checks, mods, and community fixes.
 
-**CRKCACHY** is a tool collection for **CachyOS** with **Steam**: interactive Bash installers for system dependencies and Proton, plus detailed per-game guides.
+> Help only, no crack. [Legal](docs/legal.md)  
+> **Deutsch:** [README.md](README.md)
 
-> **No game, no crack, no online-fix files** – only setup, checks, and documented steps. See [docs/legal.en.md](docs/legal.en.md).
+---
 
-**Deutsch:** [README.md](README.md)
+## Step 1 – Open the terminal
 
-## Quick Start
+**Ctrl + Alt + T** or search for **Terminal** / **Konsole**.
+
+---
+
+## Step 2 – Get CRKCACHY (once)
 
 ```bash
 git clone https://github.com/benjarogit/crkcachy.git
 cd crkcachy
 chmod +x install.sh lib/*.sh tools/*/install.sh tools/*/checks.sh
+```
+
+---
+
+## Step 3 – Start
+
+```bash
 ./install.sh
 ```
 
-The master installer:
+The program:
 
-1. Checks CachyOS / `paru` / Steam
-2. Installs recommended packages (Vulkan, Protonup, gaming runtime)
-3. Installs **GE-Proton** via `protonup-rs`
-4. Verifies **Spacewar (App 480)** for Steam tricks
-5. Optionally runs a game tool (e.g. House of Ashes)
+1. sets up **arrow menu** and **guide reader** if needed (once, with your OK)  
+2. checks your **PC**  
+3. helps with the **game in Steam**
 
-## Available tools
+**Arrow keys** = pick · **Enter** = confirm
 
-| Tool | Description |
-|------|-------------|
-| [house-of-ashes](tools/house-of-ashes/) | The Dark Picture Anthology: House of Ashes – Proton + online-fix setup |
+---
 
-## Repository layout
+## View only (no game setup)
 
-```
-crkcachy/
-├── install.sh              # Master installer
-├── lib/                    # Shared Bash library
-├── tools/<game>/           # Per game: README, install.sh, checks.sh
-└── docs/                   # Legal, prerequisites, troubleshooting
+```bash
+./install.sh --status
 ```
 
-## Prerequisites
+---
 
-- [CachyOS](https://cachyos.org/) (or Arch with warning)
-- `paru` as AUR helper
-- Steam installed and logged in
-- Legal game files + self-sourced online fix (for multiplayer)
+## House of Ashes
 
-Details: [docs/prerequisites.md](docs/prerequisites.md)
+[tools/house-of-ashes/README.en.md](tools/house-of-ashes/README.en.md)
 
-## Troubleshooting
+---
 
-[docs/troubleshooting.md](docs/troubleshooting.md) – trial mode, invites, overlay, runtime download.
+## Help
 
-## Adding a new tool
-
-[docs/adding-a-tool.md](docs/adding-a-tool.md)
+- [Prerequisites](docs/prerequisites.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## License
 
-MIT – see [LICENSE](LICENSE).
+MIT – [LICENSE](LICENSE)

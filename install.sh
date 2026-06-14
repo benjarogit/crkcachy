@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CRKCACHY master installer – step-by-step wizard
+# CRKCACHY master installer – assessment-driven wizard
 
 set -euo pipefail
 
@@ -20,177 +20,141 @@ source "${CRKCACHY_ROOT}/lib/cachyos.sh"
 source "${CRKCACHY_ROOT}/lib/steam.sh"
 # shellcheck source=lib/proton.sh
 source "${CRKCACHY_ROOT}/lib/proton.sh"
+# shellcheck source=lib/assess.sh
+source "${CRKCACHY_ROOT}/lib/assess.sh"
+# shellcheck source=lib/preflight.sh
+source "${CRKCACHY_ROOT}/lib/preflight.sh"
 
-BASE_PACKAGES=(
-  protonup-rs-bin
+ASSESS_LOGICAL_BASE=(
   vkd3d
-  lib32-vkd3d
-  lib32-gamemode
+  gamemode
   gvfs
   winetricks
 )
 
-OPTIONAL_PACKAGES=(
-  protonup-qt
+ASSESS_LOGICAL_VULKAN=(
+  vulkan-loader
 )
 
-VULKAN_PACKAGES=(
-  vulkan-icd-loader
-  lib32-vulkan-icd-loader
-)
+ASSESS_STEAM_LOGICAL=steam
 
-run_system_setup() {
-  preflight
-  install_base_packages
-  setup_proton
-  setup_spacewar
-  print_overlay_hint
-}
+announce_choice() {
+  local choice="${1:-}"
 
-preflight() {
-  log_info "$(msg install.step1)"
-  check_cachyos || true
-  check_paru || true
-  check_steam || true
-  echo ""
-}
-
-install_base_packages() {
-  log_info "$(msg install.step2)"
-
-  explain_block "$(msg install.packages_explain_title)" "$(msg install.packages_explain_body)"
-
-  install_packages_paru "${BASE_PACKAGES[@]}" || true
-
-  explain_block "$(msg install.qt_title)" "$(msg install.qt_body)"
-
-  if confirm "$(msg install.qt_confirm)"; then
-    install_packages_paru "${OPTIONAL_PACKAGES[@]}" || true
-  else
-    log_ok "$(msg install.qt_skipped)"
-  fi
-
-  explain_block "$(msg install.vulkan_title)" "$(msg install.vulkan_body)"
-
-  if confirm "$(msg install.vulkan_confirm)"; then
-    install_packages_paru "${VULKAN_PACKAGES[@]}" || true
-  else
-    log_ok "$(msg install.vulkan_skipped)"
-  fi
-
-  if ! pacman_installed steam; then
-    log_warn "$(msg install.steam_missing)"
-    explain_block "$(msg install.steam_title)" "$(msg install.steam_body)"
-    if confirm "$(msg install.steam_confirm)"; then
-      install_packages_paru steam || true
-    fi
-  fi
-  echo ""
-}
-
-setup_proton() {
-  log_info "$(msg install.step3)"
-
-  if ! check_protonup; then
-    log_warn "$(msg install.protonup_missing)"
-    echo ""
+  if [[ -z "$choice" ]]; then
+    ui_action "$(msg flow.chose_enter)"
+    case "$ASSESS_RECOMMENDED" in
+      3) ui_action "$(msg flow.chose_3)" ;;
+      2) ui_action "$(msg flow.chose_2)" ;;
+      *) ui_action "$(msg flow.chose_1)" ;;
+    esac
     return
   fi
 
-  if verify_ge_proton; then
-    explain_block "$(msg install.ge_present_title)" "$(msg install.ge_present_body)"
-
-    if confirm "$(msg install.ge_update_confirm)"; then
-      install_ge_proton || true
-    else
-      log_ok "$(msg install.ge_kept)"
-    fi
-  else
-    explain_block "$(msg install.ge_missing_title)" "$(msg install.ge_missing_body)"
-    install_ge_proton || true
-  fi
-  echo ""
+  ui_action "$(msgf flow.chose "$choice")"
+  case "$choice" in
+    1) ui_action "$(msg flow.chose_1)" ;;
+    2) ui_action "$(msg flow.chose_2)" ;;
+    3) ui_action "$(msg flow.chose_3)" ;;
+  esac
 }
 
-setup_spacewar() {
-  log_info "$(msg install.step4)"
+run_pc_fix() {
+  ui_step "$(msg install.step2)"
 
-  explain_block "$(msg install.spacewar_title)" "$(msg install.spacewar_body)"
+  if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
+    log_ok "$(msg assess.pc_already_ok)"
+    print_overlay_hint
+    return 0
+  fi
 
-  check_spacewar || true
-  echo ""
+  assess_guided_fix
+  print_overlay_hint
 }
 
 run_game_setup() {
-  log_info "$(msg install.step5)"
+  ui_step "$(msg install.step5)"
+  ui_action "$(msg flow.game_tool)"
+
+  if ! assess_ensure_ready; then
+    return 1
+  fi
+
   run_tool_wizard || true
   echo ""
+  return 0
+}
+
+offer_post_install_readme() {
+  local readme_rel="README.md"
+
+  if discover_tools && [[ ${#TOOL_SLUGS[@]} -eq 1 ]]; then
+    readme_rel="tools/${TOOL_SLUGS[0]}/README.md"
+  fi
+
+  cui_offer_markdown "$readme_rel" "$(msg install.show_readme)" || true
 }
 
 print_status() {
-  local ok=0 fail=0
-
+  ensure_crkcachy_runtime
   print_banner
-  log_info "$(msg install.status_title)"
+  preflight_status_only
+  echo ""
+  assess_run
+  tui_assess_panel || true
   echo ""
 
-  if check_cachyos; then ok=$((ok+1)); else fail=$((fail+1)); fi
-  if check_paru; then ok=$((ok+1)); else fail=$((fail+1)); fi
-  if check_steam; then ok=$((ok+1)); else fail=$((fail+1)); fi
-  if check_protonup; then ok=$((ok+1)); else fail=$((fail+1)); fi
-  if verify_ge_proton; then ok=$((ok+1)); else fail=$((fail+1)); fi
-  if check_spacewar; then ok=$((ok+1)); else fail=$((fail+1)); fi
-
-  echo ""
-  log_info "$(msg install.packages_title)"
-  for pkg in steam "${BASE_PACKAGES[@]}" "${VULKAN_PACKAGES[@]}"; do
-    if pacman_installed "$pkg"; then
-      log_ok "$pkg"
-      ok=$((ok+1))
-    else
-      log_warn "$(msgf install.pkg_missing "$pkg")"
-      fail=$((fail+1))
-    fi
-  done
-
-  echo ""
-  discover_tools && print_tool_list || true
-
-  echo ""
-  if [[ $fail -eq 0 ]]; then
-    log_ok "$(msg install.all_ready)"
-    log_hint "./install.sh  → Option 3 für nur Spiel"
-  else
-    log_warn "$(msgf install.points_open "$fail" "$ok")"
-    log_hint "./install.sh  → Option 1 oder 2"
+  if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
+    log_ok "$(msg status.ready_next)"
   fi
+
+  ui_divider
+  log_hint "$(msg assess.status_hint)"
 }
 
 show_wizard_menu() {
-  explain_block "$(msg wizard.title)" "$(msg wizard.body)"
-
-  echo "  1) $(msg wizard.opt1)"
-  echo "  2) $(msg wizard.opt2)"
-  echo "  3) $(msg wizard.opt3)"
-  echo "  4) $(msg wizard.opt4)"
+  assess_run
+  tui_assess_panel || true
   echo ""
 
-  read -r -p "$(msg wizard.prompt)" choice
+  cui_section "$(msg wizard.title)" "$(assess_recommended_hint)"
+
+  local choice
+  tui_wizard_pick choice
+  echo ""
+
+  announce_choice "${choice:-}"
 
   case "${choice:-}" in
     1)
-      run_system_setup
-      run_game_setup
+      run_pc_fix || true
+      run_game_setup || true
       ;;
     2)
-      run_system_setup
+      run_pc_fix || true
       ;;
     3)
-      run_game_setup
+      if ! run_game_setup; then
+        log_warn "$(msg assess.block_game_still)"
+      fi
       ;;
     4)
-      print_status
-      exit 0
+      assess_run
+      assess_print_report || true
+      print_wizard_options
+      assess_print_next_step
+      return 0
+      ;;
+    "")
+      case "$ASSESS_RECOMMENDED" in
+        3)
+          if ! run_game_setup; then
+            log_warn "$(msg assess.block_game_still)"
+          fi
+          ;;
+        2) run_pc_fix || true ;;
+        *) run_pc_fix || true; run_game_setup || true ;;
+      esac
       ;;
     *)
       log_warn "$(msg wizard.invalid)"
@@ -203,6 +167,8 @@ show_wizard_menu() {
 
 has_flag() {
   local flag="$1"
+  shift
+  local arg
   for arg in "$@"; do
     [[ "$arg" == "$flag" ]] && return 0
   done
@@ -215,10 +181,9 @@ main() {
     exit 0
   fi
 
+  ensure_crkcachy_runtime
   print_banner
-
-  explain_block "$(msg install.legal_title)" "$(msg install.legal_body)"
-  explain_block "$(msg install.how_title)" "$(msg install.how_body)"
+  preflight_onboard
 
   if ! show_wizard_menu; then
     log_info "$(msg install.cancelled)"
@@ -226,8 +191,7 @@ main() {
   fi
 
   log_ok "$(msg install.finished)"
-  log_info "$(msg install.next_readme)"
-  log_hint "tools/<spiel>/README.md"
+  offer_post_install_readme
 }
 
 main "$@"

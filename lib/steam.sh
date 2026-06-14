@@ -66,3 +66,8 @@ check_spacewar() {
 print_overlay_hint() {
   explain_block "$(msg overlay.title)" "$(msg overlay.body)"
 }
+
+# shellcheck source=lib/steam_artwork.sh
+source "${CRKCACHY_ROOT}/lib/steam_artwork.sh"
+# shellcheck source=lib/steam_desktop.sh
+source "${CRKCACHY_ROOT}/lib/steam_desktop.sh"

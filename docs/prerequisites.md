@@ -1,34 +1,17 @@
-# Voraussetzungen – einfach erklärt
+# Voraussetzungen – einfach
 
-Was du brauchst bevor CRKCACHY funktioniert.
+## Was dein PC braucht
 
-## Dein Computer
+| Was | Warum |
+|-----|--------|
+| **Konsole** (schwarzes Fenster) | Hier startest du `./install.sh` |
+| **Pfeil-Menü** | Wird beim ersten Start eingerichtet (Programm fragt dich) |
+| **Anleitung-Leser** | Zeigt Rechtstexte und Spiel-Anleitungen schön formatiert |
+| **Linux** | CachyOS/Arch = volle Unterstützung · Ubuntu/Fedora = teilweise |
+| **Steam** | Für Spiele |
+| **CachyOS** | Empfohlen – funktioniert oft auch auf ähnlichem Linux |
 
-- **CachyOS** (empfohlen) oder Arch Linux
-- **paru** – installiert Zusatzprogramme: `sudo pacman -S paru`
-- **Steam** – der Spiele-Client: `paru -S steam`
-- In Steam **eingeloggt**
-
-## Proton (Windows-Spiele auf Linux)
-
-- **GE-Proton** – wird von `./install.sh` installiert
-- In Steam später unter **Kompatibilität** auswählen (z. B. GE-Proton10-34)
-
-## Grafik
-
-- Vulkan-Helfer – `./install.sh` kann sie installieren
-- GPU-Treiber (NVIDIA/AMD) sollten auf CachyOS schon da sein
-
-## Für House of Ashes zusätzlich
-
-- **Spacewar** – kostenloses Steam-Spiel: `steam://install/480`
-- **Legale Spieldateien** – dein Extract-Ordner mit `HouseOfAshes.exe`
-- **Online-Fix** – selbst einbinden (nicht aus CRKCACHY)
-
-## Steam Overlay
-
-Einstellungen → Im Spiel → Overlay **an**  
-Wichtig für Einladungen im Multiplayer.
+Alles andere (Proton, Zusatz-Pakete) prüft und installiert das Programm **mit deiner Erlaubnis**.
 
 ## Recht
 

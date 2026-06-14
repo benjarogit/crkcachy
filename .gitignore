@@ -2,3 +2,4 @@
 
 dev/
 docs/test-install.md
+lib/__pycache__/

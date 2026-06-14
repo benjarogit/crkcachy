@@ -25,6 +25,8 @@ Thank you for considering a contribution.
 
 ## Code style
 
+- UI: use `lib/cui.sh` (logo, panels, `cui_yes_no`, `cui_choose`) – not raw `gum` in feature code
+- Packages: use `lib/platform.sh` and logical names from `lib/platform_packages.sh` (`install_repo_packages`, `platform_resolve_package`) – never hard-code `pacman`/`paru` flags. See `docs/platform-rosetta.md`.
 - Match existing `lib/common.sh` logging (`log_info`, `log_warn`, `confirm`)
 - Interactive prompts default to safe choices (`[y/N]`)
 - User paths via prompts, never hardcoded home directories in docs examples from your machine

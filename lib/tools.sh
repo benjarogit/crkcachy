@@ -108,12 +108,22 @@ run_tool_wizard() {
     return 1
   fi
 
-  explain_block "$(msg tools.setup_title)" "$(msg tools.setup_body)"
+  # Ein Spiel → direkt starten (kein zweites Menü)
+  if [[ ${#TOOL_SLUGS[@]} -eq 1 ]]; then
+    ui_action "$(msgf tools.starting "$(get_tool_name "${TOOL_SLUGS[0]}")")"
+    bash "${TOOL_INSTALLS[0]}"
+    return 0
+  fi
 
   while true; do
-    print_tool_list || return 1
+    cui_section "$(msg tools.setup_title)" "$(msg tools.list_title)"
 
-    read -r -p "$(msg tools.pick_number)" choice
+    if ! discover_tools; then
+      return 1
+    fi
+
+    local choice
+    tui_tool_pick choice
 
     if [[ -z "${choice:-}" ]]; then
       log_info "$(msg tools.none_selected)"

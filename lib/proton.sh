@@ -33,16 +33,24 @@ list_ge_proton() {
 }
 
 install_ge_proton() {
+  if ! command_exists protonup-rs; then
+    package_explain_block "$(msg proton.install_title)" protonup
+    if ! offer_logical_packages true protonup; then
+      log_warn "$(msg proton.skipped)"
+      return 1
+    fi
+  fi
+
   require_command protonup-rs "$(msg proton.install_cmd_hint)"
 
-  explain_block "$(msg proton.install_title)" "$(msg proton.install_body)"
-
   if confirm "$(msg proton.confirm_install)"; then
-    log_info "$(msg proton.running)"
+    ui_running "protonup-rs GE-Proton"
     protonup-rs -q --tool "$PROTONUP_TOOL" --version latest --for steam
-    log_ok "$(msg proton.done)"
+    ui_done "$(msg proton.done)"
   else
     log_warn "$(msg proton.skipped)"
+    log_hint "$(msg offer.manual_label)"
+    log_hint "$(msg proton.manual_cmd)"
     return 1
   fi
 
