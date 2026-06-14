@@ -17,26 +17,28 @@ check_cachyos() {
   fi
 
   if [[ "$is_cachyos" == "true" ]]; then
-    log_ok "CachyOS detected."
+    log_ok "$(msg cachyos.ok)"
     return 0
   fi
 
   if [[ "$is_arch" == "true" ]]; then
-    log_warn "Arch-based system detected, but not CachyOS."
-    log_warn "CRKCACHY is tested on CachyOS; package names may differ."
+    log_warn "$(msg cachyos.arch_warn)"
+    log_hint "$(msg cachyos.arch_hint)"
     return 1
   fi
 
-  log_warn "Non-Arch system detected. CRKCACHY targets CachyOS/Arch."
+  log_warn "$(msg cachyos.other_warn)"
+  log_hint "$(msg cachyos.other_hint)"
   return 2
 }
 
 check_paru() {
   if command_exists paru; then
-    log_ok "paru is available."
+    log_ok "$(msg paru.ok)"
     return 0
   fi
 
-  log_warn "paru not found. Install with: sudo pacman -S paru"
+  log_warn "$(msg paru.missing_warn)"
+  log_hint "$(msg paru.install_hint)"
   return 1
 }

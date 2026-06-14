@@ -1,66 +1,73 @@
-# CRKCACHY
+# CRKCACHY – Installation in 3 Schritten
 
-[![CachyOS](https://img.shields.io/badge/CachyOS-ready-blue)](https://cachyos.org/)
-[![Steam](https://img.shields.io/badge/Steam-required-1b2838)](https://store.steampowered.com/)
-[![Proton-GE](https://img.shields.io/badge/Proton-GE-supported-4c1)](https://github.com/GloriousEggroll/proton-ge-custom)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+**Ein Befehl.** Der Installer fragt dich, was du willst. Du antwortest mit **1, 2, 3 oder 4**.
 
-**CRKCACHY** ist eine Tool-Sammlung für **CachyOS** mit **Steam**: interaktive Bash-Installer für System-Abhängigkeiten und Proton, plus ausführliche Anleitungen pro Spiel.
+> Kein Spiel, kein Crack – nur Einrichtung. [Rechtliches](docs/legal.md)  
+> **English:** [README.en.md](README.en.md)
 
-> **Kein Spiel, kein Crack, kein Online-Fix** – nur Setup, Prüfungen und der dokumentierte Weg. Siehe [docs/legal.md](docs/legal.md).
+---
 
-**English:** [README.en.md](README.en.md)
+## Schritt 1 – Terminal öffnen
 
-## Quick Start
+`Ctrl+Alt+T` oder Startmenü → **Konsole**
+
+---
+
+## Schritt 2 – CRKCACHY holen (einmalig)
 
 ```bash
 git clone https://github.com/benjarogit/crkcachy.git
 cd crkcachy
 chmod +x install.sh lib/*.sh tools/*/install.sh tools/*/checks.sh
+```
+
+---
+
+## Schritt 3 – Installer starten
+
+```bash
 ./install.sh
 ```
 
-Der Master-Installer:
+### Du siehst diese Auswahl:
 
-1. Prüft CachyOS / `paru` / Steam
-2. Installiert empfohlene Pakete (Vulkan, Protonup, Gaming-Runtime)
-3. Installiert **GE-Proton** via `protonup-rs`
-4. Prüft **Spacewar (App 480)** für Steam-Tricks
-5. Startet optional ein Spiel-Tool (z. B. House of Ashes)
+| Eingabe | Was passiert |
+|---------|----------------|
+| **1** | **Alles** – PC vorbereiten + Spiel aus Liste wählen *(empfohlen)* |
+| **2** | Nur PC (Pakete, Proton, Spacewar) |
+| **3** | Nur Spiel – wenn PC schon fertig ist |
+| **4** | Nur prüfen – nichts installieren |
 
-## Verfügbare Tools
+Danach folgst du den **Nummern und Fragen** im Terminal.
 
-| Tool | Beschreibung |
-|------|--------------|
-| [house-of-ashes](tools/house-of-ashes/) | The Dark Picture Anthology: House of Ashes – Proton + Online-Fix-Setup |
+**Sprache:** automatisch (DE/EN). Manuell: `./install.sh --lang en`
 
-## Repository-Struktur
+---
 
+## Wie der Installer „weiß“ was du willst
+
+1. **Du wählst** ob PC oder Spiel (Menü 1–4).
+2. **Spiele-Liste ist dynamisch** – alles unter `tools/` mit `install.sh` erscheint automatisch.
+3. **Mehrere Spiele?** Nach einem Spiel: „Noch ein weiteres Spiel?“ → **j**
+4. **Alle Spiele?** In der Liste: **a** = alle der Reihe durchgehen.
+
+Neues Spiel später: jemand legt `tools/neues-spiel/install.sh` an → erscheint in der Liste.
+
+---
+
+## Nur prüfen (ohne Install)
+
+```bash
+./install.sh --status
 ```
-crkcachy/
-├── install.sh              # Master-Installer
-├── lib/                    # Gemeinsame Bash-Bibliothek
-├── tools/<spiel>/           # Pro Spiel: README, install.sh, checks.sh
-└── docs/                   # Legal, Prerequisites, Troubleshooting
-```
 
-## Voraussetzungen
+---
 
-- [CachyOS](https://cachyos.org/) (oder Arch mit Warnung)
-- `paru` als AUR-Helfer
-- Steam installiert und eingeloggt
-- Legale Spieldateien + selbst beschaffter Online-Fix (falls Multiplayer)
+## Hilfe
 
-Details: [docs/prerequisites.md](docs/prerequisites.md)
-
-## Troubleshooting
-
-[docs/troubleshooting.md](docs/troubleshooting.md) – Trial-Modus, Invites, Overlay, Runtime-Download.
-
-## Neues Tool hinzufügen
-
-[docs/adding-a-tool.md](docs/adding-a-tool.md)
+- Spiel-Anleitung: `tools/house-of-ashes/README.md`
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## Lizenz
 
-MIT – siehe [LICENSE](LICENSE).
+MIT – [LICENSE](LICENSE)

@@ -15,6 +15,24 @@ tools/<game-slug>/
 
 `<game-slug>`: Kleinbuchstaben, Bindestriche, z. B. `house-of-ashes`.
 
+## Plugin-Liste (automatisch)
+
+Der Master-Installer scannt `tools/*/install.sh` – **kein** manuelles Eintragen in `install.sh` nötig.
+
+Für Namen in der Auswahl-Liste in **beiden** Sprachdateien ergänzen:
+
+- `lib/lang/de.sh`: `_MSG[tool.<game-slug>.name]` und `_MSG[tool.<game-slug>.desc]`
+- `lib/lang/en.sh`: dieselben Keys auf Englisch
+
+Beispiel:
+
+```bash
+_MSG[tool.my-game.name]="Mein Spiel"
+_MSG[tool.my-game.desc]="Kurzbeschreibung für die Liste"
+```
+
+Danach erscheint das Spiel in `./install.sh` → Option 1 oder 3.
+
 ## install.sh
 
 - `source` aus `../../lib/common.sh` (und bei Bedarf `steam.sh`, `proton.sh`)
@@ -45,7 +63,7 @@ Jedes Tool-README muss enthalten:
 
 ## Master-Installer
 
-`tools/*/install.sh` wird automatisch in `install.sh` Menü gelistet (`list_tools` / `run_tool_menu`).
+`tools/*/install.sh` wird automatisch gefunden (`lib/tools.sh`). Mehrere Spiele: User wählt nacheinander oder `a` für alle.
 
 ## App-IDs dokumentieren
 

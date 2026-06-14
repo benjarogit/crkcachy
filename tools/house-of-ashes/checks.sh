@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# House of Ashes – read-only validation of game folder and online-fix layout
+# House of Ashes – read-only folder validation
 
 set -euo pipefail
 
 TOOL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CRKCACHY_ROOT="$(cd "${TOOL_DIR}/../../" && pwd)"
 
+# shellcheck source=lib/i18n.sh
+source "${CRKCACHY_ROOT}/lib/i18n.sh"
+parse_lang_arg "$@"
 # shellcheck source=lib/common.sh
 source "${CRKCACHY_ROOT}/lib/common.sh"
 
@@ -30,8 +33,8 @@ FLT_CONFLICT_FILES=(
 )
 
 usage() {
-  echo "Usage: $0 <game_directory>"
-  echo "  Validates House of Ashes extract folder (read-only)."
+  echo "$(msgf ha.check.usage "$0")"
+  echo "$(msg ha.check.usage_desc)"
   exit "${1:-0}"
 }
 
@@ -48,12 +51,12 @@ check_ini_appids() {
   fi
 
   if [[ "$has_fake" == "true" && "$has_real" == "true" ]]; then
-    log_ok "OnlineFix.ini: FakeAppId=${FAKE_APPID}, RealAppId=${REAL_APPID}"
+    log_ok "$(msgf ha.check.ini_ok "$FAKE_APPID" "$REAL_APPID")"
     return 0
   fi
 
-  log_warn "OnlineFix.ini missing expected App IDs."
-  log_warn "Expected FakeAppId=${FAKE_APPID} and RealAppId=${REAL_APPID}"
+  log_warn "$(msg ha.check.ini_bad)"
+  log_hint "$(msgf ha.check.ini_hint "$FAKE_APPID" "$REAL_APPID")"
   return 1
 }
 
@@ -62,28 +65,28 @@ run_checks() {
   local errors=0
 
   if [[ ! -d "$game_dir" ]]; then
-    die "Directory not found: $game_dir"
+    die "$(msgf ha.check.dir_not_found "$game_dir")"
   fi
 
-  log_info "Checking: $game_dir"
+  log_info "$(msgf ha.check.checking "$game_dir")"
 
   if [[ -f "${game_dir}/${GAME_EXE}" ]]; then
-    log_ok "Found ${GAME_EXE}"
+    log_ok "$(msg ha.check.exe_ok)"
   else
-    log_error "Missing ${GAME_EXE} in game root"
+    log_error "$(msg ha.check.exe_missing)"
     errors=$((errors + 1))
   fi
 
   local win64="${game_dir}/${WIN64_REL}"
   if [[ ! -d "$win64" ]]; then
-    log_error "Missing directory: ${WIN64_REL}"
+    log_error "$(msgf ha.check.dir_missing "$WIN64_REL")"
     errors=$((errors + 1))
   else
     for f in "${REQUIRED_WIN64[@]}"; do
       if [[ -f "${win64}/${f}" ]]; then
-        log_ok "Found ${WIN64_REL}/${f}"
+        log_ok "$(msgf ha.check.file_ok "${WIN64_REL}/${f}")"
       else
-        log_error "Missing ${WIN64_REL}/${f}"
+        log_error "$(msgf ha.check.file_missing "${WIN64_REL}/${f}")"
         errors=$((errors + 1))
       fi
     done
@@ -95,28 +98,29 @@ run_checks() {
 
   local steam_api="${game_dir}/${STEAM_API_REL}"
   if [[ -f "$steam_api" ]]; then
-    log_ok "Found steam_api64.dll (user-applied fix expected here)"
+    log_ok "$(msg ha.check.steam_api_ok)"
   else
-    log_warn "Missing ${STEAM_API_REL} – online-fix usually replaces this file"
+    log_warn "$(msgf ha.check.steam_api_missing "$STEAM_API_REL")"
+    log_hint "$(msg ha.check.steam_api_hint)"
     errors=$((errors + 1))
   fi
 
   for f in "${FLT_CONFLICT_FILES[@]}"; do
     if [[ -f "${win64}/${f}" ]]; then
-      log_warn "Found ${WIN64_REL}/${f} – may conflict with Online-Fix (FLT vs Online-Fix)"
+      log_warn "$(msgf ha.check.flt_warn "$WIN64_REL" "$f")"
     fi
   done
 
   if [[ -f "${game_dir}/steam_appid.txt" ]]; then
-    log_warn "steam_appid.txt present in game root – usually not needed for Steam launch with SteamAppId=480"
+    log_warn "$(msg ha.check.appid_warn)"
   fi
 
   echo ""
   if [[ $errors -eq 0 ]]; then
-    log_ok "All critical checks passed."
+    log_ok "$(msg ha.check.all_ok)"
     return 0
   else
-    log_error "$errors check(s) failed."
+    log_error "$(msgf ha.check.errors "$errors")"
     return 1
   fi
 }
@@ -124,6 +128,9 @@ run_checks() {
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage 0
 fi
+
+filter_lang_args "$@"
+set -- "${FILTERED_ARGS[@]}"
 
 if [[ $# -lt 1 ]]; then
   usage 1

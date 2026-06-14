@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
-# CRKCACHY master installer – system baseline for CachyOS + Steam gaming
+# CRKCACHY master installer – step-by-step wizard
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CRKCACHY_ROOT="$SCRIPT_DIR"
 
+# shellcheck source=lib/i18n.sh
+source "${CRKCACHY_ROOT}/lib/i18n.sh"
+parse_lang_arg "$@"
+
 # shellcheck source=lib/common.sh
 source "${CRKCACHY_ROOT}/lib/common.sh"
+# shellcheck source=lib/tools.sh
+source "${CRKCACHY_ROOT}/lib/tools.sh"
 # shellcheck source=lib/cachyos.sh
 source "${CRKCACHY_ROOT}/lib/cachyos.sh"
 # shellcheck source=lib/steam.sh
@@ -33,8 +39,16 @@ VULKAN_PACKAGES=(
   lib32-vulkan-icd-loader
 )
 
+run_system_setup() {
+  preflight
+  install_base_packages
+  setup_proton
+  setup_spacewar
+  print_overlay_hint
+}
+
 preflight() {
-  log_info "=== Preflight ==="
+  log_info "$(msg install.step1)"
   check_cachyos || true
   check_paru || true
   check_steam || true
@@ -42,20 +56,32 @@ preflight() {
 }
 
 install_base_packages() {
-  log_info "=== Base packages (paru) ==="
+  log_info "$(msg install.step2)"
+
+  explain_block "$(msg install.packages_explain_title)" "$(msg install.packages_explain_body)"
+
   install_packages_paru "${BASE_PACKAGES[@]}" || true
 
-  if confirm "Also install optional protonup-qt (GUI)?"; then
+  explain_block "$(msg install.qt_title)" "$(msg install.qt_body)"
+
+  if confirm "$(msg install.qt_confirm)"; then
     install_packages_paru "${OPTIONAL_PACKAGES[@]}" || true
+  else
+    log_ok "$(msg install.qt_skipped)"
   fi
 
-  if confirm "Install Vulkan ICD loaders (recommended for NVIDIA/AMD)?"; then
+  explain_block "$(msg install.vulkan_title)" "$(msg install.vulkan_body)"
+
+  if confirm "$(msg install.vulkan_confirm)"; then
     install_packages_paru "${VULKAN_PACKAGES[@]}" || true
+  else
+    log_ok "$(msg install.vulkan_skipped)"
   fi
 
   if ! pacman_installed steam; then
-    log_warn "Steam is not installed."
-    if confirm "Try installing steam via paru now?"; then
+    log_warn "$(msg install.steam_missing)"
+    explain_block "$(msg install.steam_title)" "$(msg install.steam_body)"
+    if confirm "$(msg install.steam_confirm)"; then
       install_packages_paru steam || true
     fi
   fi
@@ -63,60 +89,145 @@ install_base_packages() {
 }
 
 setup_proton() {
-  log_info "=== GE-Proton ==="
-  if check_protonup; then
+  log_info "$(msg install.step3)"
+
+  if ! check_protonup; then
+    log_warn "$(msg install.protonup_missing)"
+    echo ""
+    return
+  fi
+
   if verify_ge_proton; then
-    if confirm "GE-Proton already present. Re-install/update latest?"; then
+    explain_block "$(msg install.ge_present_title)" "$(msg install.ge_present_body)"
+
+    if confirm "$(msg install.ge_update_confirm)"; then
       install_ge_proton || true
+    else
+      log_ok "$(msg install.ge_kept)"
     fi
   else
+    explain_block "$(msg install.ge_missing_title)" "$(msg install.ge_missing_body)"
     install_ge_proton || true
-  fi
-  else
-    log_warn "Install protonup-rs-bin first, then re-run install.sh"
   fi
   echo ""
 }
 
 setup_spacewar() {
-  log_info "=== Spacewar (App 480) ==="
+  log_info "$(msg install.step4)"
+
+  explain_block "$(msg install.spacewar_title)" "$(msg install.spacewar_body)"
+
   check_spacewar || true
   echo ""
 }
 
-run_tools() {
-  log_info "=== Game tools ==="
-  if list_tools; then
-    echo ""
-    if confirm "Run a game setup tool now?"; then
-      run_tool_menu || true
-    fi
-  else
-    log_warn "No tools in tools/ yet."
-  fi
+run_game_setup() {
+  log_info "$(msg install.step5)"
+  run_tool_wizard || true
   echo ""
 }
 
-main() {
+print_status() {
+  local ok=0 fail=0
+
   print_banner
-  log_info "Legal: This project does not distribute games or fix files."
-  log_info "See docs/legal.md before continuing."
+  log_info "$(msg install.status_title)"
   echo ""
 
-  if ! confirm "Continue with system setup?"; then
-    log_info "Aborted."
+  if check_cachyos; then ok=$((ok+1)); else fail=$((fail+1)); fi
+  if check_paru; then ok=$((ok+1)); else fail=$((fail+1)); fi
+  if check_steam; then ok=$((ok+1)); else fail=$((fail+1)); fi
+  if check_protonup; then ok=$((ok+1)); else fail=$((fail+1)); fi
+  if verify_ge_proton; then ok=$((ok+1)); else fail=$((fail+1)); fi
+  if check_spacewar; then ok=$((ok+1)); else fail=$((fail+1)); fi
+
+  echo ""
+  log_info "$(msg install.packages_title)"
+  for pkg in steam "${BASE_PACKAGES[@]}" "${VULKAN_PACKAGES[@]}"; do
+    if pacman_installed "$pkg"; then
+      log_ok "$pkg"
+      ok=$((ok+1))
+    else
+      log_warn "$(msgf install.pkg_missing "$pkg")"
+      fail=$((fail+1))
+    fi
+  done
+
+  echo ""
+  discover_tools && print_tool_list || true
+
+  echo ""
+  if [[ $fail -eq 0 ]]; then
+    log_ok "$(msg install.all_ready)"
+    log_hint "./install.sh  → Option 3 für nur Spiel"
+  else
+    log_warn "$(msgf install.points_open "$fail" "$ok")"
+    log_hint "./install.sh  → Option 1 oder 2"
+  fi
+}
+
+show_wizard_menu() {
+  explain_block "$(msg wizard.title)" "$(msg wizard.body)"
+
+  echo "  1) $(msg wizard.opt1)"
+  echo "  2) $(msg wizard.opt2)"
+  echo "  3) $(msg wizard.opt3)"
+  echo "  4) $(msg wizard.opt4)"
+  echo ""
+
+  read -r -p "$(msg wizard.prompt)" choice
+
+  case "${choice:-}" in
+    1)
+      run_system_setup
+      run_game_setup
+      ;;
+    2)
+      run_system_setup
+      ;;
+    3)
+      run_game_setup
+      ;;
+    4)
+      print_status
+      exit 0
+      ;;
+    *)
+      log_warn "$(msg wizard.invalid)"
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
+has_flag() {
+  local flag="$1"
+  for arg in "$@"; do
+    [[ "$arg" == "$flag" ]] && return 0
+  done
+  return 1
+}
+
+main() {
+  if has_flag --status "$@" || has_flag -s "$@"; then
+    print_status
     exit 0
   fi
 
-  preflight
-  install_base_packages
-  setup_proton
-  setup_spacewar
-  print_overlay_hint
-  run_tools
+  print_banner
 
-  log_ok "CRKCACHY master install finished."
-  log_info "Next: open the tool README for your game (e.g. tools/house-of-ashes/README.md)"
+  explain_block "$(msg install.legal_title)" "$(msg install.legal_body)"
+  explain_block "$(msg install.how_title)" "$(msg install.how_body)"
+
+  if ! show_wizard_menu; then
+    log_info "$(msg install.cancelled)"
+    exit 0
+  fi
+
+  log_ok "$(msg install.finished)"
+  log_info "$(msg install.next_readme)"
+  log_hint "tools/<spiel>/README.md"
 }
 
 main "$@"

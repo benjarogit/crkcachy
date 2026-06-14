@@ -8,11 +8,12 @@ PROTONUP_TOOL="GEProton"
 
 check_protonup() {
   if command_exists protonup-rs; then
-    log_ok "protonup-rs found."
+    log_ok "$(msg protonup.ok)"
     return 0
   fi
 
-  log_warn "protonup-rs not found. Install: paru -S protonup-rs-bin"
+  log_warn "$(msg protonup.missing)"
+  log_hint "$(msg protonup.install_hint)"
   return 1
 }
 
@@ -32,22 +33,24 @@ list_ge_proton() {
 }
 
 install_ge_proton() {
-  require_command protonup-rs "Install: paru -S protonup-rs-bin"
+  require_command protonup-rs "$(msg proton.install_cmd_hint)"
 
-  if confirm "Install latest GE-Proton for Steam via protonup-rs?"; then
-    log_info "Running: protonup-rs -q --tool ${PROTONUP_TOOL} --version latest --for steam"
+  explain_block "$(msg proton.install_title)" "$(msg proton.install_body)"
+
+  if confirm "$(msg proton.confirm_install)"; then
+    log_info "$(msg proton.running)"
     protonup-rs -q --tool "$PROTONUP_TOOL" --version latest --for steam
-    log_ok "protonup-rs finished."
+    log_ok "$(msg proton.done)"
   else
-    log_warn "Skipped GE-Proton install."
+    log_warn "$(msg proton.skipped)"
     return 1
   fi
 
   if list_ge_proton; then
-    log_ok "GE-Proton installations in compatibilitytools.d:"
+    log_ok "$(msg proton.versions)"
     list_ge_proton
   else
-    log_warn "No GE-Proton folder found in ${PROTON_GE_DIR}"
+    log_warn "$(msgf proton.not_found_dir "$PROTON_GE_DIR")"
     return 1
   fi
 
@@ -56,10 +59,12 @@ install_ge_proton() {
 
 verify_ge_proton() {
   if list_ge_proton >/dev/null 2>&1; then
-    log_ok "GE-Proton present in ${PROTON_GE_DIR}"
+    log_ok "$(msg proton.verified)"
+    list_ge_proton
     return 0
   fi
 
-  log_warn "No GE-Proton found. Run install step or use protonup-qt GUI."
+  log_warn "$(msg proton.missing)"
+  log_hint "$(msg proton.run_install)"
   return 1
 }

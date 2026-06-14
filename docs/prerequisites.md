@@ -1,63 +1,34 @@
-# Voraussetzungen
+# Voraussetzungen – einfach erklärt
 
-CRKCACHY zielt auf **CachyOS** mit **Steam** und **Proton-GE**. Diese Seite listet die erwartete Systembasis.
+Was du brauchst bevor CRKCACHY funktioniert.
 
-**English summary:** CachyOS (or Arch with caution), `paru`, Steam, GE-Proton via `protonup-rs`, Vulkan loaders, legal game files, self-applied fixes.
+## Dein Computer
 
-## Betriebssystem
+- **CachyOS** (empfohlen) oder Arch Linux
+- **paru** – installiert Zusatzprogramme: `sudo pacman -S paru`
+- **Steam** – der Spiele-Client: `paru -S steam`
+- In Steam **eingeloggt**
 
-| Komponente | Empfehlung |
-|------------|------------|
-| OS | CachyOS (getestet) |
-| Arch (ohne CachyOS) | Warnung – Paketnamen können abweichen |
-| `paru` | AUR-Helfer: `sudo pacman -S paru` |
+## Proton (Windows-Spiele auf Linux)
 
-## Steam
+- **GE-Proton** – wird von `./install.sh` installiert
+- In Steam später unter **Kompatibilität** auswählen (z. B. GE-Proton10-34)
 
-- Paket: `steam` (`paru -S steam`)
-- Account eingeloggt
-- **Overlay** aktiv: Einstellungen → Im Spiel
-- Für Spacewar-Trick: **Spacewar (480)** installiert (`steam://install/480`)
+## Grafik
 
-Steam-Daten typisch unter: `~/.local/share/Steam/`
+- Vulkan-Helfer – `./install.sh` kann sie installieren
+- GPU-Treiber (NVIDIA/AMD) sollten auf CachyOS schon da sein
 
-## Proton
+## Für House of Ashes zusätzlich
 
-- **GE-Proton** via `protonup-rs-bin`:
-  ```bash
-  protonup-rs -q --tool GEProton --version latest --for steam
-  ```
-- Optional GUI: `protonup-qt`
-- Installationspfad: `~/.local/share/Steam/compatibilitytools.d/GE-Proton*`
-- Alternative in Steam: `proton-cachyos-*` (CachyOS)
+- **Spacewar** – kostenloses Steam-Spiel: `steam://install/480`
+- **Legale Spieldateien** – dein Extract-Ordner mit `HouseOfAshes.exe`
+- **Online-Fix** – selbst einbinden (nicht aus CRKCACHY)
 
-## Gaming-Runtime (paru)
+## Steam Overlay
 
-Der Master-Installer schlägt vor:
-
-```bash
-paru -S --needed protonup-rs-bin vkd3d lib32-vkd3d lib32-gamemode gvfs winetricks
-```
-
-Optional: `protonup-qt`
-
-## Vulkan (NVIDIA / AMD)
-
-```bash
-paru -S --needed vulkan-icd-loader lib32-vulkan-icd-loader
-```
-
-Zusätzlich GPU-spezifische Treiber (z. B. `nvidia-dkms`, `mesa`) wie auf CachyOS üblich.
-
-## Spiele & Fixes
-
-- **Legale Vollversion** oder vom Publisher erlaubte Demo
-- Online-Fix nur **selbst** vom Fix-Autor – CRKCACHY liefert keine DLLs
-- Extract-Ordner starten (`HouseOfAshes.exe` etc.) – kein Kopieren ins Repo
-
-## Bottles (optional, nicht Standard)
-
-CRKCACHY ist **Steam-first**. Bottles kann für Singleplayer hilfreich sein, ist aber nicht der dokumentierte Multiplayer-Pfad für House of Ashes. Siehe Troubleshooting.
+Einstellungen → Im Spiel → Overlay **an**  
+Wichtig für Einladungen im Multiplayer.
 
 ## Recht
 
