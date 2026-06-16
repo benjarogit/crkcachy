@@ -4,7 +4,7 @@
 
 **Deutsch:** [README.md](README.md)
 
-> CRKCACHY does **not** ship game files or fix downloads. You need a legal full copy and must obtain the fix yourself.
+> CRKCACHY does **not** ship game files or fixes. You bring your own files. CRKCACHY does not indicate where files come from.
 
 ## Transparency
 
@@ -27,9 +27,11 @@ cd /path/to/crkcachy
 ./install.sh
 ```
 
-## Step 2 – Online fix (self-sourced, not from CRKCACHY)
+## Step 2 – Fix stack (you apply it yourself)
 
-Place files from **TDPAHOA_Fix_Repair_Steam_Generic** into your **extract folder**:
+The tested fix stack is **TDPAHOA_Fix_Repair_Steam_Generic**. CRKCACHY does not distribute it and does not name a source.
+
+Place the fix files into your **extract folder** as follows:
 
 | Path | Files |
 |------|-------|

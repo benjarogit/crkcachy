@@ -39,7 +39,7 @@ Folge der **Haupt-Anleitung** im CRKCACHY-Projektordner (`./install.sh` → Ente
 ## Was du brauchst
 
 - Spiele-Ordner mit `HouseOfAshes.exe`
-- Fix **TDPAHOA_Fix_Repair_Steam_Generic** **selbst** ins Spielordner legen (nicht aus CRKCACHY)
+- Fix-Stack **TDPAHOA_Fix_Repair_Steam_Generic** selbst in den Spielordner legen – CRKCACHY gibt keine Quelle an
 - Steam läuft und du bist eingeloggt
 - Bei mehreren Steam-Accounts: Tool fragt, welchem Profil Shortcut/Icon gelten soll
 
