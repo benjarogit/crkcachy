@@ -1,7 +1,8 @@
 # CRKCACHY – How to (simple)
 
-**CRKCACHY** helps you run **standalone and portable games** via **Steam + Proton** – without Bottles or Wineboot.  
-No game in the package: guides, checks, mods, and community fixes.
+**CRKCACHY** runs **Windows games on Linux** – via **Steam + Proton**, no Bottles.  
+No game included: setup help, read-only folder check, mods and fixes.  
+**No game files, no fix downloads** – you place files in the folder yourself.
 
 > Help only, no crack. [Legal](docs/legal.md)  
 > **Deutsch:** [README.md](README.md)
@@ -50,6 +51,7 @@ The program:
 
 ## House of Ashes
 
+Path guidance and Steam auto-setup for **TDPAHOA_Fix_Repair_Steam_Generic** (you apply the fix yourself).  
 [tools/house-of-ashes/README.en.md](tools/house-of-ashes/README.en.md)
 
 ---

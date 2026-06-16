@@ -72,7 +72,7 @@ tui_tool_pick() {
   labels+=("$(msg tools.opt_skip)")
   values+=("")
 
-  selected="$(cui_choose "$(msg tools.choose_hint)" 0 "${labels[@]}")"
+  selected="$(cui_choose_searchable "$(msg tools.choose_hint)" "$(msg tools.hub_search_hint)" "${labels[@]}")" || true
 
   result=""
   for idx in "${!labels[@]}"; do

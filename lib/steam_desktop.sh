@@ -47,17 +47,37 @@ steam_fetch_shortcut_line() {
   local exe_linux_path="$1"
   local exe_basename="${2:-$(basename "$exe_linux_path")}"
   local config_dir line
+  local -a search_dirs=()
 
   [[ -f "$STEAM_ARTWORK_PY" ]] || return 1
 
-  while IFS= read -r config_dir; do
+  if steam_target_profiles_active; then
+    search_dirs=("${STEAM_TARGET_CONFIG_DIRS[@]}")
+  else
+    mapfile -t search_dirs < <(steam_userdata_all_config_dirs)
+  fi
+
+  for config_dir in "${search_dirs[@]}"; do
+    [[ -f "${config_dir}/shortcuts.vdf" ]] || continue
     line="$(python3 "$STEAM_ARTWORK_PY" "${config_dir}/shortcuts.vdf" \
       --exe "$exe_linux_path" --basename "$exe_basename" 2>/dev/null | head -n1 || true)"
     if [[ -n "$line" ]]; then
       echo "$line"
       return 0
     fi
-  done < <(steam_userdata_config_dirs)
+  done
+
+  if steam_target_profiles_active; then
+    while IFS= read -r config_dir; do
+      [[ -f "${config_dir}/shortcuts.vdf" ]] || continue
+      line="$(python3 "$STEAM_ARTWORK_PY" "${config_dir}/shortcuts.vdf" \
+        --exe "$exe_linux_path" --basename "$exe_basename" 2>/dev/null | head -n1 || true)"
+      if [[ -n "$line" ]]; then
+        echo "$line"
+        return 0
+      fi
+    done < <(steam_userdata_all_config_dirs)
+  fi
 
   return 1
 }
@@ -170,7 +190,7 @@ steam_install_desktop_launcher() {
     return 1
   }
 
-  IFS=$'\t' read -r signed unsigned _legacy name _exe rungameid <<< "$line"
+  IFS=$'\t' read -r signed unsigned _legacy name _exe rungameid _launch <<< "$line"
   [[ -n "${rungameid:-}" ]] || return 1
 
   if [[ -z "${display_name:-}" ]]; then
@@ -212,6 +232,11 @@ steam_offer_desktop_launcher() {
 
   if ! steam_shortcut_exists "$exe_linux_path" "$exe_basename"; then
     return 1
+  fi
+
+  if ! steam_target_profiles_active; then
+    steam_prompt_target_profiles \
+      "$exe_linux_path" "$exe_basename" "$display_name" "$exe_basename" || return 1
   fi
 
   echo ""

@@ -1,0 +1,28 @@
+{
+  "slug": "house-of-ashes",
+  "name": {
+    "de": "House of Ashes",
+    "en": "House of Ashes"
+  },
+  "description": {
+    "de": "The Dark Pictures – Steam, Proton, Online-Fix-Check, Steam-Automatik",
+    "en": "The Dark Pictures – Steam, Proton, online-fix check, Steam auto-setup"
+  },
+  "game_exe": "HouseOfAshes.exe",
+  "steam_display_name": "House of Ashes",
+  "desktop_slug": "house-of-ashes",
+  "default_game_dir": "",
+  "policy": {
+    "distributes_game_files": false,
+    "distributes_fix_files": false,
+    "reads_game_folder_only": true
+  },
+  "tested_fix": {
+    "id": "TDPAHOA_Fix_Repair_Steam_Generic",
+    "archive": "TDPAHOA_Fix_Repair_Steam_Generic.rar",
+    "note": {
+      "de": "CRKCACHY verteilt keine Spieldateien und keine Fix-Downloads. Du legst den Fix selbst in den Ordner – wir prüfen nur, ob die erwarteten Dateien da sind.",
+      "en": "CRKCACHY does not ship game or fix files. You place the fix in the folder yourself – we only verify expected files are present."
+    }
+  }
+}

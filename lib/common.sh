@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.31"
+CRKCACHY_VERSION="0.1.51"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -53,8 +53,25 @@ explain_block() {
   echo ""
 }
 
+# shellcheck source=lib/debug.sh
+source "${CRKCACHY_ROOT}/lib/debug.sh"
+if [[ "${CRKCACHY_DEBUG:-0}" == 1 ]]; then
+  crkcachy_init_logging
+  log_debug "Debug mode active – log: $(crkcachy_log_path)"
+fi
+
 # shellcheck source=lib/package_explain.sh
 source "${CRKCACHY_ROOT}/lib/package_explain.sh"
+# shellcheck source=lib/game_paths.sh
+source "${CRKCACHY_ROOT}/lib/game_paths.sh"
+# shellcheck source=lib/tool_actions.sh
+source "${CRKCACHY_ROOT}/lib/tool_actions.sh"
+# shellcheck source=lib/tool_catalog.sh
+source "${CRKCACHY_ROOT}/lib/tool_catalog.sh"
+# shellcheck source=lib/tool_fetch.sh
+source "${CRKCACHY_ROOT}/lib/tool_fetch.sh"
+# shellcheck source=lib/tool_hub.sh
+source "${CRKCACHY_ROOT}/lib/tool_hub.sh"
 
 # Plain prompt before gum is available (bootstrap only)
 bootstrap_confirm() {

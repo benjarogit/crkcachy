@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "tools": [
+    {
+      "slug": "house-of-ashes",
+      "name": {
+        "de": "House of Ashes",
+        "en": "House of Ashes"
+      },
+      "description": {
+        "de": "The Dark Pictures – Steam, Proton, Online-Fix-Check, Steam-Automatik",
+        "en": "The Dark Pictures – Steam, Proton, online-fix check, Steam auto-setup"
+      }
+    }
+  ]
+}

@@ -9,6 +9,9 @@ CRKCACHY_ROOT="$SCRIPT_DIR"
 # shellcheck source=lib/i18n.sh
 source "${CRKCACHY_ROOT}/lib/i18n.sh"
 parse_lang_arg "$@"
+parse_cli_arg "$@"
+filter_lang_args "$@"
+filter_cli_args "${FILTERED_ARGS[@]:-$@}"
 
 # shellcheck source=lib/common.sh
 source "${CRKCACHY_ROOT}/lib/common.sh"
@@ -80,7 +83,7 @@ run_game_setup() {
     return 1
   fi
 
-  run_tool_wizard || true
+  tool_hub_interactive || true
   echo ""
   return 0
 }
@@ -92,7 +95,13 @@ offer_post_install_readme() {
     readme_rel="tools/${TOOL_SLUGS[0]}/README.md"
   fi
 
-  cui_offer_markdown "$readme_rel" "$(msg install.show_readme)" || true
+  echo ""
+  cui_step_screen 1 1 "$(msg install.finish_title)" "$(msg install.finish_body)" "$(msg install.finish_next)"
+
+  if cui_yes_no "$(msg install.show_readme)" false; then
+    echo ""
+    cui_show_markdown "$(crkcachy_markdown_path "$readme_rel")" "$(msg install.readme_title)" false
+  fi
 }
 
 print_status() {
@@ -114,10 +123,8 @@ print_status() {
 
 show_wizard_menu() {
   assess_run
+  cui_wizard_main_header "$(assess_recommended_hint)"
   tui_assess_panel || true
-  echo ""
-
-  cui_section "$(msg wizard.title)" "$(assess_recommended_hint)"
 
   local choice
   tui_wizard_pick choice
@@ -181,6 +188,24 @@ main() {
     exit 0
   fi
 
+  local action
+  action="$(tool_action_from_flag)"
+
+  if [[ -n "$action" ]] || [[ -n "${CRKCACHY_TOOL:-}" ]]; then
+    ensure_crkcachy_runtime
+    print_banner
+    tool_hub_run "$action"
+    exit $?
+  fi
+
+  if has_flag --tools "$@"; then
+    ensure_crkcachy_runtime
+    print_banner
+    preflight_onboard
+    tool_hub_interactive
+    exit $?
+  fi
+
   ensure_crkcachy_runtime
   print_banner
   preflight_onboard
@@ -194,4 +219,4 @@ main() {
   offer_post_install_readme
 }
 
-main "$@"
+main "${FILTERED_CLI_ARGS[@]:-${FILTERED_ARGS[@]}}"

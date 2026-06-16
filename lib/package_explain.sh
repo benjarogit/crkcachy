@@ -15,6 +15,39 @@ package_explain_text() {
   echo "$text"
 }
 
+package_explain_short() {
+  local logical="$1"
+  local key="pkg.explain_short.${logical}"
+  local text="${_MSG[$key]:-}"
+
+  if [[ -z "$text" ]]; then
+    text="$(platform_logical_display_name "$logical")"
+  fi
+
+  echo "$text"
+}
+
+package_install_plan_lines() {
+  local logical line n=1
+  for logical in "$@"; do
+    line="$(msgf ui.install_plan_line "$n" "$(platform_logical_display_name "$logical")" "$(package_explain_short "$logical")")"
+    echo "$line"
+    n=$((n + 1))
+  done
+}
+
+package_install_plan_block() {
+  local title="$1"
+  shift
+  local -a lines=()
+
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && lines+=("$line")
+  done < <(package_install_plan_lines "$@")
+
+  cui_install_plan "$title" "$(msg pkg.install_plan_intro)" "${lines[@]}"
+}
+
 # Show what each logical package is and why it is needed.
 package_explain_block() {
   local title="$1"
@@ -80,7 +113,8 @@ offer_logical_packages() {
 
   missing_display="$(package_missing_display_names "${missing[@]}")"
   log_info "$(msgf paru.missing "$missing_display")"
-  package_explain_block "$(msg pkg.explain.title)" "${missing[@]}"
+  package_install_plan_block "$(msg pkg.install_plan_title)" "${missing[@]}"
+  package_explain_block "$(msg pkg.explain.detail_title)" "${missing[@]}"
 
   while IFS= read -r -d '' pkg; do
     all_native+=("$pkg")

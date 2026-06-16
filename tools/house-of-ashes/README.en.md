@@ -4,7 +4,12 @@
 
 **Deutsch:** [README.md](README.md)
 
-> CRKCACHY does **not** ship game files or online-fix binaries. You need a legal full copy and must obtain the fix yourself per [online-fix.me FAQ](https://online-fix.me/guides/16258-site-usage-faq.html).
+> CRKCACHY does **not** ship game files or fix downloads. You need a legal full copy and must obtain the fix yourself.
+
+## Transparency
+
+**Tested fix stack:** `TDPAHOA_Fix_Repair_Steam_Generic`  
+Tool paths, launch options, icon extraction and Steam auto-setup are validated against this fix layout.
 
 ## Prerequisites
 
@@ -12,7 +17,8 @@
 2. **GE-Proton** (e.g. GE-Proton10-34) – run `../../install.sh` or use `protonup-rs`
 3. **Spacewar (App 480)** installed in Steam (for `SteamAppId=480`)
 4. **Legal game files** in your extract folder (do not commit to git)
-5. **Online fix** applied by you (see below)
+5. **Online fix** applied by you – tested stack: **TDPAHOA_Fix_Repair_Steam_Generic** (see below)
+6. Multiple Steam accounts on this PC? The tool asks which profile gets shortcut/icon/launch options
 
 ## Step 1 – System baseline
 
@@ -23,7 +29,7 @@ cd /path/to/crkcachy
 
 ## Step 2 – Online fix (self-sourced, not from CRKCACHY)
 
-Place files from the fix author into your **extract folder**:
+Place files from **TDPAHOA_Fix_Repair_Steam_Generic** into your **extract folder**:
 
 | Path | Files |
 |------|-------|

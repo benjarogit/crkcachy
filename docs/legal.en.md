@@ -1,29 +1,25 @@
 # Short & important
 
-**CRKCACHY** does **not** ship games, crack files, fix downloads, or DRM circumvention tools.
+**CRKCACHY** is **not a game** and **not a crack**. No fix downloads, no DRM bypass, no game files.
 
 ## What CRKCACHY does
 
-- Shows how **standalone and portable games** run via **Steam + Proton** – **without** Bottles, Wineboot, or similar extra apps.
-- Documents tested steps, tools, and paths – we experiment and share publicly.
-- Helps with **mods**, community fixes, and community packs (more tools coming).
-- **Read-only** checks whether files **you** applied are in the expected places.
+- Helps you **run Windows games on Linux** – via **Steam + Proton**, without Bottles or Wineboot.
+- Walks you through **Steam setup**: add game, Proton, launch options, icon.
+- **Checks your game folder** (read-only): are important files missing? Which fix stack was expected?
+- **Mods and community fixes** – setup help, not distribution.
 
-## What you provide yourself
+## What you need
 
-- **Game files** – purchase, backup copy, portable build: **your choice**. We **recommend** a legal full copy; the guide is **technically general**.
+- **Game files** – you bring them (purchase, backup, portable).
 - **Steam** with an account.
-- Obtain, apply, and use fixes, mods, or packs yourself – **where** you get them is your responsibility.
+- **Fixes/mods** – you put them in the game folder. Where files come from is your choice.
+- Example House of Ashes: tested stack **TDPAHOA_Fix_Repair_Steam_Generic** – CRKCACHY only provides path guidance and checks.
 
 ## Liability
 
-CRKCACHY is **documentation and help**, not game distribution. Maintainers accept **no liability** for:
-
-- License or terms-of-use violations
-- Account bans (e.g. VAC)
-- System or data damage
-- Illegal acquisition of games or fixes
+This is a **guide**, not game distribution. No liability for account bans (e.g. VAC), PC damage, or illegal files.
 
 ## Contributions
 
-Pull requests with crack files, emulator binaries, or direct links to illegal downloads will **not** be accepted.
+No crack files or illegal download links in pull requests.

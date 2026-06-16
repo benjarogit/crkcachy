@@ -33,61 +33,139 @@ preflight_has_installer() {
   platform_has_package_manager
 }
 
-preflight_check_line() {
-  local ok="$1"
-  local label="$2"
+# --- Display helpers ---------------------------------------------------------
+
+_pf_ok()   { echo -e "${_C_GREEN}  ✓${_C_RESET} $*"; }
+_pf_warn() { echo -e "${_C_YELLOW}  ○${_C_RESET} $*"; }
+_pf_fail() { echo -e "${_C_RED}  ✗${_C_RESET} $*"; }
+
+# Always show the full CRKCACHY-tool check (gum, glow, pacman/paru, OS).
+preflight_print_tool_checks() {
+  local ok os_label ge_ver ge_list=""
+
+  gum style --bold "$(msg runtime.check_title_tools)"
+  echo ""
+
+  # gum
+  ok=true
+  command_exists gum && preflight_gum_version || ok=false
   if [[ "$ok" == true ]]; then
-    echo "✓ $label"
+    _pf_ok "gum $(gum --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) – $(msg runtime.item_menu)"
   else
-    echo "○ $label – $(msg runtime.missing_suffix)"
+    _pf_fail "gum – $(msg runtime.item_menu)"; PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
+  fi
+
+  # glow
+  ok=true
+  command_exists glow || ok=false
+  if [[ "$ok" == true ]]; then
+    _pf_ok "glow – $(msg runtime.item_reader)"
+  else
+    _pf_fail "glow – $(msg runtime.item_reader)"; PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
+  fi
+
+  # pacman / package manager
+  ok=true
+  preflight_has_installer || ok=false
+  if [[ "$ok" == true ]]; then
+    local pm="${PLATFORM_AUR_HELPER:-pacman}"
+    _pf_ok "$pm – $(msg runtime.item_packages)"
+  else
+    _pf_fail "$(msg runtime.item_packages)"; PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
+  fi
+
+  # OS
+  os_label="$(platform_os_checklist_label)"
+  ok=true
+  platform_os_check_ok || ok=false
+  if [[ "$ok" == true ]]; then
+    _pf_ok "$os_label"
+  else
+    _pf_warn "$os_label – $(msg platform.tier_partial_hint)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 }
 
+# Always show the gaming-stack check (Steam, GE-Proton, Spacewar, packages).
+preflight_print_gaming_checks() {
+  local ok ge_list=""
+
+  echo ""
+  gum style --bold "$(msg runtime.check_title_gaming)"
+  echo ""
+
+  # Steam installed
+  ok=true
+  if command_exists steam || platform_logical_installed steam; then ok=true; else ok=false; fi
+  if [[ "$ok" == true ]]; then
+    _pf_ok "Steam – $(msg runtime.item_steam_ok)"
+  else
+    _pf_warn "Steam – $(msg runtime.item_steam)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  fi
+
+  # Steam data dir
+  ok=true
+  find_steam_root 2>/dev/null || ok=false
+  if [[ "$ok" == true ]]; then
+    _pf_ok "$(msg runtime.item_steam_data_ok) ($STEAM_ROOT)"
+  else
+    _pf_warn "$(msg runtime.item_steam_data)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  fi
+
+  # protonup-rs
+  ok=true
+  command_exists protonup-rs || platform_logical_installed protonup || ok=false
+  if [[ "$ok" == true ]]; then
+    _pf_ok "protonup-rs – $(msg runtime.item_protonup_ok)"
+  else
+    _pf_warn "protonup-rs – $(msg runtime.item_protonup)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  fi
+
+  # GE-Proton versions
+  ok=true
+  ge_list="$(list_ge_proton 2>/dev/null | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)"
+  if [[ -n "$ge_list" ]]; then
+    _pf_ok "GE-Proton: $ge_list"
+  else
+    _pf_warn "GE-Proton – $(msg runtime.item_ge_proton)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  fi
+
+  # Spacewar
+  ok=true
+  find_steam_root 2>/dev/null || true
+  if [[ -f "${SPACEWAR_MANIFEST:-}" ]]; then
+    _pf_ok "Spacewar (App 480) – $(msg runtime.item_spacewar_ok)"
+  else
+    _pf_warn "Spacewar (App 480) – $(msg runtime.item_spacewar)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  fi
+
+  # Key gaming packages
+  local pkg
+  for pkg in vkd3d gamemode winetricks; do
+    ok=true
+    platform_logical_installed "$pkg" 2>/dev/null || ok=false
+    local display
+    display="$(platform_logical_display_name "$pkg" 2>/dev/null || echo "$pkg")"
+    if [[ "$ok" == true ]]; then
+      _pf_ok "$display"
+    else
+      _pf_warn "$display – $(msg runtime.item_pkg_missing)"
+    fi
+  done
+}
+
 preflight_print_checklist() {
-  local ok lines=() os_label
+  # Always run both check groups (they increment the fail counters as they go)
+  preflight_print_tool_checks
+  preflight_print_gaming_checks
+  echo ""
 
   if [[ "$PREFLIGHT_REQUIRED_FAIL" -eq 0 && "$PREFLIGHT_RECOMMENDED_FAIL" -eq 0 ]]; then
-    log_ok "$(msg runtime.check_all_ok)"
-    return
-  fi
-
-  ok=true
-  command_exists gum && preflight_gum_version || ok=false
-  [[ "$ok" != true ]] && PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL + 1))
-  lines+=("$(preflight_check_line "$ok" "$(msg runtime.item_menu)")")
-
-  ok=true
-  command_exists glow || ok=false
-  [[ "$ok" != true ]] && PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL + 1))
-  lines+=("$(preflight_check_line "$ok" "$(msg runtime.item_reader)")")
-
-  ok=true
-  preflight_has_installer || ok=false
-  [[ "$ok" != true ]] && PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL + 1))
-  lines+=("$(preflight_check_line "$ok" "$(msg runtime.item_packages)")")
-
-  ok=true
-  [[ -n "$PLATFORM_AUR_HELPER" ]] || ok=false
-  [[ "$ok" != true ]] && PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL + 1))
-  lines+=("$(preflight_check_line "$ok" "$(msg runtime.item_paru)")")
-
-  ok=true
-  platform_os_check_ok || ok=false
-  os_label="$(platform_os_checklist_label)"
-  [[ "$ok" != true ]] && PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL + 1))
-  lines+=("$(preflight_check_line "$ok" "$os_label")")
-
-  ok=true
-  if command_exists steam || platform_logical_installed steam; then
-    ok=true
+    cui_status_chip true "$(msg runtime.check_all_ok)"
+  elif [[ "$PREFLIGHT_REQUIRED_FAIL" -gt 0 ]]; then
+    cui_status_chip false "$(msgf runtime.check_fail_required "$PREFLIGHT_REQUIRED_FAIL")"
   else
-    ok=false
-    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL + 1))
+    cui_status_chip true "$(msgf runtime.check_warn_recommended "$PREFLIGHT_RECOMMENDED_FAIL")"
   fi
-  lines+=("$(preflight_check_line "$ok" "$(msg runtime.item_steam)")")
-
-  cui_section "$(msg runtime.check_title)" "$(msg runtime.check_subtitle)"
-  cui_list "${lines[@]}"
 }
 
 preflight_fix_recommended() {
@@ -119,23 +197,19 @@ preflight_onboard() {
   preflight_print_checklist
   echo ""
 
-  if [[ "$PREFLIGHT_REQUIRED_FAIL" -gt 0 ]]; then
-    log_error "$(msg runtime.required_fail)"
-  fi
-
   if [[ "$PLATFORM_TIER" == unsupported ]]; then
     log_warn "$(msg platform.tier_unsupported_warn)"
   elif [[ "$PLATFORM_TIER" == partial ]]; then
     log_warn "$(msg platform.tier_partial_warn)"
   fi
 
-  if [[ "$PREFLIGHT_RECOMMENDED_FAIL" -gt 0 ]]; then
-    log_warn "$(msgf runtime.recommended_open "$PREFLIGHT_RECOMMENDED_FAIL")"
+  if [[ "$PREFLIGHT_RECOMMENDED_FAIL" -gt 0 && "$PREFLIGHT_REQUIRED_FAIL" -eq 0 ]]; then
     if confirm "$(msg runtime.fix_recommended)" false; then
       preflight_fix_recommended || true
       echo ""
       preflight_run
       preflight_print_checklist
+      echo ""
     fi
   fi
 
@@ -151,5 +225,6 @@ preflight_status_only() {
   preflight_run
   platform_log_summary
   echo ""
-  preflight_print_checklist
+  preflight_print_tool_checks
+  preflight_print_gaming_checks
 }

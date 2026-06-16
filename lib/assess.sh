@@ -217,13 +217,9 @@ tui_assess_panel() {
   local issue pkg
 
   if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
-    log_ok "$(msg assess.all_ready)"
-    log_hint "$(msgf assess.score "$ASSESS_OK" "$ASSESS_FAIL")"
     return 0
   fi
 
-  log_warn "$(msg assess.not_ready)"
-  log_hint "$(msgf assess.score "$ASSESS_OK" "$ASSESS_FAIL")"
   for issue in "${ASSESS_ISSUES[@]}"; do
     log_hint "○ $(assess_issue_label "$issue")"
   done
@@ -243,6 +239,9 @@ assess_print_report() {
     log_ok "$(msg assess.all_ready)"
     log_hint "$(msg assess.all_ready_hint)"
     log_hint "$(msgf assess.score "$ASSESS_OK" "$ASSESS_FAIL")"
+    echo ""
+    gum style --border rounded --padding "1 2" --foreground "$CUI_MUTED" "$(msg wizard.checks_body)"
+    echo ""
     return 0
   fi
 

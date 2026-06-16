@@ -1,17 +1,47 @@
-# House of Ashes – kurz und einfach
+# House of Ashes – Anleitung
 
-**English:** [README.en.md](README.en.md)
+**English:** siehe README.en.md im gleichen Ordner.
+
+## Transparenz
+
+CRKCACHY **verteilt keine Spieldateien und keine Fix-Downloads**.  
+Du legst den Online-Fix **selbst** in den Spielordner. Wir prüfen nur (read-only), ob die erwarteten Dateien da sind.
+
+**Getesteter Fix-Stack:** `TDPAHOA_Fix_Repair_Steam_Generic`  
+Die Tool-Installation (Pfade, Startoptionen, Icon, Steam-Automatik) ist darauf ausgelegt.
 
 ## Zuerst
 
-Folge der Haupt-Anleitung: [../../README.md](../../README.md)  
-Dort: `./install.sh` → **Enter** oder **3**.
+Folge der **Haupt-Anleitung** im CRKCACHY-Projektordner (`./install.sh` → Enter oder **3**).
+
+## Aktionen (Master oder hier)
+
+```bash
+# Projektroot:
+./install.sh --tools          # Tool wählen → Aktion wählen
+./install.sh --install        # Tool wählen → installieren
+./install.sh --uninstall      # deinstallieren
+./install.sh --check          # prüfen (+ Reparatur anbieten)
+./install.sh --reset          # Reset (nur CLI, für Tests)
+
+# Oder direkt hier:
+./install.sh                  # Aktionsmenü
+./install.sh --install
+```
+
+| Aktion | Zweck |
+|--------|--------|
+| **Installieren** | Automatik oder manuell, danach Prüfung |
+| **Deinstallieren** | CRKCACHY-Einrichtung entfernen, optional aus Steam |
+| **Prüfen** | PC + Ordner + Steam – ersetzt separates „Validieren“ |
+| **Reset** | Nur `--reset` (CLI): Metadaten zurück, Spiel bleibt in Steam |
 
 ## Was du brauchst
 
 - Spiele-Ordner mit `HouseOfAshes.exe`
-- Online-Fix **selbst** eingebunden (nicht aus CRKCACHY)
+- Fix **TDPAHOA_Fix_Repair_Steam_Generic** **selbst** ins Spielordner legen (nicht aus CRKCACHY)
 - Steam läuft und du bist eingeloggt
+- Bei mehreren Steam-Accounts: Tool fragt, welchem Profil Shortcut/Icon gelten soll
 
 ## Wenn das Programm fragt
 
@@ -21,9 +51,14 @@ Dort: `./install.sh` → **Enter** oder **3**.
 | Vulkan? | **Enter** |
 | GE-Proton update? | **Enter** |
 | Spielordner | **Enter** für Standard-Pfad |
+| Steam-Automatik? | **j** (empfohlen) |
+| Desktop-Eintrag? | **j** (optional) |
 
 ## Danach in Steam
 
-Das Programm zeigt dir alles – Startoptionen kopieren, Spiel hinzufügen, Proton wählen.
+Name, Startoptionen und Icon automatisch (wenn gewählt).  
+Proton **GE-Proton10-34** und Overlay prüfen. Start nur über **Play**.
 
-Mehr Details nur bei Problemen: [../../docs/troubleshooting.md](../../docs/troubleshooting.md)
+## Probleme?
+
+Siehe **docs/troubleshooting.md** im CRKCACHY-Projektordner.

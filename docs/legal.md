@@ -1,29 +1,25 @@
 # Kurz & wichtig
 
-**CRKCACHY** liefert **keine Spiele**, **keine Crack-Dateien**, **keine Fix-Downloads** und **keine DRM-Umgehungen**.
+**CRKCACHY** ist **kein Spiel** und **kein Crack**. Keine Fix-Downloads, keine DRM-Umgehungen, keine Spieldateien.
 
 ## Was CRKCACHY macht
 
-- Zeigt, wie **Standalone- und Portable-Spiele** über **Steam + Proton** laufen – **ohne** Bottles, Wineboot oder ähnliche Zusatz-Programme.
-- Dokumentiert getestete Schritte, Tools und Pfade – wir probieren aus und stellen das öffentlich bereit.
-- Hilft bei **Mods**, Community-Fixes und Community-Packs (weitere Tools folgen).
-- Prüft **nur lesend**, ob Dateien, die **du** eingebunden hast, an den erwarteten Stellen liegen.
+- Hilft dir, **Windows-Spiele auf Linux** zu starten – über **Steam + Proton**, ohne Bottles oder Wineboot.
+- Führt dich durchs **Steam-Setup**: Spiel hinzufügen, Proton, Startoptionen, Icon.
+- **Prüft deinen Spielordner** (nur lesen): fehlen wichtige Dateien? Welcher Fix-Stack wurde erwartet?
+- **Mods und Community-Fixes** – Hilfe beim Einrichten, nicht beim Verteilen.
 
-## Was du selbst besorgst
+## Was du brauchst
 
-- **Spiel-Dateien** – Kauf, Sicherungskopie, Portable-Version: **du entscheidest**. Wir **empfehlen** eine legale Vollversion; die Anleitung ist technisch **allgemein**.
+- **Spieldateien** – du bringst sie mit (Kauf, Backup, Portable).
 - **Steam** mit Account.
-- Fixes, Mods oder Packs **selbst** beschaffen, einbinden und nutzen – woher du sie nimmst, liegt bei dir.
+- **Fixes/Mods** – du legst sie ins Spielordner. Woher die Dateien kommen, entscheidest du.
+- Beispiel House of Ashes: getesteter Stack **TDPAHOA_Fix_Repair_Steam_Generic** – CRKCACHY liefert nur Pfad-Hinweise und Prüfungen.
 
 ## Haftung
 
-CRKCACHY ist **Dokumentation und Hilfe**, kein Spielvertrieb. Die Maintainer übernehmen **keine Haftung** für:
-
-- Verstöße gegen Lizenz- oder Nutzungsbedingungen
-- Sperren von Accounts (z. B. VAC)
-- Schäden am System oder Daten
-- illegale Beschaffung von Spielen oder Fixes
+Das ist eine **Anleitung**, kein Spielvertrieb. Keine Haftung für Account-Sperren (z. B. VAC), Schäden am PC oder illegale Dateien.
 
 ## Beiträge
 
-Pull Requests mit Crack-Dateien, Emulator-Binaries oder direkten Links zu illegalen Downloads werden **nicht** akzeptiert.
+Keine Crack-Dateien, keine illegalen Download-Links in Pull Requests.

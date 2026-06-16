@@ -1,7 +1,8 @@
 # CRKCACHY – So geht’s (einfach)
 
-**CRKCACHY** hilft dir, **Standalone- und Portable-Spiele** über **Steam + Proton** zu nutzen – ohne Bottles oder Wineboot.  
-Kein Spiel im Paket: Anleitung, Checks, Mods und Community-Fixes.
+**CRKCACHY** bringt **Windows-Spiele auf Linux** – über **Steam + Proton**, ohne Bottles.  
+Kein Spiel dabei: Setup-Hilfe, Ordner-Check (nur lesen), Mods und Fixes.  
+**Keine Spieldateien, keine Fix-Downloads** – du legst Dateien selbst in den Ordner.
 
 > Nur Hilfe, kein Crack. [Rechtliches](docs/legal.md)  
 > **English:** [README.en.md](README.en.md)
@@ -32,11 +33,20 @@ chmod +x install.sh lib/*.sh tools/*/install.sh tools/*/checks.sh
 
 Das Programm:
 
-1. richtet bei Bedarf **Pfeil-Menü** und **Anleitung-Leser** ein (einmal, mit deiner Erlaubnis)  
+1. richtet **Menü** und **Anleitungen** ein (einmal, mit Bestätigung)  
 2. prüft deinen **PC**  
-3. hilft beim **Spiel in Steam**
+3. richtet dein **Spiel in Steam** ein
 
 **Pfeiltasten** = auswählen · **Enter** = bestätigen
+
+**Direkt (Spiel-Tool):**
+
+```bash
+./install.sh --tools       # Tool + Aktion wählen
+./install.sh --install     # installieren
+./install.sh --uninstall   # deinstallieren
+./install.sh --check       # prüfen (inkl. Steam-Validierung)
+```
 
 ---
 
@@ -50,6 +60,7 @@ Das Programm:
 
 ## House of Ashes
 
+Pfad-Hilfe und Steam-Automatik für **TDPAHOA_Fix_Repair_Steam_Generic** (von dir selbst eingelegt).  
 [tools/house-of-ashes/README.md](tools/house-of-ashes/README.md)
 
 ---

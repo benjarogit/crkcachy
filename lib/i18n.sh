@@ -80,6 +80,61 @@ parse_lang_arg() {
   done
 }
 
+# Parse --debug, --reset, --validate-only, --install, --uninstall, --check, --action= (call before common.sh)
+parse_cli_arg() {
+  local arg prev=""
+  for arg in "$@"; do
+    if [[ "$prev" == "--tool" ]]; then
+      CRKCACHY_TOOL="$arg"
+    elif [[ "$prev" == "--game-dir" ]]; then
+      CRKCACHY_GAME_DIR="$arg"
+    else
+      case "$arg" in
+        --debug) CRKCACHY_DEBUG=1 ;;
+        --reset) CRKCACHY_RESET=1; CRKCACHY_ACTION=reset ;;
+        --skip-intro) CRKCACHY_SKIP_INTRO=1 ;;
+        --force-intro) CRKCACHY_FORCE_INTRO=1 ;;
+        --validate-only|--validate) CRKCACHY_CHECK_ONLY=1; CRKCACHY_ACTION=check ;;
+        --install) CRKCACHY_INSTALL=1; CRKCACHY_ACTION=install ;;
+        --uninstall) CRKCACHY_UNINSTALL=1; CRKCACHY_ACTION=uninstall ;;
+        --check) CRKCACHY_CHECK_ONLY=1; CRKCACHY_ACTION=check ;;
+        --tool=*) CRKCACHY_TOOL="${arg#*=}" ;;
+        --game-dir=*) CRKCACHY_GAME_DIR="${arg#*=}" ;;
+        --tool|--game-dir) ;;
+        --action=*) CRKCACHY_ACTION="${arg#*=}" ;;
+      esac
+    fi
+    prev="$arg"
+  done
+}
+
+filter_cli_args() {
+  local filtered=()
+  local arg prev=""
+
+  for arg in "$@"; do
+    if [[ "$prev" == "--tool" ]]; then
+      prev="$arg"
+      continue
+    fi
+    if [[ "$prev" == "--game-dir" ]]; then
+      prev="$arg"
+      continue
+    fi
+    case "$arg" in
+      --debug|--reset|--validate-only|--validate|--install|--uninstall|--check|--tool|--game-dir|--skip-intro|--force-intro)
+        prev="$arg"
+        continue
+        ;;
+      --tool=*|--game-dir=*|--action=*) prev="$arg"; continue ;;
+      *) filtered+=("$arg") ;;
+    esac
+    prev="$arg"
+  done
+
+  FILTERED_CLI_ARGS=("${filtered[@]}")
+}
+
 # Remove --lang from args (for scripts with other positional arguments)
 filter_lang_args() {
   local filtered=()

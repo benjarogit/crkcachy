@@ -67,7 +67,15 @@ print_overlay_hint() {
   explain_block "$(msg overlay.title)" "$(msg overlay.body)"
 }
 
+# shellcheck source=lib/steam_accounts.sh
+source "${CRKCACHY_ROOT}/lib/steam_accounts.sh"
 # shellcheck source=lib/steam_artwork.sh
 source "${CRKCACHY_ROOT}/lib/steam_artwork.sh"
 # shellcheck source=lib/steam_desktop.sh
 source "${CRKCACHY_ROOT}/lib/steam_desktop.sh"
+# shellcheck source=lib/steam_reset.sh
+source "${CRKCACHY_ROOT}/lib/steam_reset.sh"
+# shellcheck source=lib/steam_validate.sh
+source "${CRKCACHY_ROOT}/lib/steam_validate.sh"
+# shellcheck source=lib/steam_repair.sh
+source "${CRKCACHY_ROOT}/lib/steam_repair.sh"
