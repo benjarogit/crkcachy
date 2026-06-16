@@ -153,6 +153,29 @@ preflight_print_gaming_checks() {
   done
 }
 
+# Zählt Fails still durch (keine Ausgabe) – nur für Vorher-Nachher-Vergleich
+_preflight_count_silent() {
+  local ok
+
+  command_exists gum && preflight_gum_version || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
+  command_exists glow || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
+  preflight_has_installer || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
+
+  if ! (command_exists steam || platform_logical_installed steam 2>/dev/null); then
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  fi
+  find_steam_root 2>/dev/null || PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  command_exists protonup-rs || platform_logical_installed protonup 2>/dev/null || \
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  list_ge_proton >/dev/null 2>&1 || PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  find_steam_root 2>/dev/null || true
+  [[ -f "${SPACEWAR_MANIFEST:-/dev/null}" ]] || PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+  local pkg
+  for pkg in vkd3d gamemode winetricks; do
+    platform_logical_installed "$pkg" 2>/dev/null || true
+  done
+}
+
 preflight_print_checklist() {
   # Always run both check groups (they increment the fail counters as they go)
   preflight_print_tool_checks
@@ -235,14 +258,17 @@ preflight_onboard() {
       local _fail_before="$PREFLIGHT_RECOMMENDED_FAIL"
       preflight_fix_recommended || true
       echo ""
+      # Still re-count silently to see if anything changed
       preflight_run
-      preflight_print_tool_checks
-      preflight_print_gaming_checks
-      echo ""
+      _preflight_count_silent
       if [[ "$PREFLIGHT_RECOMMENDED_FAIL" -lt "$_fail_before" ]]; then
+        # Improvement – show updated list
+        preflight_print_tool_checks
+        preflight_print_gaming_checks
+        echo ""
         cui_status_chip true "$(msg runtime.check_all_ok)"
       else
-        cui_status_chip false "$(msgf runtime.check_warn_recommended "$PREFLIGHT_RECOMMENDED_FAIL")"
+        # Nothing changed (e.g. Spacewar async) – just show hint, no repeated list
         log_hint "$(msg runtime.spacewar_async_hint)"
       fi
       echo ""
