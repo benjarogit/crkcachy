@@ -34,44 +34,49 @@ preflight_has_installer() {
 }
 
 # --- Display helpers ---------------------------------------------------------
-
-_pf_ok()   { echo -e "${_C_GREEN}  ✓${_C_RESET} $*"; }
-_pf_warn() { echo -e "${_C_YELLOW}  ○${_C_RESET} $*"; }
-_pf_fail() { echo -e "${_C_RED}  ✗${_C_RESET} $*"; }
+# Nutzen das neue cui_check_row aus dem CRKCACHY Design System.
+# Format: cui_check_row <state> <name> [value] [detail]
+#   state = ok | warn | fail
+#   name  = linksbündig in Spalte 1 (24 Zeichen)
+#   value = Spalte 2 (28 Zeichen)
+#   detail= Spalte 3, gedimmt
 
 # Always show the full CRKCACHY-tool check (gum, glow, pacman/paru, OS).
 preflight_print_tool_checks() {
-  local ok os_label ge_ver ge_list=""
+  local ok gum_ver os_label
 
-  gum style --bold "$(msg runtime.check_title_tools)"
-  echo ""
+  cui_check_category "$(msg runtime.check_title_tools)"
 
   # gum
   ok=true
   command_exists gum && preflight_gum_version || ok=false
+  gum_ver="$(gum --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")"
   if [[ "$ok" == true ]]; then
-    _pf_ok "gum $(gum --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) – $(msg runtime.item_menu)"
+    cui_check_row ok "gum ${gum_ver}" "$(msg runtime.item_menu)"
   else
-    _pf_fail "gum – $(msg runtime.item_menu)"; PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
+    cui_check_row fail "gum" "$(msg runtime.item_menu)"
+    PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
   fi
 
   # glow
   ok=true
   command_exists glow || ok=false
   if [[ "$ok" == true ]]; then
-    _pf_ok "glow – $(msg runtime.item_reader)"
+    cui_check_row ok "glow" "$(msg runtime.item_reader)"
   else
-    _pf_fail "glow – $(msg runtime.item_reader)"; PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
+    cui_check_row fail "glow" "$(msg runtime.item_reader)"
+    PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
   fi
 
-  # pacman / package manager
+  # pacman / paru
   ok=true
   preflight_has_installer || ok=false
+  local pm="${PLATFORM_AUR_HELPER:-pacman}"
   if [[ "$ok" == true ]]; then
-    local pm="${PLATFORM_AUR_HELPER:-pacman}"
-    _pf_ok "$pm – $(msg runtime.item_packages)"
+    cui_check_row ok "$pm" "$(msg runtime.item_packages)"
   else
-    _pf_fail "$(msg runtime.item_packages)"; PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
+    cui_check_row fail "$(msg runtime.item_packages)" ""
+    PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
   fi
 
   # OS
@@ -79,76 +84,81 @@ preflight_print_tool_checks() {
   ok=true
   platform_os_check_ok || ok=false
   if [[ "$ok" == true ]]; then
-    _pf_ok "$os_label"
+    cui_check_row ok "$os_label" ""
   else
-    _pf_warn "$os_label – $(msg platform.tier_partial_hint)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+    cui_check_row warn "$os_label" "$(msg platform.tier_partial_hint)"
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 }
 
 # Always show the gaming-stack check (Steam, GE-Proton, Spacewar, packages).
 preflight_print_gaming_checks() {
-  local ok ge_list=""
+  local ok ge_list ge_first ge_rest
 
-  echo ""
-  gum style --bold "$(msg runtime.check_title_gaming)"
-  echo ""
+  cui_check_category "$(msg runtime.check_title_gaming)"
 
-  # Steam installed
+  # Steam installiert
   ok=true
   if command_exists steam || platform_logical_installed steam; then ok=true; else ok=false; fi
   if [[ "$ok" == true ]]; then
-    _pf_ok "Steam – $(msg runtime.item_steam_ok)"
+    cui_check_row ok "Steam" "$(msg runtime.item_steam_ok)"
   else
-    _pf_warn "Steam – $(msg runtime.item_steam)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+    cui_check_row warn "Steam" "$(msg runtime.item_steam)"
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 
-  # Steam data dir
+  # Steam-Bibliothek (STEAM_ROOT)
   ok=true
   find_steam_root 2>/dev/null || ok=false
   if [[ "$ok" == true ]]; then
-    _pf_ok "$(msg runtime.item_steam_data_ok) ($STEAM_ROOT)"
+    # Pfad ggf. kürzen damit er in Spalte 3 passt
+    local steam_short="${STEAM_ROOT:-}"
+    [[ "${#steam_short}" -gt 34 ]] && steam_short="…${steam_short: -33}"
+    cui_check_row ok "$(msg runtime.item_steam_data_ok)" "gefunden" "$steam_short"
   else
-    _pf_warn "$(msg runtime.item_steam_data)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+    cui_check_row warn "$(msg runtime.item_steam_data)" "nicht gefunden" "$(msg runtime.item_steam_data_hint)"
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 
   # protonup-rs
   ok=true
   command_exists protonup-rs || platform_logical_installed protonup || ok=false
   if [[ "$ok" == true ]]; then
-    _pf_ok "protonup-rs – $(msg runtime.item_protonup_ok)"
+    cui_check_row ok "protonup-rs" "$(msg runtime.item_protonup_ok)" "$(msg runtime.item_protonup_detail)"
   else
-    _pf_warn "protonup-rs – $(msg runtime.item_protonup)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+    cui_check_row warn "protonup-rs" "$(msg runtime.item_protonup)"
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 
-  # GE-Proton versions
-  ok=true
+  # GE-Proton – ersten Eintrag als Wert, weitere als Detail
   ge_list="$(list_ge_proton 2>/dev/null | tr '\n' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true)"
   if [[ -n "$ge_list" ]]; then
-    _pf_ok "GE-Proton: $ge_list"
+    ge_first="$(echo "$ge_list" | awk '{print $1}')"
+    ge_rest="$(echo "$ge_list"  | awk 'NF>1{$1=""; print substr($0,2)}')"
+    cui_check_row ok "GE-Proton" "$ge_first" "${ge_rest:++${ge_rest}}"
   else
-    _pf_warn "GE-Proton – $(msg runtime.item_ge_proton)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+    cui_check_row warn "GE-Proton" "$(msg runtime.item_ge_proton)" "$(msg runtime.item_ge_proton_hint)"
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 
   # Spacewar
-  ok=true
   find_steam_root 2>/dev/null || true
   if [[ -f "${SPACEWAR_MANIFEST:-}" ]]; then
-    _pf_ok "Spacewar (App 480) – $(msg runtime.item_spacewar_ok)"
+    cui_check_row ok "Spacewar" "App 480" "$(msg runtime.item_spacewar_ok)"
   else
-    _pf_warn "Spacewar (App 480) – $(msg runtime.item_spacewar)"; PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
+    cui_check_row warn "Spacewar" "App 480" "$(msg runtime.item_spacewar)"
+    PREFLIGHT_RECOMMENDED_FAIL=$((PREFLIGHT_RECOMMENDED_FAIL+1))
   fi
 
-  # Key gaming packages
+  # Gaming-Pakete (nur logischer Name, keine Package-Liste)
   local pkg
   for pkg in vkd3d gamemode winetricks; do
     ok=true
     platform_logical_installed "$pkg" 2>/dev/null || ok=false
-    local display
-    display="$(platform_logical_display_name "$pkg" 2>/dev/null || echo "$pkg")"
     if [[ "$ok" == true ]]; then
-      _pf_ok "$display"
+      cui_check_row ok "$pkg" "$(msg runtime.item_pkg_ok)"
     else
-      _pf_warn "$display – $(msg runtime.item_pkg_missing)"
+      cui_check_row warn "$pkg" "$(msg runtime.item_pkg_missing)"
     fi
   done
 }
