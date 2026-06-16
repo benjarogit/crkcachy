@@ -262,16 +262,176 @@ preflight_fix_spacewar() {
   done
 }
 
+# ── Gate: protonup-rs ────────────────────────────────────────────────────────
+
+preflight_fix_protonup() {
+  echo ""
+  gum style --bold "$(msg runtime.protonup_gate_title)"
+  echo ""
+  gum style --foreground "$CUI_MUTED" "$(msg runtime.protonup_gate_body)"
+  echo ""
+
+  local choice
+  choice="$(gum choose \
+    --header "$(msg runtime.protonup_gate_prompt)" \
+    "$(msg runtime.protonup_opt_auto)" \
+    "$(msg runtime.protonup_opt_manual)" \
+    "$(msg runtime.protonup_opt_skip)")" 2>/dev/null || choice=""
+
+  case "$choice" in
+    "$(msg runtime.protonup_opt_auto)")
+      log_info "$(msg runtime.protonup_installing)"
+      if offer_logical_packages false protonup 2>/dev/null; then
+        echo ""
+        cui_status_chip true "$(msg runtime.protonup_verified)"
+        return 0
+      else
+        echo ""
+        log_warn "$(msg runtime.protonup_install_failed)"
+        echo ""
+        gum style --border rounded --padding "0 2" "$(msg runtime.protonup_manual_steps)"
+        echo ""
+        confirm "$(msg runtime.protonup_manual_done)" true || true
+      fi
+      ;;
+    "$(msg runtime.protonup_opt_manual)")
+      echo ""
+      gum style --border rounded --padding "0 2" "$(msg runtime.protonup_manual_steps)"
+      echo ""
+      if confirm "$(msg runtime.protonup_manual_done)" true; then
+        if command_exists protonup-rs; then
+          cui_status_chip true "$(msg runtime.protonup_verified)"
+          return 0
+        fi
+        log_warn "$(msg runtime.protonup_not_found_warn)"
+      fi
+      ;;
+    *)
+      log_warn "$(msg runtime.protonup_skipped)"
+      return 1
+      ;;
+  esac
+  command_exists protonup-rs
+}
+
+# ── Gate: GE-Proton ──────────────────────────────────────────────────────────
+
+preflight_fix_ge_proton() {
+  echo ""
+  gum style --bold "$(msg runtime.ge_proton_gate_title)"
+  echo ""
+  gum style --foreground "$CUI_MUTED" "$(msg runtime.ge_proton_gate_body)"
+  echo ""
+
+  if ! command_exists protonup-rs; then
+    log_warn "$(msg runtime.ge_proton_needs_protonup)"
+    return 1
+  fi
+
+  local choice
+  choice="$(gum choose \
+    --header "$(msg runtime.ge_proton_gate_prompt)" \
+    "$(msg runtime.ge_proton_opt_auto)" \
+    "$(msg runtime.ge_proton_opt_manual)" \
+    "$(msg runtime.ge_proton_opt_skip)")" 2>/dev/null || choice=""
+
+  case "$choice" in
+    "$(msg runtime.ge_proton_opt_auto)")
+      echo ""
+      log_info "$(msg runtime.ge_proton_installing)"
+      if protonup-rs -q --tool GEProton --version latest --for steam 2>/dev/null; then
+        echo ""
+        cui_status_chip true "$(msg runtime.ge_proton_verified)"
+        return 0
+      else
+        log_warn "$(msg runtime.ge_proton_install_failed)"
+        echo ""
+        gum style --border rounded --padding "0 2" "$(msg runtime.ge_proton_manual_steps)"
+      fi
+      ;;
+    "$(msg runtime.ge_proton_opt_manual)")
+      echo ""
+      gum style --border rounded --padding "0 2" "$(msg runtime.ge_proton_manual_steps)"
+      echo ""
+      if confirm "$(msg runtime.ge_proton_manual_done)" true; then
+        if list_ge_proton >/dev/null 2>&1; then
+          cui_status_chip true "$(msg runtime.ge_proton_verified)"
+          return 0
+        fi
+        log_warn "$(msg runtime.ge_proton_not_found_warn)"
+      fi
+      ;;
+    *)
+      log_warn "$(msg runtime.ge_proton_skipped)"
+      return 1
+      ;;
+  esac
+  list_ge_proton >/dev/null 2>&1
+}
+
+# ── Gate: Steam-Bibliothek (nicht eingeloggt) ─────────────────────────────
+
+preflight_fix_steam_data() {
+  echo ""
+  gum style --bold "$(msg runtime.steam_data_gate_title)"
+  echo ""
+  gum style --foreground "$CUI_MUTED" "$(msg runtime.steam_data_gate_body)"
+  echo ""
+
+  local choice
+  choice="$(gum choose \
+    --header "$(msg runtime.steam_data_gate_prompt)" \
+    "$(msg runtime.steam_data_opt_open)" \
+    "$(msg runtime.steam_data_opt_skip)")" 2>/dev/null || choice=""
+
+  case "$choice" in
+    "$(msg runtime.steam_data_opt_open)")
+      log_info "$(msg runtime.steam_data_opening)"
+      (command_exists steam && steam >/dev/null 2>&1 &) || true
+      echo ""
+      log_ok "$(msg runtime.steam_data_opened)"
+      echo ""
+      local tries=0
+      while true; do
+        if find_steam_root 2>/dev/null; then
+          cui_status_chip true "$(msg runtime.steam_data_verified)"
+          return 0
+        fi
+        tries=$((tries + 1))
+        if [[ "$tries" -gt 4 ]]; then
+          log_warn "$(msg runtime.steam_data_not_found_warn)"
+          confirm "$(msg runtime.steam_data_skip_anyway)" false || return 1
+          return 0
+        fi
+        if ! confirm "$(msg runtime.steam_data_wait_confirm)" true; then
+          return 1
+        fi
+        sleep 2
+      done
+      ;;
+    *)
+      log_warn "$(msg runtime.steam_data_skipped)"
+      return 1
+      ;;
+  esac
+}
+
+# ── Spacewar Gate (bereits oben definiert) ────────────────────────────────
+
+# ── Gesamt-Fix-Orchestrator ──────────────────────────────────────────────────
+
 preflight_fix_recommended() {
   local fixed=false
 
+  # paru / AUR-Helfer
   if [[ -z "$PLATFORM_AUR_HELPER" ]] && platform_is_arch_family; then
     if offer_paru_install; then
       fixed=true
     fi
   fi
 
-  if ! command_exists steam && ! platform_logical_installed steam; then
+  # Steam Client
+  if ! command_exists steam && ! platform_logical_installed steam 2>/dev/null; then
     package_explain_block "$(msg pkg.explain.steam_title)" steam
     if confirm "$(msg runtime.install_steam)"; then
       install_packages_repo steam && fixed=true
@@ -282,16 +442,25 @@ preflight_fix_recommended() {
     fi
   fi
 
-  # Spacewar automatisch über Steam installieren wenn es fehlt
-  if [[ -n "${SPACEWAR_MANIFEST:-}" ]] && [[ ! -f "${SPACEWAR_MANIFEST}" ]]; then
-    find_steam_root 2>/dev/null || true
-    if [[ ! -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]; then
-      echo ""
-      log_warn "$(msg runtime.spacewar_missing_fix)"
-      if confirm "$(msg runtime.spacewar_install_now)" true; then
-        preflight_fix_spacewar && fixed=true
-      fi
-    fi
+  # Steam-Bibliothek (nicht eingeloggt)
+  if ! find_steam_root 2>/dev/null; then
+    preflight_fix_steam_data && fixed=true || true
+  fi
+
+  # protonup-rs
+  if ! command_exists protonup-rs && ! platform_logical_installed protonup 2>/dev/null; then
+    preflight_fix_protonup && fixed=true || true
+  fi
+
+  # GE-Proton
+  if ! list_ge_proton >/dev/null 2>&1; then
+    preflight_fix_ge_proton && fixed=true || true
+  fi
+
+  # Spacewar
+  find_steam_root 2>/dev/null || true
+  if [[ ! -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]; then
+    preflight_fix_spacewar && fixed=true || true
   fi
 
   [[ "$fixed" == true ]]

@@ -646,6 +646,51 @@ _MSG[runtime.spacewar_verified]="Spacewar installiert und gefunden – alles ber
 _MSG[runtime.spacewar_not_found_warn]="Spacewar wurde noch nicht gefunden. Fix-Stacks könnten fehlschlagen."
 _MSG[runtime.spacewar_skip_anyway]="Trotzdem fortfahren (Spacewar fehlt)?"
 _MSG[runtime.spacewar_skipped]="Spacewar übersprungen – kann später über Steam installiert werden."
+
+# ── Gate: protonup-rs ─────────────────────────────────────────────────────
+_MSG[runtime.protonup_gate_title]="protonup-rs installieren"
+_MSG[runtime.protonup_gate_body]=$'protonup-rs verwaltet GE-Proton-Versionen – ohne es kann kein\nGE-Proton heruntergeladen werden. Windows-Spiele starten dann nicht.\n\nInstallation: paru -S protonup-rs  (ein Befehl, ~2 MB)'
+_MSG[runtime.protonup_gate_prompt]="Wie möchtest du protonup-rs installieren?"
+_MSG[runtime.protonup_opt_auto]="Automatisch – jetzt via paru installieren"
+_MSG[runtime.protonup_opt_manual]="Manuell – ich installiere es selbst"
+_MSG[runtime.protonup_opt_skip]="Überspringen (GE-Proton kann dann nicht installiert werden)"
+_MSG[runtime.protonup_installing]="Installiere protonup-rs via paru …"
+_MSG[runtime.protonup_install_failed]="Automatische Installation fehlgeschlagen – bitte manuell:"
+_MSG[runtime.protonup_manual_steps]=$'So installierst du protonup-rs manuell:\n\n  paru -S protonup-rs\n\nOder mit yay:\n  yay -S protonup-rs\n\nOder direkt vom Release:\n  https://github.com/nicowillis/protonup-rs/releases'
+_MSG[runtime.protonup_manual_done]="Installation erledigt? Prüfen?"
+_MSG[runtime.protonup_verified]="protonup-rs installiert – bereit für GE-Proton."
+_MSG[runtime.protonup_not_found_warn]="protonup-rs noch nicht gefunden – bitte Schritt wiederholen."
+_MSG[runtime.protonup_skipped]="protonup-rs übersprungen – GE-Proton kann ohne es nicht installiert werden."
+
+# ── Gate: GE-Proton ───────────────────────────────────────────────────────
+_MSG[runtime.ge_proton_gate_title]="GE-Proton installieren"
+_MSG[runtime.ge_proton_gate_body]=$'GE-Proton ist die Proton-Version mit erweiterten Fixes für Windows-Spiele.\nOhne GE-Proton starten die meisten Spiele nicht korrekt.\n\nInstallation: protonup-rs -q --tool GEProton --version latest --for steam\nDownload: ~500 MB – nur einmal nötig.'
+_MSG[runtime.ge_proton_gate_prompt]="Wie möchtest du GE-Proton installieren?"
+_MSG[runtime.ge_proton_needs_protonup]="protonup-rs fehlt – bitte zuerst protonup-rs installieren."
+_MSG[runtime.ge_proton_opt_auto]="Automatisch – jetzt die neueste Version laden"
+_MSG[runtime.ge_proton_opt_manual]="Manuell – ich lade es selbst herunter"
+_MSG[runtime.ge_proton_opt_skip]="Überspringen (Spiele starten dann nicht)"
+_MSG[runtime.ge_proton_installing]="Lade GE-Proton (neueste Version) herunter – bitte warten …"
+_MSG[runtime.ge_proton_install_failed]="Download fehlgeschlagen – bitte manuell:"
+_MSG[runtime.ge_proton_manual_steps]=$'So installierst du GE-Proton manuell:\n\n  protonup-rs -q --tool GEProton --version latest --for steam\n\nOder mit der GUI:\n  protonup-rs  (ohne Argumente öffnet die interaktive Oberfläche)\n\nAlternativ direkt von GitHub:\n  https://github.com/GloriousEggroll/proton-ge-custom/releases\n  → .tar.gz herunterladen → entpacken nach:\n  ~/.local/share/Steam/compatibilitytools.d/'
+_MSG[runtime.ge_proton_manual_done]="Download abgeschlossen? Prüfen?"
+_MSG[runtime.ge_proton_verified]="GE-Proton installiert und gefunden."
+_MSG[runtime.ge_proton_not_found_warn]="GE-Proton noch nicht gefunden – Ordner prüfen: ~/.local/share/Steam/compatibilitytools.d/"
+_MSG[runtime.ge_proton_skipped]="GE-Proton übersprungen – Spiele können ohne es nicht starten."
+
+# ── Gate: Steam-Bibliothek ───────────────────────────────────────────────
+_MSG[runtime.steam_data_gate_title]="Steam einloggen"
+_MSG[runtime.steam_data_gate_body]=$'Steam ist installiert, aber der Bibliotheksordner wurde nicht gefunden.\nDas passiert wenn Steam noch nie gestartet oder eingeloggt wurde.\n\nBitte Steam starten, einloggen und warten bis die Bibliothek geladen ist.\nCRKCACHY prüft dann ob der Ordner da ist.'
+_MSG[runtime.steam_data_gate_prompt]="Was möchtest du tun?"
+_MSG[runtime.steam_data_opt_open]="Steam jetzt öffnen"
+_MSG[runtime.steam_data_opt_skip]="Überspringen (einige Funktionen nicht verfügbar)"
+_MSG[runtime.steam_data_opening]="Steam wird gestartet …"
+_MSG[runtime.steam_data_opened]="Steam geöffnet. Bitte einloggen und warten bis die Bibliothek geladen ist."
+_MSG[runtime.steam_data_wait_confirm]="Steam-Bibliothek bereit? Nochmal prüfen?"
+_MSG[runtime.steam_data_verified]="Steam-Bibliothek gefunden – alles bereit."
+_MSG[runtime.steam_data_not_found_warn]="Steam-Bibliotheksordner noch nicht gefunden. Bitte Steam vollständig einloggen."
+_MSG[runtime.steam_data_skip_anyway]="Trotzdem fortfahren (Steam-Bibliothek fehlt)?"
+_MSG[runtime.steam_data_skipped]="Steam-Bibliothek übersprungen."
 _MSG[runtime.item_pkg_missing]="fehlt – wird für Windows-Spiele empfohlen"
 _MSG[runtime.missing_suffix]="nicht installiert"
 _MSG[runtime.item_menu]="Terminal-Menüs (gum)"
