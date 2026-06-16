@@ -164,8 +164,22 @@ preflight_print_checklist() {
   elif [[ "$PREFLIGHT_REQUIRED_FAIL" -gt 0 ]]; then
     cui_status_chip false "$(msgf runtime.check_fail_required "$PREFLIGHT_REQUIRED_FAIL")"
   else
-    cui_status_chip true "$(msgf runtime.check_warn_recommended "$PREFLIGHT_RECOMMENDED_FAIL")"
+    cui_status_chip false "$(msgf runtime.check_warn_recommended "$PREFLIGHT_RECOMMENDED_FAIL")"
   fi
+}
+
+preflight_fix_spacewar() {
+  # Spacewar (App 480) über Steam direkt installieren
+  if command_exists steam || platform_logical_installed steam 2>/dev/null; then
+    log_info "$(msg runtime.spacewar_launching)"
+    steam steam://install/480 2>/dev/null &
+    sleep 3
+    # Steam startet async – Manifest erst nach Download da, als OK akzeptieren
+    log_ok "$(msg runtime.spacewar_launched)"
+    return 0
+  fi
+  log_warn "$(msg runtime.spacewar_no_steam)"
+  return 1
 }
 
 preflight_fix_recommended() {
@@ -188,6 +202,18 @@ preflight_fix_recommended() {
     fi
   fi
 
+  # Spacewar automatisch über Steam installieren wenn es fehlt
+  if [[ -n "${SPACEWAR_MANIFEST:-}" ]] && [[ ! -f "${SPACEWAR_MANIFEST}" ]]; then
+    find_steam_root 2>/dev/null || true
+    if [[ ! -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]; then
+      echo ""
+      log_warn "$(msg runtime.spacewar_missing_fix)"
+      if confirm "$(msg runtime.spacewar_install_now)" true; then
+        preflight_fix_spacewar && fixed=true
+      fi
+    fi
+  fi
+
   [[ "$fixed" == true ]]
 }
 
@@ -204,11 +230,21 @@ preflight_onboard() {
   fi
 
   if [[ "$PREFLIGHT_RECOMMENDED_FAIL" -gt 0 && "$PREFLIGHT_REQUIRED_FAIL" -eq 0 ]]; then
+    echo ""
     if confirm "$(msg runtime.fix_recommended)" false; then
+      local _fail_before="$PREFLIGHT_RECOMMENDED_FAIL"
       preflight_fix_recommended || true
       echo ""
       preflight_run
-      preflight_print_checklist
+      preflight_print_tool_checks
+      preflight_print_gaming_checks
+      echo ""
+      if [[ "$PREFLIGHT_RECOMMENDED_FAIL" -lt "$_fail_before" ]]; then
+        cui_status_chip true "$(msg runtime.check_all_ok)"
+      else
+        cui_status_chip false "$(msgf runtime.check_warn_recommended "$PREFLIGHT_RECOMMENDED_FAIL")"
+        log_hint "$(msg runtime.spacewar_async_hint)"
+      fi
       echo ""
     fi
   fi
