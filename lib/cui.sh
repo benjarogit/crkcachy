@@ -261,6 +261,26 @@ cui_legal_gate() {
   cui_onboard_mark_done
 }
 
+# ── ARCHITEKTUR-REGEL: stdout-Capture-Sicherheit ─────────────────────────────
+#
+# cui_choose / cui_filter / cui_choose_searchable / cui_input:
+#   → Diese Primitiven sind SICHER mit selected="$(cui_choose ...)"
+#   → Sie geben NUR den ausgewählten Wert via stdout aus (gum nutzt /dev/tty)
+#
+# WRAPPER-FUNKTIONEN die ZUSÄTZLICH echo/log_*/cui_section ausgeben:
+#   → NIEMALS mit var="$(wrapper_func)" aufrufen → UI-Text landet im Wert!
+#   → Stattdessen: globale Variable nutzen (z.B. TOOL_ACTION_PICKED)
+#     Muster:
+#       wrapper_func   # setzt WRAPPER_RESULT
+#       var="$WRAPPER_RESULT"
+#
+# Bekannte Wrapper mit globaler Variable:
+#   tool_hub_pick_tool_slug  → TOOL_HUB_PICKED_SLUG
+#   tool_hub_resolve_slug    → TOOL_HUB_PICKED_SLUG
+#   tool_action_pick_menu    → TOOL_ACTION_PICKED
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
 cui_choose_searchable() {
   cui_filter "$@"
 }

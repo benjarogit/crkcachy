@@ -203,7 +203,8 @@ main() {
   action="$(tool_action_from_flag)"
 
   if [[ -z "$action" ]]; then
-    action="$(tool_action_pick_menu "$HA_GAME_STEAM_NAME")"
+    tool_action_pick_menu "$HA_GAME_STEAM_NAME"
+    action="$TOOL_ACTION_PICKED"
   fi
 
   dispatch_action "$action"

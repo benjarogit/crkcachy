@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.57"
+CRKCACHY_VERSION="0.1.58"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
