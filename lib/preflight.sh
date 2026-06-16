@@ -191,18 +191,75 @@ preflight_print_checklist() {
   fi
 }
 
+_preflight_spacewar_installed() {
+  find_steam_root 2>/dev/null || true
+  [[ -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]
+}
+
 preflight_fix_spacewar() {
-  # Spacewar (App 480) über Steam direkt installieren
-  if command_exists steam || platform_logical_installed steam 2>/dev/null; then
-    log_info "$(msg runtime.spacewar_launching)"
-    steam steam://install/480 2>/dev/null &
-    sleep 3
-    # Steam startet async – Manifest erst nach Download da, als OK akzeptieren
-    log_ok "$(msg runtime.spacewar_launched)"
-    return 0
-  fi
-  log_warn "$(msg runtime.spacewar_no_steam)"
-  return 1
+  echo ""
+  gum style --bold "$(msg runtime.spacewar_gate_title)"
+  echo ""
+  gum style --foreground "$CUI_MUTED" "$(msg runtime.spacewar_gate_body)"
+  echo ""
+
+  local choice
+  choice="$(gum choose \
+    --header "$(msg runtime.spacewar_gate_prompt)" \
+    "$(msg runtime.spacewar_opt_auto)" \
+    "$(msg runtime.spacewar_opt_manual)" \
+    "$(msg runtime.spacewar_opt_skip)")" 2>/dev/null || choice=""
+
+  case "$choice" in
+    "$(msg runtime.spacewar_opt_auto)")
+      if command_exists steam || platform_logical_installed steam 2>/dev/null; then
+        log_info "$(msg runtime.spacewar_launching)"
+        steam steam://install/480 >/dev/null 2>&1 &
+        echo ""
+        log_ok "$(msg runtime.spacewar_launched)"
+      else
+        log_warn "$(msg runtime.spacewar_no_steam)"
+        return 1
+      fi
+      ;;
+    "$(msg runtime.spacewar_opt_manual)")
+      echo ""
+      gum style --border rounded --padding "0 2" \
+        "$(msg runtime.spacewar_manual_steps)"
+      echo ""
+      ;;
+    *)
+      log_warn "$(msg runtime.spacewar_skipped)"
+      return 1
+      ;;
+  esac
+
+  # Warte auf Bestätigung + Prüfung
+  echo ""
+  local tries=0
+  while true; do
+    if _preflight_spacewar_installed; then
+      echo ""
+      cui_status_chip true "$(msg runtime.spacewar_verified)"
+      return 0
+    fi
+    tries=$((tries + 1))
+    if [[ "$tries" -gt 3 ]]; then
+      echo ""
+      log_warn "$(msg runtime.spacewar_not_found_warn)"
+      if ! confirm "$(msg runtime.spacewar_skip_anyway)" false; then
+        return 1
+      fi
+      return 0
+    fi
+    echo ""
+    if ! confirm "$(msg runtime.spacewar_wait_confirm)" true; then
+      log_warn "$(msg runtime.spacewar_skipped)"
+      return 1
+    fi
+    # Kurz warten damit Steam-Manifest auf Disk erscheint
+    sleep 2
+  done
 }
 
 preflight_fix_recommended() {
