@@ -135,7 +135,8 @@ tool_hub_run() {
   fi
 
   if [[ -z "$action" ]]; then
-    action="$(tool_action_pick_menu "$(get_tool_name "$slug")")"
+    tool_action_pick_menu "$(get_tool_name "$slug")"
+    action="$TOOL_ACTION_PICKED"
     [[ "$action" != "back" && -n "$action" ]] || {
       log_info "$(msg install.cancelled)"
       return 0

@@ -39,7 +39,11 @@ tool_action_from_flag() {
   echo ""
 }
 
+# Result variable – avoids stdout capture bugs when called from subshells
+TOOL_ACTION_PICKED=""
+
 tool_action_pick_menu() {
+  TOOL_ACTION_PICKED=""
   local tool_name="$1"
   local selected
 
@@ -55,11 +59,11 @@ tool_action_pick_menu() {
     "$(msg action.opt_back)")"
 
   case "$selected" in
-    "$(msg action.opt_install)") echo "install" ;;
-    "$(msg action.opt_uninstall)") echo "uninstall" ;;
-    "$(msg action.opt_check)") echo "check" ;;
-    "$(msg action.opt_reset)") echo "reset" ;;
-    *) echo "back" ;;
+    "$(msg action.opt_install)") TOOL_ACTION_PICKED="install" ;;
+    "$(msg action.opt_uninstall)") TOOL_ACTION_PICKED="uninstall" ;;
+    "$(msg action.opt_check)") TOOL_ACTION_PICKED="check" ;;
+    "$(msg action.opt_reset)") TOOL_ACTION_PICKED="reset" ;;
+    *) TOOL_ACTION_PICKED="back" ;;
   esac
 }
 
