@@ -434,6 +434,11 @@ _MSG[uninstall.verify_still_there]="noch vorhanden!"
 _MSG[uninstall.verify_all_ok]="Vollständig deinstalliert"
 _MSG[uninstall.verify_incomplete]="Einige Elemente konnten nicht entfernt werden"
 _MSG[uninstall.verify_hint]="Tipp: Steam neu starten und ./install.sh --uninstall erneut ausführen."
+_MSG[uninstall.verify_skipped]="übersprungen (kein Spielordner bekannt)"
+
+_MSG[uninstall.path_unknown]="Spielordner nicht bekannt"
+_MSG[uninstall.path_unknown_hint]="Steam-Shortcut wird übersprungen"
+_MSG[uninstall.path_unknown_body]=$'CRKCACHY kennt den Spielordner nicht mehr.\nDesktop-Einträge und Icon-Cache werden trotzdem entfernt.\nDer Steam-Shortcut muss ggf. manuell in Steam gelöscht werden.'
 
 _MSG[check.title]="System-Check"
 _MSG[check.body]=$'Prüft ohne Änderungen:\n• PC: Steam, GE-Proton, Spacewar\n• Spielordner: exe, Fix-Dateien\n• Steam-Einrichtung: Name, Startoptionen, Icon, Desktop\n\nBei Problemen: automatisch reparieren oder manuelle Schritte anzeigen.'
