@@ -419,6 +419,17 @@ _MSG[uninstall.confirm]="Jetzt deinstallieren?"
 _MSG[uninstall.no_setup_title]="Keine Steam-Einrichtung gefunden"
 _MSG[uninstall.no_setup_body]="Es gibt keinen Shortcut – wir räumen trotzdem Desktop-Einträge und Icon-Cache auf."
 
+_MSG[uninstall.verify_title]="Deinstallations-Check"
+_MSG[uninstall.verify_steam_shortcut]="Steam-Shortcut"
+_MSG[uninstall.verify_desktop_app]="Startmenü-Eintrag"
+_MSG[uninstall.verify_desktop_icon]="Desktop-Icon"
+_MSG[uninstall.verify_icon_cache]="Icon-Cache"
+_MSG[uninstall.verify_removed]="entfernt"
+_MSG[uninstall.verify_still_there]="noch vorhanden!"
+_MSG[uninstall.verify_all_ok]="Vollständig deinstalliert"
+_MSG[uninstall.verify_incomplete]="Einige Elemente konnten nicht entfernt werden"
+_MSG[uninstall.verify_hint]="Tipp: Steam neu starten und ./install.sh --uninstall erneut ausführen."
+
 _MSG[check.title]="System-Check"
 _MSG[check.body]=$'Prüft ohne Änderungen:\n• PC: Steam, GE-Proton, Spacewar\n• Spielordner: exe, Fix-Dateien\n• Steam-Einrichtung: Name, Startoptionen, Icon, Desktop\n\nBei Problemen: automatisch reparieren oder manuelle Schritte anzeigen.'
 _MSG[check.next]="Spielordner wählen → Prüfung startet."

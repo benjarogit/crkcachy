@@ -649,6 +649,17 @@ _MSG[uninstall.confirm]="Uninstall now?"
 _MSG[uninstall.no_setup_title]="No Steam setup found"
 _MSG[uninstall.no_setup_body]="No shortcut found – we still clean desktop entries and icon cache."
 
+_MSG[uninstall.verify_title]="Uninstall check"
+_MSG[uninstall.verify_steam_shortcut]="Steam shortcut"
+_MSG[uninstall.verify_desktop_app]="Application menu entry"
+_MSG[uninstall.verify_desktop_icon]="Desktop icon"
+_MSG[uninstall.verify_icon_cache]="Icon cache"
+_MSG[uninstall.verify_removed]="removed"
+_MSG[uninstall.verify_still_there]="still present!"
+_MSG[uninstall.verify_all_ok]="Fully uninstalled"
+_MSG[uninstall.verify_incomplete]="Some items could not be removed"
+_MSG[uninstall.verify_hint]="Tip: restart Steam and run ./install.sh --uninstall again."
+
 _MSG[check.title]="System check"
 _MSG[check.body]=$'Read-only checks:\n• PC: Steam, GE-Proton, Spacewar\n• Game folder: exe, fix files\n• Steam setup: name, launch options, icon, desktop\n\nOn issues: auto-repair or show manual steps.'
 _MSG[check.next]="Pick game folder → check starts."

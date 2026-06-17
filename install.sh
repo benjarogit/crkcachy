@@ -164,6 +164,7 @@ show_wizard_menu() {
       ;;
     5)
       run_game_uninstall || true
+      exit 0
       ;;
     "")
       case "$ASSESS_RECOMMENDED" in
