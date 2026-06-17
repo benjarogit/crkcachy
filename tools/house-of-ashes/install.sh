@@ -36,7 +36,14 @@ ha_show_folder_meaning() {
 }
 
 ha_show_finish_summary() {
-  cui_step_screen 4 4 "$(msg ha.finish_title)" "$(msg ha.finish_body)" "$(msg ha.finish_next)"
+  local exe_path="$1"
+  local game_dir="$2"
+  local launch_opts="$3"
+
+  cui_step_screen 4 4 "$(msg ha.finish_title)" "$(msg ha.finish_intro)" "$(msg ha.finish_next)"
+
+  steam_print_setup_finish_checklist \
+    "$exe_path" "$HA_GAME_EXE" "$HA_GAME_STEAM_NAME" "$launch_opts" "$HA_SLUG"
 }
 
 print_steam_manual_steps() {
@@ -126,7 +133,6 @@ run_steam_auto_or_manual() {
   if cui_yes_no "$(msg ha.steam_auto_confirm)" false; then
     if steam_configure_shortcut \
       "$exe_path" "$HA_GAME_EXE" "$game_dir" "$HA_GAME_STEAM_NAME" "$launch_opts"; then
-      ha_show_manual_proton_overlay
       offer_desktop_and_validate "$exe_path" "$game_dir" "$launch_opts"
       return 0
     fi
@@ -259,14 +265,14 @@ run_ha_install() {
   install_log_save
   trap - EXIT  # Trap entfernen (save ist erledigt)
 
-  ha_show_finish_summary
+  ha_show_finish_summary "$exe_path" "$game_dir" "$launch_opts"
 
-  if cui_yes_no "$(msg ha.show_readme)" false; then
+  if cui_yes_no "$(msg ha.show_tips)" false; then
     echo ""
-    cui_show_markdown "$(crkcachy_markdown_path "tools/house-of-ashes/README.md")" "$(msg ha.readme_title)" false
+    gum style --border rounded --padding "1 2" --foreground "$CUI_C_MUTED" \
+      "$(msg ha.user_tips_body)"
+    echo ""
   fi
-
-  ui_wait_enter
 }
 
 main() {

@@ -123,20 +123,25 @@ _after_uninstall_menu() {
   exit 0
 }
 
-offer_post_install_readme() {
-  local readme_rel="README.md"
-
-  if discover_tools && [[ ${#TOOL_SLUGS[@]} -eq 1 ]]; then
-    readme_rel="tools/${TOOL_SLUGS[0]}/README.md"
-  fi
+_after_install_menu() {
+  echo ""
+  local _pick
+  _pick="$(gum choose \
+    --header "$(msg install.after_title)" \
+    --cursor "› " \
+    "$(msg install.after_menu)" \
+    "$(msg install.after_exit)")" 2>/dev/null || _pick=""
 
   echo ""
-  cui_step_screen 1 1 "$(msg install.finish_title)" "$(msg install.finish_body)" "$(msg install.finish_next)"
-
-  if cui_yes_no "$(msg install.show_readme)" false; then
-    echo ""
-    cui_show_markdown "$(crkcachy_markdown_path "$readme_rel")" "$(msg install.readme_title)" false
-  fi
+  case "${_pick:-}" in
+    "$(msg install.after_menu)")
+      show_wizard_menu || true
+      ;;
+    *)
+      echo ""
+      log_ok "$(msg install.goodbye)"
+      ;;
+  esac
 }
 
 print_status() {
@@ -255,25 +260,7 @@ main() {
     exit 0
   fi
 
-  log_ok "$(msg install.finished)"
-  offer_post_install_readme
-
-  # ── Post-Install: Zurück zum Menü oder Beenden ──────────────────────
-  echo ""
-  local _after_choice
-  _after_choice="$(gum choose \
-    --header "$(msg install.after_title)" \
-    --cursor "› " \
-    "$(msg install.after_menu)" \
-    "$(msg install.after_exit)")" 2>/dev/null || _after_choice=""
-
-  if [[ "$_after_choice" == "$(msg install.after_menu)" ]]; then
-    cui_screen_clear
-    show_wizard_menu || true
-  fi
-
-  echo ""
-  log_ok "$(msg install.goodbye)"
+  _after_install_menu
 }
 
 main "${FILTERED_CLI_ARGS[@]:-${FILTERED_ARGS[@]}}"

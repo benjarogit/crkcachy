@@ -415,50 +415,98 @@ def remove_matching_shortcuts(
     return 0
 
 
-def set_compat_tool(config_vdf_path: str, app_unsigned_id: str, tool_name: str) -> int:
-    """Set the Proton compat tool for a non-Steam shortcut in config.vdf.
+def _compat_entry(tool_name: str) -> dict:
+    return {"name": tool_name, "config": "", "priority": "250"}
 
-    Path: InstallConfigStore > Software > Valve > Steam > CompatToolMapping > <app_id>
-    """
+
+def _compat_mapping_global(data: dict) -> dict:
+    return (
+        data
+        .setdefault("InstallConfigStore", {})
+        .setdefault("Software", {})
+        .setdefault("Valve", {})
+        .setdefault("Steam", {})
+        .setdefault("CompatToolMapping", {})
+    )
+
+
+def _compat_mapping_local(data: dict) -> dict:
+    return (
+        data
+        .setdefault("UserLocalConfigStore", {})
+        .setdefault("Software", {})
+        .setdefault("Valve", {})
+        .setdefault("Steam", {})
+        .setdefault("CompatToolMapping", {})
+    )
+
+
+def _read_compat_name(data: dict, app_unsigned_id: str, mode: str) -> str:
+    if mode == "global":
+        compat_map = _compat_mapping_global(data)
+    else:
+        compat_map = _compat_mapping_local(data)
+    entry = compat_map.get(str(app_unsigned_id), {})
+    if isinstance(entry, dict):
+        return str(entry.get("name") or "")
+    return ""
+
+
+def set_compat_tool_vdf(vdf_path: str, app_unsigned_id: str, tool_name: str, mode: str) -> int:
+    """Write CompatToolMapping entry to config.vdf (global) or localconfig.vdf (per user)."""
     if vdf is None:
         print("error: python-vdf required (pacman -S python-vdf)", file=sys.stderr)
         return 1
 
     try:
-        with open(config_vdf_path, encoding="utf-8") as f:
+        with open(vdf_path, encoding="utf-8") as f:
             data = vdf.load(f)
     except (OSError, Exception) as exc:
-        print(f"error reading config.vdf: {exc}", file=sys.stderr)
+        print(f"error reading {vdf_path}: {exc}", file=sys.stderr)
         return 1
 
     try:
-        compat_map = (
-            data
-            .setdefault("InstallConfigStore", {})
-            .setdefault("Software", {})
-            .setdefault("Valve", {})
-            .setdefault("Steam", {})
-            .setdefault("CompatToolMapping", {})
-        )
+        compat_map = _compat_mapping_global(data) if mode == "global" else _compat_mapping_local(data)
     except Exception as exc:
-        print(f"error navigating config.vdf: {exc}", file=sys.stderr)
+        print(f"error navigating {vdf_path}: {exc}", file=sys.stderr)
         return 1
 
-    compat_map[str(app_unsigned_id)] = {
-        "name":     tool_name,
-        "config":   "",
-        "Priority": "250",
-    }
+    compat_map[str(app_unsigned_id)] = _compat_entry(tool_name)
 
     try:
-        with open(config_vdf_path, "w", encoding="utf-8") as f:
+        with open(vdf_path, "w", encoding="utf-8") as f:
             vdf.dump(data, f, pretty=True)
     except OSError as exc:
-        print(f"error writing config.vdf: {exc}", file=sys.stderr)
+        print(f"error writing {vdf_path}: {exc}", file=sys.stderr)
         return 1
 
-    print(f"compat-tool-set\t{app_unsigned_id}\t{tool_name}")
+    print(f"compat-tool-set\t{mode}\t{app_unsigned_id}\t{tool_name}")
     return 0
+
+
+def verify_compat_tool_vdf(vdf_path: str, app_unsigned_id: str, expected_tool: str) -> int:
+    """Return 0 if compat tool matches expected (or any tool if expected empty)."""
+    if vdf is None:
+        return 2
+
+    try:
+        with open(vdf_path, encoding="utf-8") as f:
+            data = vdf.load(f)
+    except (OSError, Exception):
+        return 2
+
+    mode = "local" if vdf_path.endswith("localconfig.vdf") else "global"
+    name = _read_compat_name(data, app_unsigned_id, mode)
+    if not name:
+        return 1
+    if expected_tool and name != expected_tool:
+        return 1
+    print(f"compat-tool-ok\t{mode}\t{name}")
+    return 0
+
+
+def set_compat_tool(config_vdf_path: str, app_unsigned_id: str, tool_name: str) -> int:
+    return set_compat_tool_vdf(config_vdf_path, app_unsigned_id, tool_name, "global")
 
 
 def main() -> int:
@@ -483,20 +531,40 @@ def main() -> int:
     parser.add_argument("--start-dir", default="", help="StartDir for --add-shortcut")
     parser.add_argument("--launch-options-add", default="", help="LaunchOptions for --add-shortcut")
     # Compat tool setting (uses config.vdf, not shortcuts.vdf)
-    parser.add_argument("--config-vdf", default="", help="Path to Steam config.vdf")
+    parser.add_argument("--config-vdf", default="", help="Path to Steam config.vdf (global compat)")
+    parser.add_argument("--localconfig-vdf", default="", help="Path to userdata localconfig.vdf")
     parser.add_argument("--set-compat-tool", default="", help="Proton tool name to set (e.g. GE-Proton10-34)")
-    parser.add_argument("--app-unsigned-id", default="", help="Unsigned app ID for --set-compat-tool")
+    parser.add_argument("--check-compat-tool", action="store_true",
+                        help="Verify compat tool in config/localconfig vdf")
+    parser.add_argument("--expected-compat-tool", default="",
+                        help="Expected Proton tool name for --check-compat-tool")
+    parser.add_argument("--app-unsigned-id", default="", help="Unsigned app ID for compat tool ops")
     args = parser.parse_args()
+
+    if args.check_compat_tool:
+        vdf_path = args.localconfig_vdf or args.config_vdf
+        if not vdf_path or not args.app_unsigned_id:
+            print("error: --config-vdf or --localconfig-vdf and --app-unsigned-id required", file=sys.stderr)
+            return 1
+        return verify_compat_tool_vdf(vdf_path, args.app_unsigned_id, args.expected_compat_tool)
 
     # Compat tool setting (independent of shortcuts.vdf)
     if args.set_compat_tool:
-        if not args.config_vdf:
-            print("error: --config-vdf required for --set-compat-tool", file=sys.stderr)
-            return 1
         if not args.app_unsigned_id:
             print("error: --app-unsigned-id required for --set-compat-tool", file=sys.stderr)
             return 1
-        return set_compat_tool(args.config_vdf, args.app_unsigned_id, args.set_compat_tool)
+        rc = 0
+        if args.config_vdf:
+            rc = set_compat_tool_vdf(args.config_vdf, args.app_unsigned_id, args.set_compat_tool, "global")
+        if args.localconfig_vdf:
+            local_rc = set_compat_tool_vdf(
+                args.localconfig_vdf, args.app_unsigned_id, args.set_compat_tool, "local"
+            )
+            rc = local_rc if rc == 0 else rc
+        if not args.config_vdf and not args.localconfig_vdf:
+            print("error: --config-vdf or --localconfig-vdf required", file=sys.stderr)
+            return 1
+        return rc
 
     if not args.shortcuts_vdf:
         print("error: shortcuts_vdf required", file=sys.stderr)
