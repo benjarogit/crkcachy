@@ -10,6 +10,8 @@ _MSG[lang.detected]="Language: English (auto-detected)"
 _MSG[lang.override]="Language: English (--lang)"
 
 _MSG[banner.subtitle]="Windows games on Linux via Steam + Proton – no Bottles"
+_MSG[banner.version_ok]="You have the latest version (%s)"
+_MSG[banner.update_available]="Update available: %s → %s  (git pull or download again)"
 
 _MSG[confirm.suffix]="[y=Yes · n=No · Enter=recommended]"
 _MSG[confirm.yes_label]="Yes"

@@ -34,13 +34,8 @@ tool_hub_pick_tool_slug() {
     slug="${TOOL_SLUGS[$i]}"
     source="${TOOL_SOURCES[$i]}"
     name="$(get_tool_name "$slug")"
-    desc="$(get_tool_desc "$slug")"
     status="$(tool_catalog_status_label "$source")"
-    if [[ -n "$desc" ]]; then
-      labels+=("$((i + 1))) $name – $desc · $status")
-    else
-      labels+=("$((i + 1))) $name · $status")
-    fi
+    labels+=("$((i + 1))) $name  [$status]")
     slugs+=("$slug")
   done
 

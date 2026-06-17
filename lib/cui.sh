@@ -67,12 +67,47 @@ cui_divider() { echo ""; cui_rule; echo ""; }
 
 cui_brand_header() {
   echo ""
+  # ASCII-Logo: funktioniert in allen Terminals ohne externe Tools
   gum style \
     --bold \
     --foreground "$CUI_C_BRAND" \
-    "CRKCACHY v${CRKCACHY_VERSION}"
-  gum style --foreground "$CUI_C_MUTED" "$(msg banner.subtitle)"
+    --border-foreground "$CUI_C_ACCENT" \
+    --border "double" \
+    --padding "0 3" \
+$'  ____  ____  _  ___   _   ____  ____  _  _ _  _ \n / ___)/ _  )| |/ / \_/ \ / ___)(  _ \( )/ )( \\/ )\n| |    \ V / |   (  ) ( || |   | | | | < <  )  ( \n \____)/   / |_|\_\\_/ \_/ \____)(_)(_)(_)\_)(_/\_)'
   echo ""
+  gum style --foreground "$CUI_C_MUTED" \
+    "  v${CRKCACHY_VERSION}  ·  $(msg banner.subtitle)"
+  echo ""
+  _cui_github_version_check
+  echo ""
+}
+
+# Prüft ob eine neuere Version auf GitHub verfügbar ist.
+# Benötigt curl. Fehler werden ignoriert (kein Internet = kein Problem).
+_cui_github_version_check() {
+  command -v curl >/dev/null 2>&1 || return 0
+  command -v grep >/dev/null 2>&1 || return 0
+
+  local _latest
+  _latest="$(curl -fsSL --connect-timeout 3 --max-time 5 \
+    "https://api.github.com/repos/benjarogit/crkcachy/releases/latest" \
+    2>/dev/null \
+    | grep -m1 '"tag_name"' \
+    | sed 's/.*"v\([^"]*\)".*/\1/' \
+    2>/dev/null || true)"
+
+  [[ -n "$_latest" ]] || return 0
+
+  if [[ "$_latest" == "$CRKCACHY_VERSION" ]]; then
+    gum style --foreground "$CUI_C_OK" \
+      "  ✓ $(msgf banner.version_ok "v${CRKCACHY_VERSION}")"
+  else
+    gum style --foreground "$CUI_C_WARN" \
+      "  ↑ $(msgf banner.update_available "v${CRKCACHY_VERSION}" "v${_latest}")"
+    gum style --foreground "$CUI_C_MUTED" \
+      "    github.com/benjarogit/crkcachy/releases/latest"
+  fi
 }
 
 # ── Section-Header (wie create-next-app Kategorien) ──────────────────────────

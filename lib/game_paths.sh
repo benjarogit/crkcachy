@@ -3,6 +3,16 @@
 
 set -euo pipefail
 
+# Portabler timeout-Wrapper: nutzt 'timeout' wenn verfügbar, sonst plain find
+_crk_find_timed() {
+  local secs="$1"; shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$secs" find "$@" 2>/dev/null || true
+  else
+    find "$@" 2>/dev/null || true
+  fi
+}
+
 crkcachy_state_root() {
   echo "${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}"
 }
@@ -91,7 +101,7 @@ tool_discover_game_dir_search() {
 
   while IFS= read -r root; do
     [[ -n "$root" && -d "$root" ]] || continue
-    found="$(timeout 5 find "$root" -maxdepth 6 -type f -iname "$game_exe" 2>/dev/null | head -n1 || true)"
+    found="$(_crk_find_timed 5 "$root" -maxdepth 6 -type f -iname "$game_exe" | head -n1)"
     if [[ -n "$found" && -f "$found" ]]; then
       dirname "$found"
       return 0
@@ -118,7 +128,7 @@ tool_discover_all_game_dirs_search() {
         echo "search|$d"
         _local_seen["$d"]=1
       fi
-    done < <(timeout 5 find "$root" -maxdepth 6 -type f -iname "$game_exe" 2>/dev/null | head -n8 || true)
+    done < <(_crk_find_timed 5 "$root" -maxdepth 6 -type f -iname "$game_exe" | head -n8)
   done < <(tool_discover_mount_roots)
 }
 

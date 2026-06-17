@@ -183,12 +183,14 @@ tool_prompt_game_dir() {
   _opts+=("$_manual_opt")
 
   # ── gum choose ─────────────────────────────────────────────────────
+  # WICHTIG: 2>/dev/null darf NICHT innerhalb von $() stehen – sonst
+  # unterdrückt es das interactive TUI von gum und der Cursor hängt.
   local _selected
   _selected="$(gum choose \
     --header "$(msg game_dir.picker_prompt)" \
-    --height 12 \
+    --height "$(( ${#_opts[@]} + 2 ))" \
     --cursor "› " \
-    "${_opts[@]}" 2>/dev/null)" || _selected=""
+    "${_opts[@]}")" 2>/dev/null || _selected=""
 
   local _chosen_path=""
 
@@ -257,7 +259,7 @@ _tool_prompt_game_dir_manual() {
   echo ""
 
   local _path
-  _path="$(tui_input "$(msg game_dir.manual_prompt)" "" 2>/dev/null || true)"
+  _path="$(tui_input "$(msg game_dir.manual_prompt)" "")" 2>/dev/null || true
   [[ -z "$_path" ]] && _path="$HOME"
   _path="$(crkcachy_expand_user_path "$_path")"
   TOOL_GAME_DIR="$_path"
@@ -285,11 +287,11 @@ _tool_offer_copy_game() {
   local _choice
   _choice="$(gum choose \
     --header "$(msg game_dir.copy_prompt)" \
-    --height 4 \
+    --height 5 \
     --cursor "› " \
     "$(msg game_dir.copy_opt_yes)" \
     "$(msg game_dir.copy_opt_manual)" \
-    "$(msg game_dir.copy_opt_no)" 2>/dev/null)" || _choice=""
+    "$(msg game_dir.copy_opt_no)")" 2>/dev/null || _choice=""
 
   case "$_choice" in
     "$(msg game_dir.copy_opt_yes)")

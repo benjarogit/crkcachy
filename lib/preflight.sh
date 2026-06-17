@@ -556,8 +556,16 @@ preflight_onboard() {
     die "$(msg runtime.cannot_continue)"
   fi
 
-  cui_legal_gate
-  echo ""
+  if cui_onboard_should_skip; then
+    # Wiederkehrender User: Pause damit Ergebnisse gelesen werden können,
+    # bevor show_wizard_menu den Bildschirm löscht.
+    echo ""
+    cui_continue
+  else
+    # Erster Start: rechtliche Info-Screens zeigen (enthalten eigene Pausen)
+    cui_legal_gate
+    echo ""
+  fi
 }
 
 preflight_status_only() {

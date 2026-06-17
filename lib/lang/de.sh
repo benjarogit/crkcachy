@@ -10,6 +10,8 @@ _MSG[lang.detected]="Sprache: Deutsch (automatisch erkannt)"
 _MSG[lang.override]="Sprache: Deutsch (--lang)"
 
 _MSG[banner.subtitle]="Windows-Spiele auf Linux – über Steam + Proton"
+_MSG[banner.version_ok]="Du hast die neueste Version (%s)"
+_MSG[banner.update_available]="Update verfügbar: %s → %s  (git pull oder neu herunterladen)"
 
 _MSG[confirm.suffix]="[j=Ja · n=Nein · Enter=empfohlen]"
 _MSG[confirm.yes_label]="Ja"
