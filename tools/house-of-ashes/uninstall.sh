@@ -194,8 +194,6 @@ _maybe_remove_spacewar() {
   echo ""
   cui_section "Spacewar" "App 480"
   echo ""
-  cui_check_row ok "Spacewar" "App 480" "$(msg uninstall.spacewar_still_installed)"
-  echo ""
 
   if [[ "$by_crkcachy" == "1" ]]; then
     gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_info_tracked)"

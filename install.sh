@@ -100,8 +100,6 @@ run_game_uninstall() {
 
 _after_uninstall_menu() {
   echo ""
-  cui_rule
-  echo ""
   local pick
   pick="$(gum choose \
     --header "$(msg wizard.after_uninstall_title)" \
