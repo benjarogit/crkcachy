@@ -195,10 +195,10 @@ install_log_print_summary() {
 
   echo ""
   cui_check_category "$(msg install_log.summary_title)"
-  [[ -n "$ts" ]]      && cui_check_row ok "$(msg install_log.field_timestamp)"   "$ts"
-  [[ -n "$version" ]] && cui_check_row ok "$(msg install_log.field_version)"     "$version"
-  [[ -n "$game_dir" ]] && cui_check_row ok "$(msg install_log.field_game_dir)"   "" "$game_dir"
-  [[ -n "$exe_path" ]] && cui_check_row ok "$(msg install_log.field_exe)"        "" "$(basename "$exe_path")"
+  if [[ -n "$ts" ]];       then cui_check_row ok "$(msg install_log.field_timestamp)" "$ts"; fi
+  if [[ -n "$version" ]];  then cui_check_row ok "$(msg install_log.field_version)"   "$version"; fi
+  if [[ -n "$game_dir" ]]; then cui_check_row ok "$(msg install_log.field_game_dir)"  "" "$game_dir"; fi
+  if [[ -n "$exe_path" ]]; then cui_check_row ok "$(msg install_log.field_exe)"       "" "$(basename "$exe_path")"; fi
 
   local shortcut; shortcut="$(install_log_get steam_shortcut_added)"
   if [[ "$shortcut" == "1" ]]; then
@@ -233,20 +233,24 @@ install_log_print_uninstall_plan() {
   cui_check_category "$(msg install_log.uninstall_plan_title)"
 
   local shortcut; shortcut="$(install_log_get steam_shortcut_added)"
-  [[ "$shortcut" == "1" ]] && \
+  if [[ "$shortcut" == "1" ]]; then
     cui_check_row ok "$(msg install_log.uninstall_steam_shortcut)" "$(msg install_log.val_will_remove)"
+  fi
 
   local app_file; app_file="$(install_log_get desktop_app_file)"
-  [[ -n "$app_file" && -f "$app_file" ]] && \
+  if [[ -n "$app_file" && -f "$app_file" ]]; then
     cui_check_row ok "$(msg install_log.uninstall_desktop_app)" "$(msg install_log.val_will_remove)" "$(basename "$app_file")"
+  fi
 
   local desk_file; desk_file="$(install_log_get desktop_desktop_file)"
-  [[ -n "$desk_file" && -f "$desk_file" ]] && \
+  if [[ -n "$desk_file" && -f "$desk_file" ]]; then
     cui_check_row ok "$(msg install_log.uninstall_desktop_icon)" "$(msg install_log.val_will_remove)" "$(basename "$desk_file")"
+  fi
 
   local icon_file; icon_file="$(install_log_get icon_file)"
-  [[ -n "$icon_file" && -f "$icon_file" ]] && \
+  if [[ -n "$icon_file" && -f "$icon_file" ]]; then
     cui_check_row ok "$(msg install_log.uninstall_icon_cache)" "$(msg install_log.val_will_remove)"
+  fi
 
   echo ""
 }

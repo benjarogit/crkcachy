@@ -113,7 +113,9 @@ main() {
   # ── 8. Spacewar-Flag aus Protokoll lesen (vor dem Löschen!) ───────────────
   local spacewar_by_crkcachy="0"
   if [[ "$log_available" == true ]]; then
-    spacewar_by_crkcachy="$(install_log_get spacewar_installed_by_crkcachy 2>/dev/null || echo "0")"
+    local _sw_val
+    _sw_val="$(install_log_get spacewar_installed_by_crkcachy 2>/dev/null || true)"
+    spacewar_by_crkcachy="${_sw_val:-0}"
   fi
 
   # ── 9. Protokoll löschen ──────────────────────────────────────────────────

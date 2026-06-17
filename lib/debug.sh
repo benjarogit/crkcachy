@@ -13,8 +13,21 @@ crkcachy_init_logging() {
     CRKCACHY_LOG_FILE="${CRKCACHY_LOG_DIR}/crkcachy-$(date +%Y%m%d-%H%M%S).log"
   fi
   export CRKCACHY_LOG_FILE
-  _crkcachy_log_write "INFO" "CRKCACHY v${CRKCACHY_VERSION} – log started"
-  _crkcachy_log_write "INFO" "User: ${USER:-unknown} | PWD: ${PWD:-}"
+
+  # Log-Rotation: maximal 10 Session-Logs behalten
+  local -a old_logs
+  mapfile -t old_logs < <(
+    ls -t "${CRKCACHY_LOG_DIR}"/crkcachy-*.log 2>/dev/null | tail -n +11
+  ) || true
+  local f
+  for f in "${old_logs[@]:-}"; do
+    [[ -n "$f" ]] && rm -f "$f" 2>/dev/null || true
+  done
+
+  _crkcachy_log_write "INFO" "──────────────────────────────────────────────"
+  _crkcachy_log_write "INFO" "CRKCACHY v${CRKCACHY_VERSION:-?} – Session gestartet"
+  _crkcachy_log_write "INFO" "User: ${USER:-unknown} | PID: $$ | PWD: ${PWD:-}"
+  _crkcachy_log_write "INFO" "──────────────────────────────────────────────"
 }
 
 _crkcachy_log_write() {

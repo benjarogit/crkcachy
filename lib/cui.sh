@@ -184,6 +184,14 @@ cui_card() {
     "$body"
 }
 
+# ── Screen-Clear (nur bei TTY, kein Garbage in Pipes) ────────────────────────
+
+cui_screen_clear() {
+  if [[ -t 1 ]] && [[ "${CRKCACHY_NO_CLEAR:-0}" != "1" ]]; then
+    tput clear 2>/dev/null || clear 2>/dev/null || true
+  fi
+}
+
 # ── Wizard-Screen (Info-Seite mit Weiter) ─────────────────────────────────────
 
 cui_wizard_screen() {
@@ -192,6 +200,7 @@ cui_wizard_screen() {
   local title="$3"
   local body="$4"
 
+  cui_screen_clear
   cui_progress_track "$step_num" "$step_total"
   echo ""
   gum style --bold "$title"

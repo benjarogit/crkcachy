@@ -158,6 +158,7 @@ print_status() {
 
 show_wizard_menu() {
   assess_run
+  cui_screen_clear
   cui_wizard_main_header "$(assess_recommended_hint)"
   tui_assess_panel || true
 

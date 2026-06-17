@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.73"
+CRKCACHY_VERSION="0.1.74"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -32,11 +32,15 @@ init_i18n
 source "${CRKCACHY_ROOT}/lib/platform.sh"
 platform_detect
 
-log_info()  { echo -e "${_C_BLUE}[$(msg tag.info)]${_C_RESET} $*"; }
-log_ok()    { echo -e "${_C_GREEN}[$(msg tag.ok)]${_C_RESET} $*"; }
-log_warn()  { echo -e "${_C_YELLOW}[$(msg tag.warn)]${_C_RESET} $*"; }
-log_error() { echo -e "${_C_RED}[$(msg tag.error)]${_C_RESET} $*" >&2; }
-log_hint()  { echo -e "${_C_CYAN}        → $*${_C_RESET}"; }
+_log_file() {
+  declare -F _crkcachy_log_write >/dev/null 2>&1 && _crkcachy_log_write "$1" "$2" || true
+}
+
+log_info()  { echo -e "${_C_BLUE}[$(msg tag.info)]${_C_RESET} $*";  _log_file "INFO"  "$*"; }
+log_ok()    { echo -e "${_C_GREEN}[$(msg tag.ok)]${_C_RESET} $*";   _log_file "OK"    "$*"; }
+log_warn()  { echo -e "${_C_YELLOW}[$(msg tag.warn)]${_C_RESET} $*"; _log_file "WARN"  "$*"; }
+log_error() { echo -e "${_C_RED}[$(msg tag.error)]${_C_RESET} $*" >&2; _log_file "ERROR" "$*"; }
+log_hint()  { echo -e "${_C_CYAN}        → $*${_C_RESET}";          _log_file "HINT"  "$*"; }
 
 die() {
   log_error "$*"
@@ -55,8 +59,9 @@ explain_block() {
 
 # shellcheck source=lib/debug.sh
 source "${CRKCACHY_ROOT}/lib/debug.sh"
+# Logging immer aktiv – Session-Log unter ~/.local/share/crkcachy/logs/
+crkcachy_init_logging
 if [[ "${CRKCACHY_DEBUG:-0}" == 1 ]]; then
-  crkcachy_init_logging
   log_debug "Debug mode active – log: $(crkcachy_log_path)"
 fi
 
