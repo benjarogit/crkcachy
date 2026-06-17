@@ -415,9 +415,56 @@ def remove_matching_shortcuts(
     return 0
 
 
+def set_compat_tool(config_vdf_path: str, app_unsigned_id: str, tool_name: str) -> int:
+    """Set the Proton compat tool for a non-Steam shortcut in config.vdf.
+
+    Path: InstallConfigStore > Software > Valve > Steam > CompatToolMapping > <app_id>
+    """
+    if vdf is None:
+        print("error: python-vdf required (pacman -S python-vdf)", file=sys.stderr)
+        return 1
+
+    try:
+        with open(config_vdf_path, encoding="utf-8") as f:
+            data = vdf.load(f)
+    except (OSError, Exception) as exc:
+        print(f"error reading config.vdf: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        compat_map = (
+            data
+            .setdefault("InstallConfigStore", {})
+            .setdefault("Software", {})
+            .setdefault("Valve", {})
+            .setdefault("Steam", {})
+            .setdefault("CompatToolMapping", {})
+        )
+    except Exception as exc:
+        print(f"error navigating config.vdf: {exc}", file=sys.stderr)
+        return 1
+
+    compat_map[str(app_unsigned_id)] = {
+        "name":     tool_name,
+        "config":   "",
+        "Priority": "250",
+    }
+
+    try:
+        with open(config_vdf_path, "w", encoding="utf-8") as f:
+            vdf.dump(data, f, pretty=True)
+    except OSError as exc:
+        print(f"error writing config.vdf: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"compat-tool-set\t{app_unsigned_id}\t{tool_name}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("shortcuts_vdf")
+    parser.add_argument("shortcuts_vdf", nargs="?", default="",
+                        help="Path to shortcuts.vdf (not needed for --set-compat-tool)")
     parser.add_argument("--exe", default="", help="Full Linux path to game exe")
     parser.add_argument("--basename", default="", help="Exe basename e.g. HouseOfAshes.exe")
     parser.add_argument("--set-name", default="", help="Rename matching shortcut display name")
@@ -435,7 +482,25 @@ def main() -> int:
     parser.add_argument("--add-shortcut", default="", help="Add new shortcut with this display name")
     parser.add_argument("--start-dir", default="", help="StartDir for --add-shortcut")
     parser.add_argument("--launch-options-add", default="", help="LaunchOptions for --add-shortcut")
+    # Compat tool setting (uses config.vdf, not shortcuts.vdf)
+    parser.add_argument("--config-vdf", default="", help="Path to Steam config.vdf")
+    parser.add_argument("--set-compat-tool", default="", help="Proton tool name to set (e.g. GE-Proton10-34)")
+    parser.add_argument("--app-unsigned-id", default="", help="Unsigned app ID for --set-compat-tool")
     args = parser.parse_args()
+
+    # Compat tool setting (independent of shortcuts.vdf)
+    if args.set_compat_tool:
+        if not args.config_vdf:
+            print("error: --config-vdf required for --set-compat-tool", file=sys.stderr)
+            return 1
+        if not args.app_unsigned_id:
+            print("error: --app-unsigned-id required for --set-compat-tool", file=sys.stderr)
+            return 1
+        return set_compat_tool(args.config_vdf, args.app_unsigned_id, args.set_compat_tool)
+
+    if not args.shortcuts_vdf:
+        print("error: shortcuts_vdf required", file=sys.stderr)
+        return 1
 
     if args.add_shortcut:
         return add_shortcut(

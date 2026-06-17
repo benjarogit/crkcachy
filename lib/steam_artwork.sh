@@ -93,6 +93,8 @@ steam_print_setup_summary() {
   local name_ok="$1"
   local launch_ok="$2"
   local icon_ok="$3"
+  local compat_ok="${4:-false}"
+  local compat_name="${5:-}"
 
   echo ""
   cui_heading "$(msg steam.summary_title)"
@@ -114,6 +116,13 @@ steam_print_setup_summary() {
     cui_result_line ok "$(msg steam.summary_icon)"
   else
     cui_result_line warn "$(msg steam.summary_icon)" "$(msg steam.summary_icon_fail)"
+  fi
+
+  if [[ "$compat_ok" == true ]]; then
+    cui_result_line ok "$(msg steam.summary_compat)" \
+      "$(if [[ -n "$compat_name" ]]; then echo "$compat_name"; fi)"
+  else
+    cui_result_line warn "$(msg steam.summary_compat)" "$(msg steam.summary_compat_manual)"
   fi
 
   echo ""
@@ -619,14 +628,94 @@ steam_apply_shortcut_icon() {
   [[ "$applied" == true ]]
 }
 
-# Auto: name + launch options + icon (Steam must be closed).
+# Setzt das Proton-Compat-Tool für einen Non-Steam-Shortcut in config.vdf.
+# Args: exe_linux_path exe_basename tool_name
+steam_apply_compat_tool() {
+  local exe_linux_path="$1"
+  local exe_basename="${2:-$(basename "$exe_linux_path")}"
+  local tool_name="${3:-}"
+
+  [[ -n "$tool_name" ]] || return 1
+
+  local _steam_root
+  _steam_root="$(find_steam_root 2>/dev/null || echo "${HOME}/.local/share/Steam")"
+  local _config_vdf="${_steam_root}/config/config.vdf"
+  [[ -f "$_config_vdf" ]] || { log_warn "$(msg steam.config_not_found)"; return 1; }
+
+  # Unsigned App-ID aus dem Shortcut ermitteln
+  local _line _unsigned
+  _line="$(steam_fetch_shortcut_line "$exe_linux_path" "$exe_basename" 2>/dev/null || true)"
+  [[ -n "${_line:-}" ]] || { log_warn "$(msg steam.shortcut_not_found)"; return 1; }
+  _unsigned="$(echo "$_line" | cut -f2)"
+  [[ -n "${_unsigned:-}" ]] || { log_warn "$(msg steam.compat_no_appid)"; return 1; }
+
+  log_debug "steam_apply_compat_tool: appid=$_unsigned tool=$tool_name"
+
+  # Compat-Tool in config.vdf schreiben
+  local _out _rc
+  _out="$(python3 "$STEAM_ARTWORK_PY" \
+    --config-vdf "$_config_vdf" \
+    --set-compat-tool "$tool_name" \
+    --app-unsigned-id "$_unsigned" 2>&1)"
+  _rc=$?
+
+  if [[ "$_rc" -eq 0 ]]; then
+    log_ok "$(msgf steam.compat_tool_set "$tool_name")"
+    return 0
+  else
+    log_warn "$(msgf steam.compat_tool_failed "$tool_name")"
+    log_debug "steam_apply_compat_tool output: $_out"
+    return 1
+  fi
+}
+
+# Verifiziert ob das Compat-Tool in config.vdf gesetzt ist.
+steam_verify_compat_tool() {
+  local exe_linux_path="$1"
+  local exe_basename="${2:-$(basename "$exe_linux_path")}"
+  local expected_tool="${3:-}"
+
+  local _steam_root
+  _steam_root="$(find_steam_root 2>/dev/null || echo "${HOME}/.local/share/Steam")"
+  local _config_vdf="${_steam_root}/config/config.vdf"
+  [[ -f "$_config_vdf" ]] || return 1
+
+  local _line _unsigned
+  _line="$(steam_fetch_shortcut_line "$exe_linux_path" "$exe_basename" 2>/dev/null || true)"
+  [[ -n "${_line:-}" ]] || return 1
+  _unsigned="$(echo "$_line" | cut -f2)"
+  [[ -n "${_unsigned:-}" ]] || return 1
+
+  python3 - "$_config_vdf" "$_unsigned" "$expected_tool" <<'PYEOF' 2>/dev/null
+import sys
+try:
+    import vdf
+    config_path, app_id, expected = sys.argv[1], sys.argv[2], sys.argv[3]
+    with open(config_path) as f:
+        data = vdf.load(f)
+    compat_map = (data.get("InstallConfigStore", {})
+                      .get("Software", {})
+                      .get("Valve", {})
+                      .get("Steam", {})
+                      .get("CompatToolMapping", {}))
+    entry = compat_map.get(app_id, {})
+    name = entry.get("name", "")
+    if not expected or name == expected:
+        sys.exit(0)
+    sys.exit(1)
+except Exception:
+    sys.exit(2)
+PYEOF
+}
+
+# Auto: name + launch options + icon + compat tool (Steam must be closed).
 steam_configure_shortcut() {
   local exe_linux_path="$1"
   local exe_basename="${2:-$(basename "$exe_linux_path")}"
   local game_dir="${3:-$(dirname "$exe_linux_path")}"
   local display_name="$4"
   local launch_opts="${5:-}"
-  local name_ok=false launch_ok=false icon_ok=false
+  local name_ok=false launch_ok=false icon_ok=false compat_ok=false
 
   if ! ensure_steam_shortcut_tooling; then
     return 1
@@ -671,18 +760,41 @@ steam_configure_shortcut() {
     fi
   fi
 
-  if [[ "$name_ok" == true || "$launch_ok" == true || "$icon_ok" == true ]]; then
-    steam_print_setup_summary "$name_ok" "$launch_ok" "$icon_ok"
+  # ── Proton Compat-Tool automatisch setzen ────────────────────────────
+  local _ge_tool
+  if declare -F ge_proton_latest_name >/dev/null 2>&1; then
+    _ge_tool="$(ge_proton_latest_name 2>/dev/null || true)"
+  fi
+  if [[ -n "${_ge_tool:-}" ]]; then
+    if steam_apply_compat_tool "$exe_linux_path" "$exe_basename" "$_ge_tool"; then
+      compat_ok=true
+    fi
+  else
+    log_warn "$(msg steam.compat_no_ge_proton)"
+  fi
+
+  if [[ "$name_ok" == true || "$launch_ok" == true || "$icon_ok" == true || "$compat_ok" == true ]]; then
+    steam_print_setup_summary "$name_ok" "$launch_ok" "$icon_ok" "${compat_ok}" "${_ge_tool:-}"
     if [[ "$icon_ok" != true ]]; then
       steam_offer_icon_tooling_retry || true
       if steam_apply_shortcut_icon "$exe_linux_path" "$exe_basename" "$game_dir"; then
         icon_ok=true
         log_ok "$(msg steam.icon_retry_ok)"
-        steam_print_setup_summary "$name_ok" "$launch_ok" "$icon_ok"
+        steam_print_setup_summary "$name_ok" "$launch_ok" "$icon_ok" "${compat_ok}" "${_ge_tool:-}"
       fi
     fi
 
-    log_debug "configure complete name=$name_ok launch=$launch_ok icon=$icon_ok"
+    # Wenn Compat-Tool nicht automatisch gesetzt – manuelle Anleitung
+    if [[ "$compat_ok" != true ]]; then
+      echo ""
+      cui_check_row false "$(msg steam.compat_chip_fail)" \
+        "$(msgf steam.compat_tool_manual "${_ge_tool:-GE-Proton}")"
+    else
+      echo ""
+      cui_check_row true "$(msgf steam.compat_chip_ok "${_ge_tool:-}")" ""
+    fi
+
+    log_debug "configure complete name=$name_ok launch=$launch_ok icon=$icon_ok compat=$compat_ok"
     return 0
   fi
 

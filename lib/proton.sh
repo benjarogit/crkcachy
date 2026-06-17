@@ -32,6 +32,30 @@ list_ge_proton() {
   return "$((found == 0))"
 }
 
+# Gibt den Namen der neuesten installierten GE-Proton-Version zurück (numerisch sortiert).
+# Gibt leer zurück wenn nichts gefunden.
+ge_proton_latest_name() {
+  [[ -d "$PROTON_GE_DIR" ]] || return 0
+
+  local _cur_major=0 _cur_minor=0 _latest="" _name _major _minor _dir
+  for _dir in "$PROTON_GE_DIR"/GE-Proton*; do
+    [[ -d "$_dir" ]] || continue
+    _name="$(basename "$_dir")"
+    if [[ "$_name" =~ GE-Proton([0-9]+)-([0-9]+) ]]; then
+      _major="${BASH_REMATCH[1]}"
+      _minor="${BASH_REMATCH[2]}"
+      if [[ "$_major" -gt "$_cur_major" ]] || \
+         { [[ "$_major" -eq "$_cur_major" ]] && [[ "$_minor" -gt "$_cur_minor" ]]; }; then
+        _cur_major="$_major"
+        _cur_minor="$_minor"
+        _latest="$_name"
+      fi
+    fi
+  done
+
+  echo "${_latest:-}"
+}
+
 install_ge_proton() {
   if ! command_exists protonup-rs; then
     package_explain_block "$(msg proton.install_title)" protonup

@@ -257,6 +257,23 @@ main() {
 
   log_ok "$(msg install.finished)"
   offer_post_install_readme
+
+  # ── Post-Install: Zurück zum Menü oder Beenden ──────────────────────
+  echo ""
+  local _after_choice
+  _after_choice="$(gum choose \
+    --header "$(msg install.after_title)" \
+    --cursor "› " \
+    "$(msg install.after_menu)" \
+    "$(msg install.after_exit)")" 2>/dev/null || _after_choice=""
+
+  if [[ "$_after_choice" == "$(msg install.after_menu)" ]]; then
+    cui_screen_clear
+    show_wizard_menu || true
+  fi
+
+  echo ""
+  log_ok "$(msg install.goodbye)"
 }
 
 main "${FILTERED_CLI_ARGS[@]:-${FILTERED_ARGS[@]}}"
