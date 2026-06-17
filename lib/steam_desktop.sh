@@ -245,6 +245,19 @@ steam_offer_desktop_launcher() {
     return 0
   fi
 
-  steam_install_desktop_launcher \
-    "$exe_linux_path" "$exe_basename" "$display_name" "$game_dir" "$slug"
+  if steam_install_desktop_launcher \
+      "$exe_linux_path" "$exe_basename" "$display_name" "$game_dir" "$slug"; then
+    local _verify_app="${apps_dir:-$(xdg_applications_dir)}/crkcachy-${slug}.desktop"
+    echo ""
+    if [[ -f "$_verify_app" ]]; then
+      cui_status_chip true "$(msg steam.desktop_verified)"
+    else
+      cui_status_chip false "$(msg steam.desktop_verify_failed)"
+    fi
+  else
+    echo ""
+    cui_status_chip false "$(msg steam.desktop_verify_failed)"
+    echo ""
+    gum style --foreground "$CUI_C_MUTED" "$(msg steam.desktop_manual_hint)"
+  fi
 }

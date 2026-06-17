@@ -305,7 +305,15 @@ preflight_fix_protonup() {
         echo ""
         gum style --border rounded --padding "0 2" "$(msg runtime.protonup_manual_steps)"
         echo ""
-        confirm "$(msg runtime.protonup_manual_done)" true || true
+        if confirm "$(msg runtime.protonup_manual_done)" true; then
+          if command_exists protonup-rs; then
+            echo ""
+            cui_status_chip true "$(msg runtime.protonup_verified)"
+            return 0
+          fi
+          echo ""
+          cui_status_chip false "$(msg runtime.protonup_not_found_warn)"
+        fi
       fi
       ;;
     "$(msg runtime.protonup_opt_manual)")
@@ -314,10 +322,12 @@ preflight_fix_protonup() {
       echo ""
       if confirm "$(msg runtime.protonup_manual_done)" true; then
         if command_exists protonup-rs; then
+          echo ""
           cui_status_chip true "$(msg runtime.protonup_verified)"
           return 0
         fi
-        log_warn "$(msg runtime.protonup_not_found_warn)"
+        echo ""
+        cui_status_chip false "$(msg runtime.protonup_not_found_warn)"
       fi
       ;;
     *)
@@ -361,6 +371,16 @@ preflight_fix_ge_proton() {
         log_warn "$(msg runtime.ge_proton_install_failed)"
         echo ""
         gum style --border rounded --padding "0 2" "$(msg runtime.ge_proton_manual_steps)"
+        echo ""
+        if confirm "$(msg runtime.ge_proton_manual_done)" true; then
+          if list_ge_proton >/dev/null 2>&1; then
+            echo ""
+            cui_status_chip true "$(msg runtime.ge_proton_verified)"
+            return 0
+          fi
+          echo ""
+          cui_status_chip false "$(msg runtime.ge_proton_not_found_warn)"
+        fi
       fi
       ;;
     "$(msg runtime.ge_proton_opt_manual)")
@@ -369,10 +389,12 @@ preflight_fix_ge_proton() {
       echo ""
       if confirm "$(msg runtime.ge_proton_manual_done)" true; then
         if list_ge_proton >/dev/null 2>&1; then
+          echo ""
           cui_status_chip true "$(msg runtime.ge_proton_verified)"
           return 0
         fi
-        log_warn "$(msg runtime.ge_proton_not_found_warn)"
+        echo ""
+        cui_status_chip false "$(msg runtime.ge_proton_not_found_warn)"
       fi
       ;;
     *)
@@ -396,7 +418,31 @@ preflight_fix_steam_data() {
   choice="$(gum choose \
     --header "$(msg runtime.steam_data_gate_prompt)" \
     "$(msg runtime.steam_data_opt_open)" \
+    "$(msg runtime.steam_data_opt_manual)" \
     "$(msg runtime.steam_data_opt_skip)")" 2>/dev/null || choice=""
+
+  _steam_data_wait_and_verify() {
+    local tries=0
+    while true; do
+      if find_steam_root 2>/dev/null; then
+        echo ""
+        cui_status_chip true "$(msg runtime.steam_data_verified)"
+        return 0
+      fi
+      tries=$((tries + 1))
+      if [[ "$tries" -gt 4 ]]; then
+        log_warn "$(msg runtime.steam_data_not_found_warn)"
+        if confirm "$(msg runtime.steam_data_skip_anyway)" false; then
+          return 0
+        fi
+        return 1
+      fi
+      if ! confirm "$(msg runtime.steam_data_wait_confirm)" true; then
+        return 1
+      fi
+      sleep 2
+    done
+  }
 
   case "$choice" in
     "$(msg runtime.steam_data_opt_open)")
@@ -405,23 +451,14 @@ preflight_fix_steam_data() {
       echo ""
       log_ok "$(msg runtime.steam_data_opened)"
       echo ""
-      local tries=0
-      while true; do
-        if find_steam_root 2>/dev/null; then
-          cui_status_chip true "$(msg runtime.steam_data_verified)"
-          return 0
-        fi
-        tries=$((tries + 1))
-        if [[ "$tries" -gt 4 ]]; then
-          log_warn "$(msg runtime.steam_data_not_found_warn)"
-          confirm "$(msg runtime.steam_data_skip_anyway)" false || return 1
-          return 0
-        fi
-        if ! confirm "$(msg runtime.steam_data_wait_confirm)" true; then
-          return 1
-        fi
-        sleep 2
-      done
+      _steam_data_wait_and_verify
+      ;;
+    "$(msg runtime.steam_data_opt_manual)")
+      echo ""
+      gum style --border rounded --padding "0 2" \
+        "$(msg runtime.steam_data_manual_steps)"
+      echo ""
+      _steam_data_wait_and_verify
       ;;
     *)
       log_warn "$(msg runtime.steam_data_skipped)"

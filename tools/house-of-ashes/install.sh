@@ -183,9 +183,36 @@ run_ha_install() {
   install_log_set "steam_display_name" "$HA_GAME_STEAM_NAME"
 
   ui_step "$(msg ha.check_folder)"
-  ui_running "$(msg ha.check_folder)"
-  bash "${TOOL_DIR}/checks.sh" "$game_dir" || log_warn "$(msg ha.fix_missing)"
-  ui_done "$(msg ha.check_folder)"
+  echo ""
+  local checks_ok=true
+  bash "${TOOL_DIR}/checks.sh" "$game_dir" || checks_ok=false
+
+  if [[ "$checks_ok" == false ]]; then
+    echo ""
+    cui_status_chip false "$(msg ha.fix_check_failed)"
+    echo ""
+    gum style --foreground "$CUI_C_MUTED" "$(msg ha.fix_guide_body)"
+    echo ""
+    gum style --border rounded --padding "0 2" \
+      "$(msg ha.fix_guide_steps)"
+    echo ""
+    if cui_yes_no "$(msg ha.fix_guide_done)" true; then
+      echo ""
+      log_info "$(msg ha.fix_recheck_running)"
+      if bash "${TOOL_DIR}/checks.sh" "$game_dir" 2>/dev/null; then
+        echo ""
+        cui_status_chip true "$(msg ha.fix_recheck_ok)"
+      else
+        echo ""
+        cui_status_chip false "$(msg ha.fix_recheck_fail)"
+        echo ""
+        log_hint "$(msg ha.fix_recheck_hint)"
+      fi
+    fi
+  else
+    echo ""
+    cui_status_chip true "$(msg ha.fix_check_ok)"
+  fi
   echo ""
 
   local exe_path launch_opts
