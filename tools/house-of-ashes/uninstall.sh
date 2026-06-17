@@ -194,6 +194,8 @@ _maybe_remove_spacewar() {
   echo ""
   cui_section "Spacewar" "App 480"
   echo ""
+  cui_check_row ok "Spacewar" "App 480" "$(msg uninstall.spacewar_still_installed)"
+  echo ""
 
   if [[ "$by_crkcachy" == "1" ]]; then
     gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_info_tracked)"
@@ -203,16 +205,76 @@ _maybe_remove_spacewar() {
 
   echo ""
 
-  if ! cui_yes_no "$(msg uninstall.spacewar_remove_ask)" false; then
+  local choice
+  choice="$(gum choose \
+    --header "$(msg uninstall.spacewar_how)" \
+    --cursor "› " \
+    "$(msg uninstall.spacewar_opt_auto)" \
+    "$(msg uninstall.spacewar_opt_manual)" \
+    "$(msg uninstall.spacewar_opt_skip)")" 2>/dev/null || choice=""
+
+  echo ""
+
+  case "${choice:-}" in
+    "$(msg uninstall.spacewar_opt_auto)")
+      _spacewar_remove_auto
+      ;;
+    "$(msg uninstall.spacewar_opt_manual)")
+      _spacewar_remove_manual
+      ;;
+    *)
+      log_info "$(msg uninstall.spacewar_skipped)"
+      return 0
+      ;;
+  esac
+
+  _spacewar_verify
+}
+
+_spacewar_remove_auto() {
+  if ! command -v steam >/dev/null 2>&1; then
+    log_warn "$(msg uninstall.spacewar_no_steam)"
+    _spacewar_remove_manual
     return 0
   fi
 
-  echo ""
   log_info "$(msg uninstall.spacewar_launching)"
   steam steam://uninstall/480 >/dev/null 2>&1 &
   disown 2>/dev/null || true
   echo ""
-  gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_hint)"
+  gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_auto_hint)"
+  echo ""
+
+  if ! cui_yes_no "$(msg uninstall.spacewar_done_confirm)" true; then
+    return 0
+  fi
+}
+
+_spacewar_remove_manual() {
+  echo ""
+  gum style --border rounded --padding "0 2" \
+    "$(msg uninstall.spacewar_manual_steps)"
+  echo ""
+
+  if ! cui_yes_no "$(msg uninstall.spacewar_done_confirm)" true; then
+    return 0
+  fi
+}
+
+_spacewar_verify() {
+  # Kurz warten damit Steam-Manifest von Disk verschwindet
+  sleep 1
+  find_steam_root 2>/dev/null || true
+
+  echo ""
+  cui_check_category "Spacewar – Check"
+  if [[ ! -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]; then
+    cui_check_row ok "Spacewar" "App 480" "$(msg uninstall.spacewar_verify_ok)"
+  else
+    cui_check_row warn "Spacewar" "App 480" "$(msg uninstall.spacewar_verify_still)"
+    echo ""
+    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_verify_hint)"
+  fi
   echo ""
 }
 

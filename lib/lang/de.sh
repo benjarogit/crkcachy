@@ -440,11 +440,22 @@ _MSG[uninstall.verify_incomplete]="Einige Elemente konnten nicht entfernt werden
 _MSG[uninstall.verify_hint]="Tipp: Steam neu starten und ./install.sh --uninstall erneut ausführen."
 _MSG[uninstall.verify_skipped]="übersprungen (kein Spielordner bekannt)"
 
+_MSG[uninstall.spacewar_still_installed]="noch installiert"
 _MSG[uninstall.spacewar_info_tracked]="Spacewar (App 480) wurde von CRKCACHY als technisches Hilfsprogramm installiert und wird für dieses Spiel nicht mehr benötigt."
-_MSG[uninstall.spacewar_info_unknown]="Spacewar (App 480) ist installiert und wird von CRKCACHY als technisches Hilfsprogramm verwendet. Entfernen, wenn du keine anderen Spiele über CRKCACHY nutzt."
-_MSG[uninstall.spacewar_remove_ask]="Spacewar (App 480) jetzt entfernen?"
+_MSG[uninstall.spacewar_info_unknown]="Spacewar (App 480) ist installiert und wird von CRKCACHY als Hilfsprogramm verwendet. Entfernen, wenn du keine anderen Spiele über CRKCACHY nutzt."
+_MSG[uninstall.spacewar_how]="Wie soll Spacewar entfernt werden?"
+_MSG[uninstall.spacewar_opt_auto]="Automatisch – Steam-Dialog öffnen"
+_MSG[uninstall.spacewar_opt_manual]="Manuell – Schritte anzeigen"
+_MSG[uninstall.spacewar_opt_skip]="Überspringen – Spacewar behalten"
+_MSG[uninstall.spacewar_skipped]="Spacewar bleibt installiert."
 _MSG[uninstall.spacewar_launching]="Steam wird geöffnet – Spacewar-Deinstallation …"
-_MSG[uninstall.spacewar_hint]="Bestätige die Deinstallation von Spacewar im Steam-Dialog."
+_MSG[uninstall.spacewar_auto_hint]=$'Steam sollte sich geöffnet haben.\nBestätige die Deinstallation von Spacewar im Dialog.'
+_MSG[uninstall.spacewar_no_steam]="Steam-Befehl nicht gefunden – bitte manuell deinstallieren."
+_MSG[uninstall.spacewar_manual_steps]=$'1. Steam öffnen\n2. Bibliothek → Spacewar (App 480) suchen\n3. Rechtsklick → Deinstallieren\n4. Im Dialog bestätigen'
+_MSG[uninstall.spacewar_done_confirm]="Spacewar erfolgreich deinstalliert?"
+_MSG[uninstall.spacewar_verify_ok]="entfernt ✓"
+_MSG[uninstall.spacewar_verify_still]="noch installiert"
+_MSG[uninstall.spacewar_verify_hint]="Tipp: Steam vollständig schließen und erneut versuchen."
 
 _MSG[uninstall.path_unknown]="Spielordner nicht bekannt"
 _MSG[uninstall.path_unknown_hint]="Steam-Shortcut wird übersprungen"
