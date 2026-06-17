@@ -167,12 +167,9 @@ run_ha_install() {
   echo ""
 
   ha_show_folder_meaning
-  ui_step "$(msg ha.folder_title)"
-  explain_block "$(msg ha.folder_title)" "$(msg ha.folder_body)"
 
-  local game_dir
-  game_dir="$(ha_prompt_game_dir)"
-  ui_action "$(msgf ha.using_path "$game_dir")"
+  ha_prompt_game_dir
+  local game_dir="$TOOL_GAME_DIR"
 
   if [[ ! -d "$game_dir" ]]; then
     die "$(msgf ha.dir_missing "$game_dir")"

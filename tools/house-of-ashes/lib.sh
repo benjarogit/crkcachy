@@ -63,6 +63,7 @@ HA_DEFAULT_GAME_DIR="$(ha_json_field default_game_dir)"
 HA_DEFAULT_GAME_DIR="${HA_DEFAULT_GAME_DIR:-}"
 
 ha_prompt_game_dir() {
+  # Result is stored in TOOL_GAME_DIR (global) – do NOT call in $(...)
   tool_prompt_game_dir "$HA_DEFAULT_GAME_DIR" "$HA_SLUG" "$HA_GAME_EXE"
 }
 

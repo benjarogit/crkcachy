@@ -82,7 +82,7 @@ tool_discover_mount_roots() {
   shopt -u nullglob
 }
 
-# Shallow search for game_exe under common user folders (maxdepth 6).
+# Shallow search for game_exe under common user folders (maxdepth 6) – first result only.
 tool_discover_game_dir_search() {
   local game_exe="$1"
   local root found
@@ -91,7 +91,7 @@ tool_discover_game_dir_search() {
 
   while IFS= read -r root; do
     [[ -n "$root" && -d "$root" ]] || continue
-    found="$(find "$root" -maxdepth 6 -type f -iname "$game_exe" 2>/dev/null | head -n1 || true)"
+    found="$(timeout 5 find "$root" -maxdepth 6 -type f -iname "$game_exe" 2>/dev/null | head -n1 || true)"
     if [[ -n "$found" && -f "$found" ]]; then
       dirname "$found"
       return 0
@@ -99,6 +99,70 @@ tool_discover_game_dir_search() {
   done < <(tool_discover_mount_roots)
 
   return 1
+}
+
+# Search ALL roots and return ALL matching parent dirs as "search|/full/path" lines.
+tool_discover_all_game_dirs_search() {
+  local game_exe="$1"
+  local root found d
+  local -A _local_seen=()
+
+  [[ -n "$game_exe" ]] || return 0
+
+  while IFS= read -r root; do
+    [[ -n "$root" && -d "$root" ]] || continue
+    while IFS= read -r found; do
+      [[ -n "$found" && -f "$found" ]] || continue
+      d="$(dirname "$found")"
+      if [[ -z "${_local_seen[$d]:-}" ]]; then
+        echo "search|$d"
+        _local_seen["$d"]=1
+      fi
+    done < <(timeout 5 find "$root" -maxdepth 6 -type f -iname "$game_exe" 2>/dev/null | head -n8 || true)
+  done < <(tool_discover_mount_roots)
+}
+
+# Discover ALL candidate game dirs.  Each line: "SOURCE_TAG|/full/path"
+# SOURCE_TAG: saved | steam | hint | search
+tool_discover_all_game_dirs() {
+  local game_exe="${1:-}"
+  local slug="${2:-}"
+  local json_hint="${3:-}"
+  local -A _seen=()
+  local p
+
+  # 1. Saved / last path
+  if [[ -n "$slug" ]]; then
+    p="$(crkcachy_load_saved_game_dir "$slug" 2>/dev/null || true)"
+    if [[ -n "$p" && -d "$p" && -z "${_seen[$p]:-}" ]]; then
+      echo "saved|$p"
+      _seen["$p"]=1
+    fi
+  fi
+
+  # 2. Steam non-Steam shortcut
+  p="$(tool_discover_game_dir_from_steam "$game_exe" 2>/dev/null || true)"
+  if [[ -n "$p" && -d "$p" && -z "${_seen[$p]:-}" ]]; then
+    echo "steam|$p"
+    _seen["$p"]=1
+  fi
+
+  # 3. tool.json hint
+  if [[ -n "$json_hint" ]]; then
+    p="$(crkcachy_expand_user_path "$json_hint")"
+    if [[ -d "$p" && -z "${_seen[$p]:-}" ]]; then
+      echo "hint|$p"
+      _seen["$p"]=1
+    fi
+  fi
+
+  # 4. Full filesystem search across all roots
+  local tag path
+  while IFS='|' read -r tag path; do
+    [[ -n "$path" && -z "${_seen[$path]:-}" ]] || continue
+    echo "${tag}|${path}"
+    _seen["$path"]=1
+  done < <(tool_discover_all_game_dirs_search "$game_exe")
 }
 
 # Read install path from existing Steam non-Steam shortcuts (any profile).

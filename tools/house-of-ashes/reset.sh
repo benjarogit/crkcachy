@@ -17,7 +17,8 @@ main() {
   cui_step_screen 1 1 "$(msg ha.reset_title)" "$(msg ha.reset_body)" "$(msg ha.reset_next)"
   echo ""
 
-  game_dir="$(ha_prompt_game_dir)"
+  ha_prompt_game_dir
+  game_dir="$TOOL_GAME_DIR"
   exe_path="$(ha_resolve_exe_path "$game_dir")"
 
   if [[ ! -f "$exe_path" ]]; then

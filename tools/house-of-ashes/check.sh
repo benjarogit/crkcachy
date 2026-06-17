@@ -109,7 +109,8 @@ main() {
   cui_step_screen 1 1 "$(msg check.title)" "$(msg check.body)" "$(msg check.next)"
 
   local game_dir
-  game_dir="$(ha_prompt_game_dir)"
+  ha_prompt_game_dir
+  game_dir="$TOOL_GAME_DIR"
 
   if ! run_ha_full_check "$game_dir"; then
     local exe_path launch_opts
