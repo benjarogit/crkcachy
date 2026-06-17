@@ -45,14 +45,16 @@ cui_heading() {
 
 # Untertitel / muted body
 cui_sub() {
-  [[ -n "${1:-}" ]] && gum style --foreground "$CUI_C_MUTED" "${1}"
+  if [[ -n "${1:-}" ]]; then
+    gum style --foreground "$CUI_C_MUTED" "${1}"
+  fi
 }
 
 # Schwache Trennlinie (wie Volta)
 cui_rule() {
   local width line
   width="$(tput cols 2>/dev/null || echo 72)"
-  [[ "$width" -gt 72 ]] && width=72
+  if [[ "$width" -gt 72 ]]; then width=72; fi
   line="$(python3 -c "print('─'*${width})" 2>/dev/null || printf '%0.s─' $(seq 1 "$width"))"
   gum style --foreground "$CUI_C_DIM" "$line"
 }
@@ -80,7 +82,9 @@ cui_section() {
   local sub="${2:-}"
   echo ""
   gum style --bold "$title"
-  [[ -n "$sub" ]] && gum style --foreground "$CUI_C_MUTED" "$sub"
+  if [[ -n "$sub" ]]; then
+    gum style --foreground "$CUI_C_MUTED" "$sub"
+  fi
 }
 
 cui_panel() { cui_section "$@"; }
@@ -241,7 +245,7 @@ cui_summary_panel() {
   gum style --bold "$title"
   echo ""
   while IFS= read -r line || [[ -n "$line" ]]; do
-    [[ -z "$line" ]] && echo "" && continue
+    if [[ -z "$line" ]]; then echo ""; continue; fi
     echo "  $line"
   done <<< "$body"
   echo ""
@@ -253,7 +257,7 @@ cui_yes_no() {
   local prompt="$1"
   local default_no="${2:-true}"
   local selected=0
-  [[ "$default_no" == "true" ]] && selected=1
+  if [[ "$default_no" == "true" ]]; then selected=1; fi
 
   local pick
   pick="$(gum choose \
@@ -324,8 +328,8 @@ cui_filter() {
   shift 2
   local count="${#@}"
   local height=8
-  [[ "$count" -gt "$height" ]] && height="$count"
-  [[ "$height" -lt 6 ]] && height=6
+  if [[ "$count" -gt "$height" ]]; then height="$count"; fi
+  if [[ "$height" -lt 6 ]]; then height=6; fi
   gum filter \
     --height "$height" \
     --header "$header" \
@@ -356,8 +360,8 @@ cui_show_markdown() {
 
   width="$(tput cols 2>/dev/null || echo 80)"
   width=$((width - 2))
-  [[ "$width" -lt 52 ]] && width=52
-  [[ "$width" -gt 96 ]] && width=96
+  if [[ "$width" -lt 52 ]]; then width=52; fi
+  if [[ "$width" -gt 96 ]]; then width=96; fi
 
   if [[ -n "$title" ]]; then
     cui_heading "$title"
@@ -464,7 +468,7 @@ cui_install_plan() {
   local line
   echo ""
   gum style --bold "$title"
-  [[ -n "$intro" ]] && echo "" && echo "  $intro" && echo ""
+  if [[ -n "$intro" ]]; then echo ""; echo "  $intro"; echo ""; fi
   for line in "$@"; do echo "  $line"; done
   echo ""
 }
