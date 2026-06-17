@@ -278,7 +278,7 @@ _tool_offer_copy_game() {
   echo ""
   gum style \
     --border rounded \
-    --border-foreground "$CUI_C_ACCENT" \
+    --border-foreground "$CUI_C_BRAND" \
     --padding "0 1" \
     "$(msgf game_dir.copy_from "$src")" \
     "$(msgf game_dir.copy_to   "$dst")"

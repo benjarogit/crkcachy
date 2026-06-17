@@ -71,7 +71,7 @@ cui_brand_header() {
   gum style \
     --bold \
     --foreground "$CUI_C_BRAND" \
-    --border-foreground "$CUI_C_ACCENT" \
+    --border-foreground "$CUI_C_BRAND" \
     --border "double" \
     --padding "0 3" \
 $'  ____  ____  _  ___   _   ____  ____  _  _ _  _ \n / ___)/ _  )| |/ / \_/ \ / ___)(  _ \( )/ )( \\/ )\n| |    \ V / |   (  ) ( || |   | | | | < <  )  ( \n \____)/   / |_|\_\\_/ \_/ \____)(_)(_)(_)\_)(_/\_)'
@@ -100,10 +100,10 @@ _cui_github_version_check() {
   [[ -n "$_latest" ]] || return 0
 
   if [[ "$_latest" == "$CRKCACHY_VERSION" ]]; then
-    gum style --foreground "$CUI_C_OK" \
+    gum style --foreground "$CUI_C_SUCCESS" \
       "  ✓ $(msgf banner.version_ok "v${CRKCACHY_VERSION}")"
   else
-    gum style --foreground "$CUI_C_WARN" \
+    gum style --foreground "$CUI_C_WARNING" \
       "  ↑ $(msgf banner.update_available "v${CRKCACHY_VERSION}" "v${_latest}")"
     gum style --foreground "$CUI_C_MUTED" \
       "    github.com/benjarogit/crkcachy/releases/latest"
