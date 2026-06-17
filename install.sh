@@ -98,6 +98,33 @@ run_game_uninstall() {
   return 0
 }
 
+_after_uninstall_menu() {
+  echo ""
+  cui_rule
+  echo ""
+  local pick
+  pick="$(gum choose \
+    --header "$(msg wizard.after_uninstall_title)" \
+    --cursor "› " \
+    "$(msg wizard.after_uninstall_menu)" \
+    "$(msg wizard.after_uninstall_install)" \
+    "$(msg wizard.after_uninstall_exit)")" 2>/dev/null || true
+
+  echo ""
+  case "${pick:-}" in
+    "$(msg wizard.after_uninstall_menu)")
+      show_wizard_menu || true
+      ;;
+    "$(msg wizard.after_uninstall_install)")
+      run_game_setup || true
+      ;;
+    *)
+      exit 0
+      ;;
+  esac
+  exit 0
+}
+
 offer_post_install_readme() {
   local readme_rel="README.md"
 
@@ -164,7 +191,7 @@ show_wizard_menu() {
       ;;
     5)
       run_game_uninstall || true
-      exit 0
+      _after_uninstall_menu
       ;;
     "")
       case "$ASSESS_RECOMMENDED" in

@@ -113,12 +113,6 @@ main() {
   # ── 8. Protokoll löschen ──────────────────────────────────────────────────
   [[ "$log_available" == true ]] && install_log_clear "$HA_SLUG" 2>/dev/null || true
 
-  # ── 9. Abschluss ──────────────────────────────────────────────────────────
-  echo ""
-  gum style --foreground "$CUI_C_MUTED" "$(msg steam.uninstall_next)"
-  echo ""
-  read -r -p $'  \033[2m→ Enter zum Beenden …\033[0m ' _ 2>/dev/null || true
-  echo ""
 }
 
 # ── Post-Deinstallations-Verifikation ─────────────────────────────────────────
