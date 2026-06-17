@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 # House of Ashes – deinstall CRKCACHY setup
 #
-# Priorität für Spielordner:
-#   1. Install-Protokoll (exe_path)
-#   2. Gespeicherter Pfad (auch wenn Ordner nicht mehr da)
-#   3. Ohne Pfad: Desktop/Icons werden entfernt, Steam-Shortcut übersprungen
+# Spielordner-Priorität:
+#   1. Install-Protokoll (exe_path / game_dir)
+#   2. Gespeicherter Pfad – direkt aus Datei, OHNE -d-Check
+#   3. Kein Pfad: nur slug-basierter Cleanup (Desktop/Icons)
+#
+# Cleanup via steam_uninstall_crkcachy_setup (kein doppelter Steam-Close-Dialog),
+# oder bei leerem exe_path direkt über slug-basierte Hilfsfunktionen.
 
 set -euo pipefail
 
@@ -24,10 +27,10 @@ main() {
     log_available=true
   fi
 
-  # ── 2. Spielordner ermitteln (kein Prompt, kein Hänger) ──────────────────
   if [[ "$log_available" == true ]]; then
-    local log_exe; log_exe="$(install_log_get exe_path)"
-    local log_dir; log_dir="$(install_log_get game_dir)"
+    local log_exe log_dir
+    log_exe="$(install_log_get exe_path)"
+    log_dir="$(install_log_get game_dir)"
     if [[ -n "$log_exe" ]]; then
       exe_path="$log_exe"
       game_dir="$(dirname "$exe_path")"
@@ -37,8 +40,8 @@ main() {
     fi
   fi
 
+  # ── 2. Fallback: gespeicherter Pfad (ohne -d-Check) ─────────────────────
   if [[ -z "$exe_path" ]]; then
-    # Gespeicherter Pfad – direkt lesen ohne -d-Check (Ordner muss nicht existieren)
     local saved_file
     saved_file="$(crkcachy_saved_game_dir_file "$HA_SLUG" 2>/dev/null || true)"
     if [[ -n "$saved_file" && -f "$saved_file" ]]; then
@@ -49,9 +52,9 @@ main() {
 
   # ── 3. Schritt-Screen ─────────────────────────────────────────────────────
   echo ""
-  cui_step_screen 1 1 "$(msg uninstall.title)" "$(msg uninstall.body)" "$(msg uninstall.next)"
+  cui_step_screen 1 1 "$(msg uninstall.title)" "$(msg uninstall.body)"
 
-  # ── 4. Bekannten Pfad anzeigen oder Hinweis bei fehlendem Pfad ────────────
+  # ── 4. Spielordner-Status anzeigen ────────────────────────────────────────
   echo ""
   cui_section "$(msg uninstall.path_section)"
   echo ""
@@ -91,10 +94,17 @@ main() {
   echo ""
 
   # ── 6. Deinstallation ─────────────────────────────────────────────────────
-  if [[ "$log_available" == true ]]; then
-    _uninstall_from_log "$exe_path" "$remove_steam"
+  if [[ -n "$exe_path" ]]; then
+    # Pfad bekannt: volle Deinstallation (Shortcut + Desktop + Icons)
+    # steam_uninstall_crkcachy_setup: Steam schließen, Shortcut-Reset,
+    # optional aus Bibliothek entfernen, slug-basierte Launcher + Icon löschen.
+    steam_uninstall_crkcachy_setup \
+      "$exe_path" "$HA_GAME_EXE" "$HA_GAME_EXE" "$HA_SLUG" "$remove_steam" || true
   else
-    _uninstall_fallback "$exe_path" "$remove_steam"
+    # Kein Pfad: nur slug-basierter Cleanup (kein Steam-Shortcut-Check)
+    steam_remove_crkcachy_launchers "$HA_SLUG" "$HA_GAME_EXE" || true
+    steam_remove_cached_icon "$HA_SLUG" || true
+    steam_refresh_desktop_cache 2>/dev/null || true
   fi
 
   # ── 7. Verifikation ───────────────────────────────────────────────────────
@@ -109,65 +119,6 @@ main() {
   echo ""
   read -r -p $'  \033[2m→ Enter zum Beenden …\033[0m ' _ 2>/dev/null || true
   echo ""
-}
-
-# ── Präzise Deinstallation anhand des Protokolls ──────────────────────────────
-_uninstall_from_log() {
-  local exe_path="$1"
-  local remove_steam="$2"
-
-  local steam_added; steam_added="$(install_log_get steam_shortcut_added)"
-  if [[ "$steam_added" == "1" ]] && steam_shortcut_exists "$exe_path" "$HA_GAME_EXE" 2>/dev/null; then
-    if steam_ensure_closed_for_edit; then
-      steam_reset_shortcut_setup "$exe_path" "$HA_GAME_EXE" "$HA_GAME_EXE" "$HA_SLUG" || true
-      if [[ "$remove_steam" == true ]]; then
-        steam_remove_shortcut_from_library "$exe_path" "$HA_GAME_EXE" || \
-          log_warn "$(msg steam.uninstall_steam_not_removed)"
-      fi
-    fi
-  fi
-
-  local f
-  for f in \
-    "$(install_log_get desktop_app_file)" \
-    "$(install_log_get desktop_desktop_file)" \
-    "$(install_log_get icon_file)"; do
-    [[ -n "$f" && -f "$f" ]] && rm -f "$f" && \
-      log_ok "$(msgf steam.desktop_removed "$(basename "$f")")"
-  done
-
-  steam_refresh_desktop_cache 2>/dev/null || true
-}
-
-# ── Fallback ohne Protokoll ───────────────────────────────────────────────────
-_uninstall_fallback() {
-  local exe_path="$1"
-  local remove_steam="$2"
-
-  # Steam-Shortcut nur wenn Pfad bekannt
-  if [[ -n "$exe_path" ]] && steam_shortcut_exists "$exe_path" "$HA_GAME_EXE" 2>/dev/null; then
-    if steam_ensure_closed_for_edit; then
-      steam_reset_shortcut_setup "$exe_path" "$HA_GAME_EXE" "$HA_GAME_EXE" "$HA_SLUG" || true
-      if [[ "$remove_steam" == true ]]; then
-        steam_remove_shortcut_from_library "$exe_path" "$HA_GAME_EXE" || \
-          log_warn "$(msg steam.uninstall_steam_not_removed)"
-      fi
-    fi
-  elif [[ -n "$exe_path" ]]; then
-    log_hint "$(msg steam.shortcut_not_found)"
-  fi
-
-  # Desktop-Einträge + Icons – immer, da slug-basiert (kein Pfad nötig)
-  local f
-  for f in \
-    "$(xdg_applications_dir)/crkcachy-${HA_SLUG}.desktop" \
-    "$(xdg_desktop_dir)/crkcachy-${HA_SLUG}.desktop" \
-    "${CRKCACHY_ICONS}/${HA_SLUG}.png"; do
-    [[ -f "$f" ]] && rm -f "$f" && \
-      log_ok "$(msgf steam.desktop_removed "$(basename "$f")")"
-  done
-
-  steam_refresh_desktop_cache 2>/dev/null || true
 }
 
 # ── Post-Deinstallations-Verifikation ─────────────────────────────────────────
@@ -190,7 +141,7 @@ _verify_uninstall() {
     cui_check_row warn "$(msg uninstall.verify_steam_shortcut)" "$(msg uninstall.verify_skipped)"
   fi
 
-  # Desktop-Einträge + Icon (slug-basiert, immer prüfbar)
+  # Desktop-Einträge + Icon (slug-basiert – immer prüfbar)
   local app_file; app_file="$(xdg_applications_dir)/crkcachy-${HA_SLUG}.desktop"
   if [[ -f "$app_file" ]]; then
     cui_check_row fail "$(msg uninstall.verify_desktop_app)" "$(msg uninstall.verify_still_there)"

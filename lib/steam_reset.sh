@@ -245,19 +245,8 @@ steam_uninstall_crkcachy_setup() {
     steam_remove_cached_icon "$slug" || true
   fi
 
-  echo ""
-  cui_heading "$(msg steam.uninstall_summary_title)"
-  echo ""
-  cui_result_line ok "$(msg steam.uninstall_summary_desktop)"
-  cui_result_line ok "$(msg steam.uninstall_summary_cache)"
-  if [[ "$remove_from_steam" == true ]]; then
-    cui_result_line ok "$(msg steam.uninstall_summary_steam)"
-  else
-    cui_result_line ok "$(msg steam.uninstall_summary_steam_kept)"
-  fi
-  echo ""
-  log_hint "$(msg steam.uninstall_next)"
-  echo ""
-
+  # Keine eigene Summary-Ausgabe – das aufrufende Skript (uninstall.sh)
+  # führt eine echte Verifikation durch (_verify_uninstall) und zeigt
+  # erst dann das Ergebnis an.
   return 0
 }

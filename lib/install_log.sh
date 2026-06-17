@@ -219,9 +219,14 @@ install_log_print_summary() {
 }
 
 # Was würde die Deinstallation entfernen (für Bestätigungs-Dialog)
+# Nutzt den aktuellen _INSTALL_LOG-State – kein erneutes Laden nötig wenn vorher
+# install_log_load aufgerufen wurde. Falls nicht geladen: lade aus Datei.
 install_log_print_uninstall_plan() {
   local slug="${1:-$INSTALL_LOG_SLUG}"
-  install_log_load "$slug" 2>/dev/null || return 1
+  # Nur neu laden wenn _INSTALL_LOG leer oder slug stimmt nicht überein
+  if [[ "${#_INSTALL_LOG[@]}" -eq 0 || "${_INSTALL_LOG[slug]:-}" != "$slug" ]]; then
+    install_log_load "$slug" 2>/dev/null || return 1
+  fi
 
   echo ""
   cui_check_category "$(msg install_log.uninstall_plan_title)"
