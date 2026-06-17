@@ -614,6 +614,31 @@ _MSG[tools.fetch_failed]="Download failed: %s"
 _MSG[tools.fetch_already]="%s is already available locally."
 _MSG[tools.fetch_ok]="%s ready."
 
+_MSG[tools.hub_auto_pick]="Game auto-selected: %s"
+_MSG[tools.hub_uninstall_pick_title]="Which game to uninstall?"
+
+_MSG[install_log.summary_title]="Protocol – last installation"
+_MSG[install_log.field_timestamp]="Installed on"
+_MSG[install_log.field_version]="CRKCACHY version"
+_MSG[install_log.field_game_dir]="Game folder"
+_MSG[install_log.field_exe]="Game exe"
+_MSG[install_log.field_steam_shortcut]="Steam shortcut"
+_MSG[install_log.field_desktop]="Desktop entry"
+_MSG[install_log.val_done]="configured"
+_MSG[install_log.val_manual]="manual (no shortcut)"
+_MSG[install_log.val_file_gone]="file missing"
+_MSG[install_log.val_will_remove]="will be removed"
+
+_MSG[install_log.uninstall_plan_title]="Will be removed"
+_MSG[install_log.uninstall_steam_shortcut]="Steam shortcut & launch options"
+_MSG[install_log.uninstall_desktop_app]="Application menu entry"
+_MSG[install_log.uninstall_desktop_icon]="Desktop icon"
+_MSG[install_log.uninstall_icon_cache]="Icon cache"
+
+_MSG[install_log.no_log_hint]="No install protocol found – manual search."
+_MSG[install_log.loaded]="Protocol loaded – game folder pre-filled."
+_MSG[install_log.cleared]="Install protocol deleted."
+
 _MSG[uninstall.title]="Uninstall – remove CRKCACHY"
 _MSG[uninstall.body]=$'Removes everything CRKCACHY configured:\n• Display name, launch options, Steam icons\n• Desktop and menu entries\n• Icon cache\n\nOptional: remove game from Steam library too.\nYour game folder on disk is not touched.'
 _MSG[uninstall.next]="Confirm game folder → choose options."

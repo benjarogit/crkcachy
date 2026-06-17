@@ -27,6 +27,8 @@ source "${CRKCACHY_ROOT}/lib/proton.sh"
 source "${CRKCACHY_ROOT}/lib/assess.sh"
 # shellcheck source=lib/preflight.sh
 source "${CRKCACHY_ROOT}/lib/preflight.sh"
+# shellcheck source=lib/install_log.sh
+source "${CRKCACHY_ROOT}/lib/install_log.sh"
 
 ASSESS_LOGICAL_BASE=(
   vkd3d
@@ -91,7 +93,7 @@ run_game_setup() {
 
 run_game_uninstall() {
   ui_step "$(msg uninstall.title)"
-  tool_hub_run "uninstall" || true
+  tool_hub_run_uninstall || true
   echo ""
   return 0
 }

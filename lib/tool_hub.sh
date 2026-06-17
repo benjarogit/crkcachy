@@ -149,3 +149,54 @@ tool_hub_run() {
 tool_hub_interactive() {
   tool_hub_run ""
 }
+
+# Für Deinstallation: kein Download-Framing, Auto-Select bei einem Tool
+tool_hub_run_uninstall() {
+  discover_tools 2>/dev/null || true
+
+  local slug=""
+
+  if [[ "${#TOOL_SLUGS[@]}" -eq 1 ]]; then
+    # Nur ein Tool bekannt → direkt auswählen
+    slug="${TOOL_SLUGS[0]}"
+    log_info "$(msgf tools.hub_auto_pick "$(get_tool_name "$slug")")"
+  elif [[ "${#TOOL_SLUGS[@]}" -gt 1 ]]; then
+    # Mehrere Tools → vereinfachter Picker (kein Download-Hinweis)
+    local labels=() slugs=() i name desc selected
+
+    echo ""
+    cui_section "$(msg tools.hub_uninstall_pick_title)"
+    echo ""
+
+    for i in "${!TOOL_SLUGS[@]}"; do
+      slug="${TOOL_SLUGS[$i]}"
+      name="$(get_tool_name "$slug")"
+      desc="$(get_tool_desc "$slug")"
+      if [[ -n "$desc" ]]; then
+        labels+=("$((i + 1))) $name – $desc")
+      else
+        labels+=("$((i + 1))) $name")
+      fi
+      slugs+=("$slug")
+    done
+    labels+=("$(msg action.opt_back)")
+    slugs+=("")
+
+    selected="$(cui_choose "$(msg wizard.choose_hint)" 0 "${labels[@]}")" || true
+    slug=""
+    for i in "${!labels[@]}"; do
+      if [[ "${labels[$i]}" == "$selected" ]]; then
+        slug="${slugs[$i]}"
+        break
+      fi
+    done
+  fi
+
+  if [[ -z "$slug" ]]; then
+    log_info "$(msg install.cancelled)"
+    return 0
+  fi
+
+  # Dispatch direkt mit uninstall – kein ensure_ready, kein Download
+  tool_hub_dispatch "$slug" "uninstall"
+}

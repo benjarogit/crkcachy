@@ -149,6 +149,11 @@ run_ha_install() {
   ha_load_runtime
   ensure_crkcachy_runtime
 
+  # Protokoll initialisieren (wird am Ende gespeichert)
+  install_log_init "$HA_SLUG"
+  # Sicherheitsnetz: Log auch bei unerwartetem Abbruch speichern
+  trap 'install_log_save 2>/dev/null || true' EXIT
+
   ha_show_plan
 
   ui_step "$(msg ha.intro_title)"
@@ -173,6 +178,10 @@ run_ha_install() {
     die "$(msgf ha.dir_missing "$game_dir")"
   fi
 
+  # Spielpfade sofort protokollieren
+  install_log_set "game_dir"          "$game_dir"
+  install_log_set "steam_display_name" "$HA_GAME_STEAM_NAME"
+
   ui_step "$(msg ha.check_folder)"
   ui_running "$(msg ha.check_folder)"
   bash "${TOOL_DIR}/checks.sh" "$game_dir" || log_warn "$(msg ha.fix_missing)"
@@ -183,7 +192,41 @@ run_ha_install() {
   exe_path="$(ha_resolve_exe_path "$game_dir")"
   launch_opts="$(ha_read_launch_options)"
 
+  install_log_set "exe_path"         "$exe_path"
+  install_log_set "steam_launch_opts" "$launch_opts"
+
   run_steam_auto_or_manual "$exe_path" "$game_dir" "$launch_opts"
+
+  # ── Was wurde tatsächlich eingerichtet? ──────────────────────────────────
+  # Steam-Shortcut
+  if steam_shortcut_exists "$exe_path" "$HA_GAME_EXE" 2>/dev/null; then
+    install_log_set "steam_shortcut_added" "1"
+    install_log_set "steam_mode" "auto"
+  else
+    install_log_set "steam_shortcut_added" "0"
+    install_log_set "steam_mode" "manual"
+  fi
+
+  # Desktop-Einträge (Pfade sind deterministisch)
+  local _app_file _desk_file _icon_file
+  _app_file="$(xdg_applications_dir)/crkcachy-${HA_SLUG}.desktop"
+  _desk_file="$(xdg_desktop_dir)/crkcachy-${HA_SLUG}.desktop"
+  _icon_file="${CRKCACHY_ICONS}/${HA_SLUG}.png"
+
+  if [[ -f "$_app_file" ]]; then
+    install_log_set "desktop_app_file" "$_app_file"
+    install_log_set "desktop_mode"    "auto"
+  fi
+  if [[ -f "$_desk_file" ]]; then
+    install_log_set "desktop_desktop_file" "$_desk_file"
+  fi
+  if [[ -f "$_icon_file" ]]; then
+    install_log_set "icon_file" "$_icon_file"
+  fi
+
+  # Protokoll auf Disk speichern
+  install_log_save
+  trap - EXIT  # Trap entfernen (save ist erledigt)
 
   ha_show_finish_summary
 

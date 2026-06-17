@@ -78,6 +78,8 @@ ha_load_runtime() {
   source "${HA_CRKCACHY_ROOT}/lib/steam.sh"
   # shellcheck source=lib/proton.sh
   source "${HA_CRKCACHY_ROOT}/lib/proton.sh"
+  # shellcheck source=lib/install_log.sh
+  source "${HA_CRKCACHY_ROOT}/lib/install_log.sh"
 }
 
 ha_parse_tool_args() {

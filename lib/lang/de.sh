@@ -384,6 +384,31 @@ _MSG[tools.fetch_failed]="Download fehlgeschlagen: %s"
 _MSG[tools.fetch_already]="%s ist bereits lokal verfügbar."
 _MSG[tools.fetch_ok]="%s bereit."
 
+_MSG[tools.hub_auto_pick]="Spiel automatisch erkannt: %s"
+_MSG[tools.hub_uninstall_pick_title]="Welches Spiel deinstallieren?"
+
+_MSG[install_log.summary_title]="Protokoll – letzte Installation"
+_MSG[install_log.field_timestamp]="Installiert am"
+_MSG[install_log.field_version]="CRKCACHY-Version"
+_MSG[install_log.field_game_dir]="Spielordner"
+_MSG[install_log.field_exe]="Spiel-Exe"
+_MSG[install_log.field_steam_shortcut]="Steam-Shortcut"
+_MSG[install_log.field_desktop]="Desktop-Eintrag"
+_MSG[install_log.val_done]="eingerichtet"
+_MSG[install_log.val_manual]="manuell (kein Shortcut)"
+_MSG[install_log.val_file_gone]="Datei fehlt"
+_MSG[install_log.val_will_remove]="wird entfernt"
+
+_MSG[install_log.uninstall_plan_title]="Wird entfernt"
+_MSG[install_log.uninstall_steam_shortcut]="Steam-Shortcut & Startoptionen"
+_MSG[install_log.uninstall_desktop_app]="Startmenü-Eintrag"
+_MSG[install_log.uninstall_desktop_icon]="Desktop-Icon"
+_MSG[install_log.uninstall_icon_cache]="Icon-Cache"
+
+_MSG[install_log.no_log_hint]="Kein Installationsprotokoll gefunden – manuelle Suche."
+_MSG[install_log.loaded]="Protokoll geladen – Spielordner vorausgefüllt."
+_MSG[install_log.cleared]="Installationsprotokoll gelöscht."
+
 _MSG[uninstall.title]="Deinstallieren – CRKCACHY entfernen"
 _MSG[uninstall.body]=$'Entfernt alles, was CRKCACHY eingerichtet hat:\n• Anzeigename, Startoptionen, Steam-Icons\n• Desktop- und Startmenü-Einträge\n• Icon-Cache\n\nOptional: Spiel auch aus der Steam-Bibliothek entfernen.\nDein Spielordner auf der Festplatte bleibt unberührt.'
 _MSG[uninstall.next]="Spielordner bestätigen → Optionen wählen."
