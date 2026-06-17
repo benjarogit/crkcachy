@@ -419,6 +419,11 @@ _MSG[uninstall.confirm]="Jetzt deinstallieren?"
 _MSG[uninstall.no_setup_title]="Keine Steam-Einrichtung gefunden"
 _MSG[uninstall.no_setup_body]="Es gibt keinen Shortcut – wir räumen trotzdem Desktop-Einträge und Icon-Cache auf."
 
+_MSG[uninstall.path_section]="Spielordner"
+_MSG[uninstall.path_source_saved]="Spielordner (gespeicherter Pfad)"
+_MSG[uninstall.path_using]="Spielordner"
+_MSG[uninstall.path_ask]="Gib den Pfad zu deinem Spielordner ein:"
+
 _MSG[uninstall.verify_title]="Deinstallations-Check"
 _MSG[uninstall.verify_steam_shortcut]="Steam-Shortcut"
 _MSG[uninstall.verify_desktop_app]="Startmenü-Eintrag"

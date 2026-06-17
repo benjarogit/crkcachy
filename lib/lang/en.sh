@@ -649,6 +649,11 @@ _MSG[uninstall.confirm]="Uninstall now?"
 _MSG[uninstall.no_setup_title]="No Steam setup found"
 _MSG[uninstall.no_setup_body]="No shortcut found – we still clean desktop entries and icon cache."
 
+_MSG[uninstall.path_section]="Game folder"
+_MSG[uninstall.path_source_saved]="Game folder (saved path)"
+_MSG[uninstall.path_using]="Game folder"
+_MSG[uninstall.path_ask]="Enter the path to your game folder:"
+
 _MSG[uninstall.verify_title]="Uninstall check"
 _MSG[uninstall.verify_steam_shortcut]="Steam shortcut"
 _MSG[uninstall.verify_desktop_app]="Application menu entry"
