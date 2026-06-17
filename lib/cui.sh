@@ -67,14 +67,15 @@ cui_divider() { echo ""; cui_rule; echo ""; }
 
 cui_brand_header() {
   echo ""
-  # ASCII-Logo: funktioniert in allen Terminals ohne externe Tools
+  # Logo: Letter-Spacing-Stil – lesbar in jedem Terminal, kein figlet nötig
   gum style \
     --bold \
     --foreground "$CUI_C_BRAND" \
-    --border-foreground "$CUI_C_BRAND" \
     --border "double" \
-    --padding "0 3" \
-$'  ____  ____  _  ___   _   ____  ____  _  _ _  _ \n / ___)/ _  )| |/ / \_/ \ / ___)(  _ \( )/ )( \\/ )\n| |    \ V / |   (  ) ( || |   | | | | < <  )  ( \n \____)/   / |_|\_\\_/ \_/ \____)(_)(_)(_)\_)(_/\_)'
+    --border-foreground "$CUI_C_BRAND" \
+    --padding "1 6" \
+    --align center \
+    "C R K C A C H Y"
   echo ""
   gum style --foreground "$CUI_C_MUTED" \
     "  v${CRKCACHY_VERSION}  ·  $(msg banner.subtitle)"
