@@ -242,12 +242,17 @@ _spacewar_remove_auto() {
   steam steam://uninstall/480 >/dev/null 2>&1 &
   disown 2>/dev/null || true
   echo ""
-  gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_auto_hint)"
+
+  # Klare Box-Anweisung – kein Ja/Nein, sondern echter Warte-Prompt
+  gum style \
+    --border rounded \
+    --border-foreground "$CUI_C_WARNING" \
+    --padding "1 2" \
+    "$(msg uninstall.spacewar_auto_hint)"
   echo ""
 
-  if ! cui_yes_no "$(msg uninstall.spacewar_done_confirm)" true; then
-    return 0
-  fi
+  # Warte auf Benutzer-Bestätigung NACHDEM Spacewar im Steam-Dialog bestätigt wurde
+  cui_continue "$(msg uninstall.spacewar_wait_continue)"
 }
 
 _spacewar_remove_manual() {
@@ -256,14 +261,41 @@ _spacewar_remove_manual() {
     "$(msg uninstall.spacewar_manual_steps)"
   echo ""
 
-  if ! cui_yes_no "$(msg uninstall.spacewar_done_confirm)" true; then
-    return 0
-  fi
+  cui_continue "$(msg uninstall.spacewar_wait_continue)"
 }
 
 _spacewar_verify() {
-  # Kurz warten damit Steam-Manifest von Disk verschwindet
-  sleep 1
+  # Etwas länger warten bis Steam das Manifest von Disk entfernt hat
+  echo ""
+  if command -v gum >/dev/null 2>&1; then
+    gum spin --spinner dot --title "$(msg uninstall.spacewar_verify_waiting)" -- sleep 3
+  else
+    sleep 3
+  fi
+  find_steam_root 2>/dev/null || true
+
+  echo ""
+  cui_check_category "Spacewar – Check"
+  if [[ ! -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]; then
+    cui_check_row ok "Spacewar" "App 480" "$(msg uninstall.spacewar_verify_ok)"
+    echo ""
+    return 0
+  fi
+
+  # Noch installiert – einmalige Retry-Chance anbieten
+  cui_check_row warn "Spacewar" "App 480" "$(msg uninstall.spacewar_verify_still)"
+  echo ""
+  gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_verify_hint)"
+  echo ""
+
+  # Nochmal warten lassen und erneut prüfen
+  cui_continue "$(msg uninstall.spacewar_retry_continue)"
+  echo ""
+  if command -v gum >/dev/null 2>&1; then
+    gum spin --spinner dot --title "$(msg uninstall.spacewar_verify_waiting)" -- sleep 3
+  else
+    sleep 3
+  fi
   find_steam_root 2>/dev/null || true
 
   echo ""
@@ -273,7 +305,7 @@ _spacewar_verify() {
   else
     cui_check_row warn "Spacewar" "App 480" "$(msg uninstall.spacewar_verify_still)"
     echo ""
-    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_verify_hint)"
+    log_hint "$(msg uninstall.spacewar_verify_hint)"
   fi
   echo ""
 }
