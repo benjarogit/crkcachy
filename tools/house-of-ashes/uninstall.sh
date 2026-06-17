@@ -227,7 +227,7 @@ _verify_uninstall() {
   fi
 
   # Desktop-App-Eintrag
-  local app_file="${CRKCACHY_ICONS%icons}../../.local/share/applications/crkcachy-${HA_SLUG}.desktop"
+  local app_file
   app_file="$(xdg_applications_dir)/crkcachy-${HA_SLUG}.desktop"
   if [[ -f "$app_file" ]]; then
     cui_check_row fail "$(msg uninstall.verify_desktop_app)" "$(msg uninstall.verify_still_there)" "$(basename "$app_file")"
