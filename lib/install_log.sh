@@ -107,6 +107,7 @@ install_log_save() {
       steam_shortcut_added steam_mode
       desktop_app_file desktop_desktop_file desktop_mode
       icon_file
+      spacewar_installed_by_crkcachy
     )
     local key
     for key in "${ordered_keys[@]}"; do

@@ -110,9 +110,19 @@ main() {
   # ── 7. Verifikation ───────────────────────────────────────────────────────
   _verify_uninstall "$exe_path"
 
-  # ── 8. Protokoll löschen ──────────────────────────────────────────────────
-  [[ "$log_available" == true ]] && install_log_clear "$HA_SLUG" 2>/dev/null || true
+  # ── 8. Spacewar-Flag aus Protokoll lesen (vor dem Löschen!) ───────────────
+  local spacewar_by_crkcachy="0"
+  if [[ "$log_available" == true ]]; then
+    spacewar_by_crkcachy="$(install_log_get spacewar_installed_by_crkcachy 2>/dev/null || echo "0")"
+  fi
 
+  # ── 9. Protokoll löschen ──────────────────────────────────────────────────
+  if [[ "$log_available" == true ]]; then
+    install_log_clear "$HA_SLUG" 2>/dev/null || true
+  fi
+
+  # ── 10. Spacewar optional entfernen ────────────────────────────────────────
+  _maybe_remove_spacewar "$spacewar_by_crkcachy"
 }
 
 # ── Post-Deinstallations-Verifikation ─────────────────────────────────────────
@@ -168,6 +178,42 @@ _verify_uninstall() {
     echo ""
     log_hint "$(msg uninstall.verify_hint)"
   fi
+}
+
+# ── Spacewar optional deinstallieren ─────────────────────────────────────────
+# $1: "1" = CRKCACHY hat Spacewar installiert (aus Protokoll)
+#     "0" = unbekannt / nicht von CRKCACHY (trotzdem anbieten mit Hinweis)
+_maybe_remove_spacewar() {
+  local by_crkcachy="${1:-0}"
+
+  find_steam_root 2>/dev/null || true
+  if [[ ! -f "${SPACEWAR_MANIFEST:-/dev/null}" ]]; then
+    return 0
+  fi
+
+  echo ""
+  cui_section "Spacewar" "App 480"
+  echo ""
+
+  if [[ "$by_crkcachy" == "1" ]]; then
+    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_info_tracked)"
+  else
+    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_info_unknown)"
+  fi
+
+  echo ""
+
+  if ! cui_yes_no "$(msg uninstall.spacewar_remove_ask)" false; then
+    return 0
+  fi
+
+  echo ""
+  log_info "$(msg uninstall.spacewar_launching)"
+  steam steam://uninstall/480 >/dev/null 2>&1 &
+  disown 2>/dev/null || true
+  echo ""
+  gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_hint)"
+  echo ""
 }
 
 main "${FILTERED_CLI_ARGS[@]:-${FILTERED_ARGS[@]}}"

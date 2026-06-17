@@ -670,6 +670,12 @@ _MSG[uninstall.verify_incomplete]="Some items could not be removed"
 _MSG[uninstall.verify_hint]="Tip: restart Steam and run ./install.sh --uninstall again."
 _MSG[uninstall.verify_skipped]="skipped (game folder unknown)"
 
+_MSG[uninstall.spacewar_info_tracked]="Spacewar (App 480) was installed by CRKCACHY as a technical helper and is no longer needed for this game."
+_MSG[uninstall.spacewar_info_unknown]="Spacewar (App 480) is installed and used by CRKCACHY as a technical helper. Remove it if you don't use any other games via CRKCACHY."
+_MSG[uninstall.spacewar_remove_ask]="Remove Spacewar (App 480) now?"
+_MSG[uninstall.spacewar_launching]="Opening Steam – uninstalling Spacewar …"
+_MSG[uninstall.spacewar_hint]="Confirm the Spacewar uninstall in the Steam dialog."
+
 _MSG[uninstall.path_unknown]="Game folder unknown"
 _MSG[uninstall.path_unknown_hint]="Steam shortcut will be skipped"
 _MSG[uninstall.path_unknown_body]=$'CRKCACHY does not know the game folder anymore.\nDesktop entries and icon cache will still be removed.\nThe Steam shortcut may need to be deleted manually in Steam.'

@@ -224,6 +224,13 @@ run_ha_install() {
     install_log_set "icon_file" "$_icon_file"
   fi
 
+  # Spacewar: wurde es von CRKCACHY während des Onboardings installiert?
+  local _sw_marker="${HOME}/.local/share/crkcachy/.spacewar_crkcachy_pending"
+  if [[ -f "$_sw_marker" ]]; then
+    install_log_set "spacewar_installed_by_crkcachy" "1"
+    rm -f "$_sw_marker" 2>/dev/null || true
+  fi
+
   # Protokoll auf Disk speichern
   install_log_save
   trap - EXIT  # Trap entfernen (save ist erledigt)

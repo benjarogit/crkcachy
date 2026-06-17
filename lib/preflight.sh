@@ -251,6 +251,10 @@ preflight_fix_spacewar() {
     if _preflight_spacewar_installed; then
       echo ""
       cui_status_chip true "$(msg runtime.spacewar_verified)"
+      # Marker schreiben: CRKCACHY hat Spacewar installiert → für Deinstallation merken
+      local _sw_marker_dir="${HOME}/.local/share/crkcachy"
+      mkdir -p "$_sw_marker_dir" 2>/dev/null || true
+      touch "${_sw_marker_dir}/.spacewar_crkcachy_pending" 2>/dev/null || true
       return 0
     fi
     tries=$((tries + 1))
