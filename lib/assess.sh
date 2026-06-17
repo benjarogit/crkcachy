@@ -407,30 +407,35 @@ assess_guided_fix() {
           fi
           ;;
         steam_data)
-          log_warn "$(assess_issue_label "$issue")"
+          if declare -F preflight_fix_steam_data >/dev/null 2>&1; then
+            preflight_fix_steam_data && fixed=true || true
+          else
+            log_warn "$(assess_issue_label "$issue")"
+          fi
           ;;
         protonup|arch_only:protonup)
-          if platform_is_arch_family; then
+          if declare -F preflight_fix_protonup >/dev/null 2>&1; then
+            preflight_fix_protonup && fixed=true || true
+          elif platform_is_arch_family; then
             if install_single_package protonup; then fixed=true; fi
           fi
           ;;
         ge_proton)
-          if command_exists protonup-rs; then
+          if declare -F preflight_fix_ge_proton >/dev/null 2>&1; then
+            preflight_fix_ge_proton && fixed=true || true
+          elif command_exists protonup-rs; then
             if confirm "$(msg proton.confirm_install)"; then
-              protonup-rs -q --tool GEProton --version latest --for steam
-              fixed=true
-            else
-              log_warn "$(msg proton.skipped)"
-              log_hint "$(msg offer.manual_label)"
-              log_hint "$(msg proton.manual_cmd)"
+              protonup-rs -q --tool GEProton --version latest --for steam && fixed=true || true
             fi
-          elif ! platform_is_arch_family; then
-            log_warn "$(assess_issue_label "arch_only:protonup")"
           fi
           ;;
         spacewar)
-          log_warn "$(assess_issue_label "$issue")"
-          log_hint "$(msg spacewar.hint1)"
+          if declare -F preflight_fix_spacewar >/dev/null 2>&1; then
+            preflight_fix_spacewar && fixed=true || true
+          else
+            log_warn "$(assess_issue_label "$issue")"
+            log_hint "$(msg spacewar.hint1)"
+          fi
           ;;
         cachyos)
           ;;
