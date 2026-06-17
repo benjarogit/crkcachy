@@ -71,11 +71,87 @@ run_pc_fix() {
   if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
     log_ok "$(msg assess.pc_already_ok)"
     print_overlay_hint
+    _pc_fix_done_panel
     return 0
   fi
 
-  assess_guided_fix
+  assess_guided_fix || true
   print_overlay_hint
+  _pc_fix_done_panel
+}
+
+# Robuster Menü-Picker – Fallback wenn gum nach Steam-Dialog nicht rendert.
+_menu_choose() {
+  local header="$1"
+  shift
+  local options=("$@")
+  local pick=""
+
+  if command -v gum >/dev/null 2>&1 && [[ -t 0 ]] && [[ -t 1 ]]; then
+    pick="$(gum choose \
+      --header "$header" \
+      --cursor "› " \
+      --height "${#options[@]}" \
+      "${options[@]}")" || pick=""
+  fi
+
+  if [[ -n "$pick" ]]; then
+    echo "$pick"
+    return 0
+  fi
+
+  echo ""
+  echo "$header"
+  local i=1 opt
+  for opt in "${options[@]}"; do
+    echo "  $i) $opt"
+    i=$((i + 1))
+  done
+  echo ""
+  local reply
+  read -r -p "> " reply
+  if [[ "$reply" =~ ^[0-9]+$ ]] && [[ "$reply" -ge 1 ]] && [[ "$reply" -le "${#options[@]}" ]]; then
+    echo "${options[$((reply - 1))]}"
+  fi
+}
+
+_pc_fix_done_panel() {
+  echo ""
+  if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
+    cui_status_chip true "$(msg assess.all_ready)"
+  else
+    cui_status_chip false "$(msg assess.pc_fix_partial)"
+  fi
+  echo ""
+  cui_continue "$(msg assess.pc_fix_continue)"
+}
+
+_after_pc_fix_menu() {
+  echo ""
+  local pick
+  pick="$(_menu_choose "$(msg assess.after_pc_title)" \
+    "$(msg assess.after_pc_install)" \
+    "$(msg assess.after_pc_menu)" \
+    "$(msg assess.after_pc_exit)")"
+
+  echo ""
+  case "${pick:-}" in
+    "$(msg assess.after_pc_install)")
+      run_game_setup || true
+      _after_install_menu
+      ;;
+    "$(msg assess.after_pc_menu)")
+      cui_screen_clear
+      show_wizard_menu || true
+      ;;
+    "$(msg assess.after_pc_exit)")
+      echo ""
+      log_ok "$(msg install.goodbye)"
+      ;;
+    *)
+      log_hint "$(msg assess.after_pc_hint)"
+      ;;
+  esac
 }
 
 run_game_setup() {
@@ -126,11 +202,9 @@ _after_uninstall_menu() {
 _after_install_menu() {
   echo ""
   local _pick
-  _pick="$(gum choose \
-    --header "$(msg install.after_title)" \
-    --cursor "› " \
+  _pick="$(_menu_choose "$(msg install.after_title)" \
     "$(msg install.after_menu)" \
-    "$(msg install.after_exit)")" 2>/dev/null || _pick=""
+    "$(msg install.after_exit)")"
 
   echo ""
   case "${_pick:-}" in
@@ -180,6 +254,7 @@ show_wizard_menu() {
       ;;
     2)
       run_pc_fix || true
+      _after_pc_fix_menu
       ;;
     3)
       if ! run_game_setup; then
@@ -204,7 +279,7 @@ show_wizard_menu() {
             log_warn "$(msg assess.block_game_still)"
           fi
           ;;
-        2) run_pc_fix || true ;;
+        2) run_pc_fix || true; _after_pc_fix_menu ;;
         *) run_pc_fix || true; run_game_setup || true ;;
       esac
       ;;

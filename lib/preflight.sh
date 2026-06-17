@@ -225,8 +225,15 @@ preflight_fix_spacewar() {
       if command_exists steam || platform_logical_installed steam 2>/dev/null; then
         log_info "$(msg runtime.spacewar_launching)"
         steam steam://install/480 >/dev/null 2>&1 &
+        disown 2>/dev/null || true
         echo ""
-        log_ok "$(msg runtime.spacewar_launched)"
+        gum style \
+          --border rounded \
+          --border-foreground "$CUI_C_WARNING" \
+          --padding "1 2" \
+          "$(msg runtime.spacewar_auto_hint)"
+        echo ""
+        cui_continue "$(msg runtime.spacewar_wait_continue)"
       else
         log_warn "$(msg runtime.spacewar_no_steam)"
         return 1
@@ -267,10 +274,7 @@ preflight_fix_spacewar() {
       return 0
     fi
     echo ""
-    if ! confirm "$(msg runtime.spacewar_wait_confirm)" true; then
-      log_warn "$(msg runtime.spacewar_skipped)"
-      return 1
-    fi
+    cui_continue "$(msg runtime.spacewar_wait_continue)"
     # Kurz warten damit Steam-Manifest auf Disk erscheint
     sleep 2
   done

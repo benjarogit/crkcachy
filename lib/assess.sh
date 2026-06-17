@@ -432,6 +432,9 @@ assess_guided_fix() {
         spacewar)
           if declare -F preflight_fix_spacewar >/dev/null 2>&1; then
             preflight_fix_spacewar && fixed=true || true
+            # Manifest kann kurz nach Steam-Dialog verzögert auf Disk erscheinen
+            sleep 2
+            find_steam_root 2>/dev/null || true
           else
             log_warn "$(assess_issue_label "$issue")"
             log_hint "$(msg spacewar.hint1)"
