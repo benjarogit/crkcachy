@@ -17,19 +17,26 @@ tui_wizard_pick() {
   local _out="${1:-}"
   local labels=() values=() i selected result idx
 
+  # Empfohlene Option zuerst, mit Badge
   labels+=("$(msg ui.badge_recommended)  $(msg wizard.opt"$ASSESS_RECOMMENDED")")
   values+=("$ASSESS_RECOMMENDED")
 
-  for i in 1 2 3 4; do
-    [[ "$i" == "$ASSESS_RECOMMENDED" || "$i" == 4 ]] && continue
+  # Restliche Hauptoptionen 1–3 (empfohlene + 4 + 5 werden separat gesetzt)
+  for i in 1 2 3; do
+    [[ "$i" == "$ASSESS_RECOMMENDED" ]] && continue
     labels+=("$(msg wizard.opt$i)")
     values+=("$i")
   done
 
+  # Systemstatus immer vorletzt
   if [[ "$ASSESS_RECOMMENDED" != 4 ]]; then
     labels+=("$(msg wizard.opt4)")
     values+=("4")
   fi
+
+  # Deinstallieren immer am Ende
+  labels+=("$(msg wizard.opt5)")
+  values+=("5")
 
   selected="$(cui_choose "$(msg wizard.choose_hint)" 0 "${labels[@]}")"
 

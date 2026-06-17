@@ -59,6 +59,7 @@ announce_choice() {
     1) ui_action "$(msg flow.chose_1)" ;;
     2) ui_action "$(msg flow.chose_2)" ;;
     3) ui_action "$(msg flow.chose_3)" ;;
+    5) ui_action "$(msg uninstall.title)" ;;
   esac
 }
 
@@ -84,6 +85,13 @@ run_game_setup() {
   fi
 
   tool_hub_interactive || true
+  echo ""
+  return 0
+}
+
+run_game_uninstall() {
+  ui_step "$(msg uninstall.title)"
+  tool_hub_run "uninstall" || true
   echo ""
   return 0
 }
@@ -151,6 +159,9 @@ show_wizard_menu() {
       print_wizard_options
       assess_print_next_step
       return 0
+      ;;
+    5)
+      run_game_uninstall || true
       ;;
     "")
       case "$ASSESS_RECOMMENDED" in
