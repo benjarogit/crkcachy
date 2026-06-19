@@ -227,15 +227,33 @@ print_status() {
 
 show_wizard_menu() {
   local redraw=false
+  local first=true
+  local note marker
 
   while true; do
     assess_run
 
-    if [[ "$redraw" == true ]]; then
+    if [[ "$first" == true || "$redraw" == true ]]; then
       cui_screen_clear
+      first=false
+      redraw=false
     fi
 
-    tui_wizard_show_header
+    if [[ "${ASSESS_SYSTEM_READY:-false}" == true ]]; then
+      crk_intro "$(msgf wizard.intro "v${CRKCACHY_VERSION}")"
+      note="$(assess_recommended_hint)"
+      marker="${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/.deps_hint_v${CRKCACHY_VERSION}"
+      if [[ ! -f "$marker" ]]; then
+        note="${note}
+
+$(msg runtime.deps_cleanup_short)"
+        mkdir -p "$(dirname "$marker")"
+        touch "$marker"
+      fi
+      crk_note "$note"
+    else
+      tui_wizard_show_header
+    fi
 
     local choice=""
     tui_wizard_pick choice
@@ -269,6 +287,7 @@ show_wizard_menu() {
         ;;
       4)
         redraw=false
+        first=true
         assess_run
         assess_print_report || true
         print_wizard_options

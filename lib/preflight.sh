@@ -480,8 +480,11 @@ preflight_fix_recommended() {
 preflight_onboard() {
   preflight_run
   echo ""
-  preflight_print_checklist
-  echo ""
+
+  if [[ "$PREFLIGHT_REQUIRED_FAIL" -gt 0 || "$PREFLIGHT_RECOMMENDED_FAIL" -gt 0 ]]; then
+    preflight_print_checklist
+    echo ""
+  fi
 
   if [[ "$PLATFORM_TIER" == unsupported ]]; then
     log_warn "$(msg platform.tier_unsupported_warn)"

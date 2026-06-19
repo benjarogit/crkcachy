@@ -332,8 +332,6 @@ crk_spin() {
 crk_print_deps_hint() {
   local marker="${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/.deps_hint_v${CRKCACHY_VERSION}"
   [[ -f "$marker" ]] && return 0
-  echo ""
-  log_hint "$(msg runtime.deps_cleanup)"
   mkdir -p "$(dirname "$marker")"
   touch "$marker"
 }

@@ -53,6 +53,7 @@ _MSG[tool.house-of-ashes.name]="House of Ashes"
 _MSG[tool.house-of-ashes.desc]="The Dark Pictures – Steam + Proton + multiplayer"
 
 _MSG[wizard.title]="What do you want to do?"
+_MSG[wizard.intro]="CRKCACHY %s"
 _MSG[wizard.choose_hint]="↑↓ pick · Enter confirms"
 _MSG[wizard.pick_retry]="Menu unavailable – please try again."
 _MSG[wizard.pick_failed]="Could not open menu. Use a real terminal (Konsole), not a pipe/CI session."
@@ -607,6 +608,7 @@ _MSG[runtime.legal_hint]="Setup help only – no liability. docs/legal.md"
 _MSG[runtime.bootstrap_title]="CRKCACHY needs a couple programs"
 _MSG[runtime.bootstrap_body]=$'First two for the interface:\n• Node.js – arrow-key menus (Clack, like OpenClaw)\n• glow – readable guides\n\nLater: Steam, icon helpers, Proton … we explain each one.'
 _MSG[runtime.bootstrap_hint]="Missing something? You'll see what it is and why."
+_MSG[runtime.deps_cleanup_short]="gum no longer needed → sudo pacman -Rns gum"
 _MSG[runtime.deps_cleanup]=$'Packages – what you still need:\n\n✓ Required: nodejs, glow\n✗ No longer needed: gum (sudo pacman -Rns gum)\n\nCRKCACHY uses Node.js + @clack/prompts for menus.'
 
 _MSG[node.what_is]="Node.js = menu UI (Clack)"

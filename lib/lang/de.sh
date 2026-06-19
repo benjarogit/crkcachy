@@ -53,6 +53,7 @@ _MSG[tool.house-of-ashes.name]="House of Ashes"
 _MSG[tool.house-of-ashes.desc]="The Dark Pictures – Steam + Proton + Multiplayer"
 
 _MSG[wizard.title]="Was möchtest du tun?"
+_MSG[wizard.intro]="CRKCACHY %s"
 _MSG[wizard.choose_hint]="↑↓ wählen · Enter bestätigt"
 _MSG[wizard.pick_retry]="Menü nicht erreichbar – bitte erneut versuchen."
 _MSG[wizard.pick_failed]="Menü konnte nicht geöffnet werden. Bitte echtes Terminal (Konsole) nutzen, nicht Pipe/CI."
@@ -881,6 +882,7 @@ _MSG[runtime.legal_hint]="Nur Hilfe – keine Haftung. Siehe docs/legal.md"
 _MSG[runtime.bootstrap_title]="Oberfläche einrichten"
 _MSG[runtime.bootstrap_body]=$'CRKCACHY nutzt zwei Programme für die Oberfläche:\n\n• Node.js – Auswahlmenüs in der Konsole (Clack, wie OpenClaw)\n• glow – README und Anleitungen formatiert anzeigen\n\nWeitere Pakete (Steam, Proton, …) kommen später – jeweils mit Erklärung.'
 _MSG[runtime.bootstrap_hint]="Fehlt etwas, zeigen wir dir den Grund und den Installationsbefehl."
+_MSG[runtime.deps_cleanup_short]="gum nicht mehr nötig → sudo pacman -Rns gum"
 _MSG[runtime.deps_cleanup]=$'Pakete – was brauchst du noch?\n\n✓ Pflicht: nodejs, glow\n✗ Nicht mehr nötig: gum (sudo pacman -Rns gum)\n\nCRKCACHY nutzt Node.js + @clack/prompts für Menüs.'
 
 _MSG[node.what_is]="Node.js = Menü-Oberfläche (Clack)"
