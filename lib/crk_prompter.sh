@@ -71,14 +71,15 @@ _crk_prompter_run() {
   err_file="${tmp}.err"
   printf '%s' "$json" > "$tmp"
 
-  if [[ -t 0 ]]; then
+  if [[ -t 0 && -t 1 ]]; then
     node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" || rc=$?
-  elif [[ -r /dev/tty ]]; then
-    node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" 0</dev/tty || rc=$?
+  elif [[ -r /dev/tty && -w /dev/tty ]]; then
+    node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 0</dev/tty > /dev/tty 2>"$err_file" || rc=$?
   else
     rm -f "$tmp" "$err_file"
     return 1
   fi
+  tput cnorm 2>/dev/null || true
   out="$(cat "$err_file" 2>/dev/null || true)"
   rm -f "$tmp" "$err_file"
 
@@ -332,7 +333,7 @@ crk_print_deps_hint() {
   local marker="${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/.deps_hint_v${CRKCACHY_VERSION}"
   [[ -f "$marker" ]] && return 0
   echo ""
-  crk_note "$(msg runtime.deps_cleanup)"
+  log_hint "$(msg runtime.deps_cleanup)"
   mkdir -p "$(dirname "$marker")"
   touch "$marker"
 }

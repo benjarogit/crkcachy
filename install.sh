@@ -226,29 +226,27 @@ print_status() {
 }
 
 show_wizard_menu() {
+  local redraw=false
+
   while true; do
     assess_run
-    cui_screen_clear
 
-    crk_intro "$(msg wizard.title)"
-
-    if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
-      crk_note "$(assess_recommended_hint)"
-    else
-      crk_note "$(msgf wizard.status_fix "$(msgf assess.score "${ASSESS_OK:-0}" "${ASSESS_FAIL:-1}")")"
-      tui_assess_panel || true
+    if [[ "$redraw" == true ]]; then
+      cui_screen_clear
     fi
+
+    tui_wizard_show_header
 
     local choice=""
     tui_wizard_pick choice
 
     if [[ -z "${choice:-}" ]]; then
-      log_warn "$(msg wizard.pick_retry)"
-      continue
+      die "$(msg wizard.pick_failed)"
     fi
 
     echo ""
     announce_choice "${choice}"
+    redraw=true
 
     case "${choice}" in
       1)
@@ -270,6 +268,7 @@ show_wizard_menu() {
         fi
         ;;
       4)
+        redraw=false
         assess_run
         assess_print_report || true
         print_wizard_options

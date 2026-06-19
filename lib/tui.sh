@@ -12,25 +12,53 @@ tui_input() { cui_input "$@"; }
 tui_run_spin() { cui_spin "$@"; }
 tui_press_enter() { cui_continue; }
 
-tui_wizard_pick() {
-  local _out="${1:-}"
-  local lines=() i selected result idx val label
+# Statischer Wizard-Kopf (kein Clack intro/note – die können die Konsole leeren)
+tui_wizard_show_header() {
+  echo ""
+  ui_divider
+  cui_heading "$(msg wizard.title)"
+  echo ""
+  if [[ "${ASSESS_SYSTEM_READY:-false}" == true ]]; then
+    cui_sub "$(assess_recommended_hint)"
+  else
+    cui_sub "$(msgf wizard.status_fix "$(msgf assess.score "${ASSESS_OK:-0}" "${ASSESS_FAIL:-1}")")"
+    tui_assess_panel || true
+  fi
+  echo ""
+}
 
+tui_wizard_build_lines() {
+  WIZARD_PICK_LINES=()
+  local i label
   label="$(msg ui.badge_recommended)  $(msg wizard.opt"$ASSESS_RECOMMENDED")"
-  lines+=("${ASSESS_RECOMMENDED}|${label}")
-
+  WIZARD_PICK_LINES+=("${ASSESS_RECOMMENDED}|${label}")
   for i in 1 2 3; do
     [[ "$i" == "$ASSESS_RECOMMENDED" ]] && continue
-    lines+=("${i}|$(msg wizard.opt$i)")
+    WIZARD_PICK_LINES+=("${i}|$(msg wizard.opt$i)")
   done
-
   if [[ "$ASSESS_RECOMMENDED" != 4 ]]; then
-    lines+=("4|$(msg wizard.opt4)")
+    WIZARD_PICK_LINES+=("4|$(msg wizard.opt4)")
+  fi
+  WIZARD_PICK_LINES+=("5|$(msg wizard.opt5)")
+}
+
+tui_wizard_pick() {
+  local _out="${1:-}"
+  local selected="" result=""
+  local -a lines=()
+
+  tui_wizard_build_lines
+  lines=("${WIZARD_PICK_LINES[@]}")
+
+  # Clack-Select (ohne vorheriges intro/note)
+  if [[ "${CRKCACHY_BASH_UI:-0}" != "1" ]]; then
+    selected="$(crk_select "$(msg wizard.choose_hint)" "${ASSESS_RECOMMENDED}" "${lines[@]}")" || selected=""
   fi
 
-  lines+=("5|$(msg wizard.opt5)")
-
-  selected="$(crk_select "$(msg wizard.choose_hint)" "${ASSESS_RECOMMENDED}" "${lines[@]}")" || selected=""
+  # Immer sichtbares Fallback – nie leere Konsole
+  if [[ -z "$selected" ]]; then
+    selected="$(_crk_bash_pick "$(msg wizard.choose_hint)" "${ASSESS_RECOMMENDED}" "${lines[@]}")" || selected=""
+  fi
 
   result="${selected:-}"
 
@@ -63,6 +91,9 @@ tui_tool_pick() {
   lines+=("|$(msg tools.opt_skip)")
 
   selected="$(crk_autocomplete "$(msg tools.choose_hint)" "$(msg tools.hub_search_hint)" "" "${lines[@]}")" || selected=""
+  if [[ -z "$selected" ]]; then
+    selected="$(_crk_bash_pick "$(msg tools.choose_hint)" "" "${lines[@]}")" || selected=""
+  fi
 
   result="${selected:-}"
 

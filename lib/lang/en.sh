@@ -55,6 +55,7 @@ _MSG[tool.house-of-ashes.desc]="The Dark Pictures – Steam + Proton + multiplay
 _MSG[wizard.title]="What do you want to do?"
 _MSG[wizard.choose_hint]="↑↓ pick · Enter confirms"
 _MSG[wizard.pick_retry]="Menu unavailable – please try again."
+_MSG[wizard.pick_failed]="Could not open menu. Use a real terminal (Konsole), not a pipe/CI session."
 _MSG[wizard.hint_ready]="System ready – game tool is next."
 _MSG[wizard.hint_fix]="Something's still missing on your PC – fix first."
 _MSG[wizard.hint_full]="First-time setup: PC and game in one run."
