@@ -6,47 +6,117 @@ set -euo pipefail
 
 CRK_PROMPTER_JS="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/lib/prompter/dist/cli.js"
 
-_crk_prompter_json() {
-  python3 -c 'import json,sys; json.dump(json.loads(sys.argv[1]), sys.stdout)' "$1"
+_crk_prompt_need_tty() {
+  if [[ ! -t 0 || ! -t 1 ]]; then
+    log_error "$(msg node.no_tty)"
+    return 1
+  fi
+  return 0
+}
+
+_crk_prompter_parse_result() {
+  local raw="$1"
+  python3 -c '
+import json, sys
+raw = sys.argv[1].strip()
+if not raw:
+    sys.exit(2)
+try:
+    d = json.loads(raw)
+except json.JSONDecodeError:
+    sys.exit(3)
+if not d.get("ok"):
+    sys.exit(4)
+v = d.get("value")
+if v is True:
+    print("true")
+elif v is False:
+    print("false")
+elif v is None:
+    print("")
+else:
+    print(v)
+' "$raw"
 }
 
 _crk_prompter_run() {
   local cmd="$1"
   local json="$2"
-  local out rc tmp
+  local rc=0 tmp err_file out
 
   [[ -f "$CRK_PROMPTER_JS" ]] || {
     log_error "$(msg node.prompter_missing)"
     return 1
   }
 
-  # JSON per Datei – stdin bleibt TTY für @clack/prompts (Pipe würde Eingabe kaputt machen)
   tmp="$(mktemp "${TMPDIR:-/tmp}/crkcachy.prompt.XXXXXX")"
+  err_file="${tmp}.err"
   printf '%s' "$json" > "$tmp"
 
-  if [[ "${CRKCACHY_DEBUG:-0}" == 1 ]]; then
-    out="$(node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp")" || rc=$?
-  else
-    out="$(node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>/dev/null)" || rc=$?
-  fi
-  rm -f "$tmp"
-  rc="${rc:-0}"
+  # stdout = Clack-TUI, JSON-Ergebnis auf stderr
+  node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" || rc=$?
+  out="$(cat "$err_file" 2>/dev/null || true)"
+  rm -f "$tmp" "$err_file"
 
   if [[ "$rc" -ne 0 ]]; then
+    if [[ "${CRKCACHY_DEBUG:-0}" == 1 && -n "$out" ]]; then
+      log_debug "prompter stderr: $out"
+    fi
     return "$rc"
   fi
 
+  if [[ -z "$out" ]]; then
+    return 1
+  fi
+
   printf '%s' "$out"
+  return 0
 }
 
 _crk_prompter_value() {
   local cmd="$1"
   local json="$2"
-  local out val
+  local out val rc=0
 
-  out="$(_crk_prompter_run "$cmd" "$json")" || return 1
-  val="$(python3 -c 'import json,sys; d=json.loads(sys.argv[1]); v=d.get("value"); print("true" if v is True else "false" if v is False else v)' "$out" 2>/dev/null || true)"
+  if ! _crk_prompt_need_tty; then
+    return 1
+  fi
+
+  out="$(_crk_prompter_run "$cmd" "$json")" || rc=$?
+  if [[ "$rc" -ne 0 || -z "$out" ]]; then
+    return 1
+  fi
+
+  val="$(_crk_prompter_parse_result "$out")" || return 1
   printf '%s' "$val"
+}
+
+# Optionen: value|label|hint (hint optional)
+_crk_build_select_json() {
+  local message="$1"
+  local placeholder="${2:-}"
+  local initial_value="${3:-}"
+  shift 3
+  python3 - "$message" "$placeholder" "$initial_value" "$@" <<'PY'
+import json, sys
+message, placeholder, initial, *rest = sys.argv[1:]
+opts = []
+for line in rest:
+    parts = line.split("|", 2)
+    if not parts:
+        continue
+    label = parts[1] if len(parts) > 1 and parts[1] else parts[0]
+    o = {"value": parts[0], "label": label}
+    if len(parts) > 2 and parts[2]:
+        o["hint"] = parts[2]
+    opts.append(o)
+payload = {"message": message, "options": opts}
+if placeholder:
+    payload["placeholder"] = placeholder
+if initial:
+    payload["initialValue"] = initial
+print(json.dumps(payload))
+PY
 }
 
 crk_intro() {
@@ -65,66 +135,35 @@ crk_note() {
   _crk_prompter_run note "$json" >/dev/null || true
 }
 
-# Optionen: value|label|hint (hint optional)
 crk_select() {
   local message="$1"
   local initial_value="${2:-}"
   shift 2
   local json
-  json="$(python3 - "$message" "$initial_value" "$@" <<'PY'
-import json, sys
-message, initial, *rest = sys.argv[1:]
-opts = []
-for line in rest:
-    parts = line.split("|", 2)
-    if not parts:
-        continue
-    o = {"value": parts[0], "label": parts[1] if len(parts) > 1 else parts[0]}
-    if len(parts) > 2 and parts[2]:
-        o["hint"] = parts[2]
-    opts.append(o)
-payload = {"message": message, "options": opts}
-if initial:
-    payload["initialValue"] = initial
-print(json.dumps(payload))
-PY
-)"
+  json="$(_crk_build_select_json "$message" "" "$initial_value" "$@")"
   _crk_prompter_value select "$json"
 }
 
 crk_autocomplete() {
   local message="$1"
-  local initial_value="${2:-}"
-  shift 2
+  local placeholder="${2:-}"
+  local initial_value="${3:-}"
+  shift 3
   local json
-  json="$(python3 - "$message" "$initial_value" "$@" <<'PY'
-import json, sys
-message, initial, *rest = sys.argv[1:]
-opts = []
-for line in rest:
-    parts = line.split("|", 2)
-    if not parts:
-        continue
-    o = {"value": parts[0], "label": parts[1] if len(parts) > 1 else parts[0]}
-    if len(parts) > 2 and parts[2]:
-        o["hint"] = parts[2]
-    opts.append(o)
-payload = {"message": message, "options": opts}
-if initial:
-    payload["initialValue"] = initial
-print(json.dumps(payload))
-PY
-)"
+  json="$(_crk_build_select_json "$message" "$placeholder" "$initial_value" "$@")"
   _crk_prompter_value autocomplete "$json"
 }
 
 crk_confirm() {
   local message="$1"
   local default_yes="${2:-false}"
-  local json val
+  local json val rc=0
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"initialValueConfirm": sys.argv[2] in ("true","1","yes")}))' "$message" "$default_yes")"
-  val="$(_crk_prompter_value confirm "$json")"
-  [[ "$val" == "True" || "$val" == "true" ]]
+  val="$(_crk_prompter_value confirm "$json")" || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    return 1
+  fi
+  [[ "$val" == "true" ]]
 }
 
 crk_text() {
@@ -144,7 +183,7 @@ crk_continue() {
   _crk_prompter_run continue "$json" >/dev/null || true
 }
 
-# Gate-Menü: Titel + Body + crk_select (Werte: auto|manual|skip oder open|manual|skip)
+# Gate-Menü: Werte auto|manual|skip oder open|manual|skip
 crk_gate_menu() {
   local title="$1"
   local body="$2"
@@ -180,7 +219,7 @@ ensure_node() {
     log_warn "$(msg node.version_old)"
   fi
 
-  explain_block "$(msg node.missing_title)" "$(package_explain_text node)
+  explain_block "$(msg node.missing_title)" "$(package_explain_text nodejs)
 
 $(msg pkg.explain.footer)"
 

@@ -206,7 +206,7 @@ preflight_fix_spacewar() {
     "$(msg runtime.spacewar_gate_prompt)" \
     "auto|$(msg runtime.spacewar_opt_auto)" \
     "manual|$(msg runtime.spacewar_opt_manual)" \
-    "skip|$(msg runtime.spacewar_opt_skip)")"
+    "skip|$(msg runtime.spacewar_opt_skip)")" || choice=""
 
   case "${choice:-}" in
     auto)
@@ -269,7 +269,7 @@ preflight_fix_protonup() {
     "$(msg runtime.protonup_gate_prompt)" \
     "auto|$(msg runtime.protonup_opt_auto)" \
     "manual|$(msg runtime.protonup_opt_manual)" \
-    "skip|$(msg runtime.protonup_opt_skip)")"
+    "skip|$(msg runtime.protonup_opt_skip)")" || choice=""
 
   case "${choice:-}" in
     auto)
@@ -328,7 +328,7 @@ preflight_fix_ge_proton() {
     "$(msg runtime.ge_proton_gate_prompt)" \
     "auto|$(msg runtime.ge_proton_opt_auto)" \
     "manual|$(msg runtime.ge_proton_opt_manual)" \
-    "skip|$(msg runtime.ge_proton_opt_skip)")"
+    "skip|$(msg runtime.ge_proton_opt_skip)")" || choice=""
 
   case "${choice:-}" in
     auto)
@@ -382,7 +382,7 @@ preflight_fix_steam_data() {
     "$(msg runtime.steam_data_gate_prompt)" \
     "open|$(msg runtime.steam_data_opt_open)" \
     "manual|$(msg runtime.steam_data_opt_manual)" \
-    "skip|$(msg runtime.steam_data_opt_skip)")"
+    "skip|$(msg runtime.steam_data_opt_skip)")" || choice=""
 
   _steam_data_wait_and_verify() {
     local tries=0

@@ -1,6 +1,7 @@
 /**
  * CRKCACHY prompter CLI – @clack/prompts (OpenClaw-style).
- * Bash: node dist/cli.js <command> --stdin  (JSON body on stdin)
+ * Bash: node dist/cli.js <command> --file payload.json
+ * JSON-Ergebnis immer auf stderr (stdout = Clack-TUI).
  */
 import { readFileSync } from "node:fs";
 import {
@@ -49,17 +50,26 @@ function readPayload(): PromptPayload {
   return {};
 }
 
-function guard<T>(value: T | symbol): T {
-  if (isCancel(value)) {
-    cancel("Abgebrochen.");
-    process.stdout.write(JSON.stringify({ ok: false, cancelled: true }));
-    process.exit(1);
-  }
-  return value;
+/** Ergebnis auf stderr – stdout bleibt frei für Clack-Rendering */
+function writeResult(payload: Record<string, unknown>): void {
+  process.stderr.write(JSON.stringify(payload));
 }
 
 function writeOk(value: unknown): void {
-  process.stdout.write(JSON.stringify({ ok: true, value }));
+  writeResult({ ok: true, value });
+}
+
+function failCancel(): void {
+  cancel("Abgebrochen.");
+  writeResult({ ok: false, cancelled: true });
+  process.exit(1);
+}
+
+function guard<T>(value: T | symbol): T {
+  if (isCancel(value)) {
+    failCancel();
+  }
+  return value;
 }
 
 function toClackOptions(options: SelectOption[]): Option<string>[] {
@@ -70,6 +80,13 @@ function toClackOptions(options: SelectOption[]): Option<string>[] {
     }
     return base;
   });
+}
+
+function requireOptions(options: SelectOption[], cmd: string): void {
+  if (options.length === 0) {
+    process.stderr.write(`${cmd}: keine Optionen\n`);
+    process.exit(2);
+  }
 }
 
 async function main(): Promise<void> {
@@ -96,6 +113,7 @@ async function main(): Promise<void> {
 
     case "select": {
       const options = data.options ?? [];
+      requireOptions(options, "select");
       const val = guard(
         await select({
           message: data.message ?? "",
@@ -109,11 +127,13 @@ async function main(): Promise<void> {
 
     case "autocomplete": {
       const options = data.options ?? [];
+      requireOptions(options, "autocomplete");
       const val = guard(
         await autocomplete({
           message: data.message ?? "",
           options: toClackOptions(options),
           initialValue: data.initialValue,
+          placeholder: data.placeholder,
         }),
       );
       writeOk(val);

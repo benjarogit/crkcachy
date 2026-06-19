@@ -13,12 +13,11 @@ tool_action_to_flag() {
   esac
 }
 
-# Result variable – avoids stdout capture bugs when called from subshells
 TOOL_HUB_PICKED_SLUG=""
 
 tool_hub_pick_tool_slug() {
   TOOL_HUB_PICKED_SLUG=""
-  local slug="" selected labels=() slugs=() i desc name status source
+  local slug="" selected="" label lines=() i name status source
 
   tool_fetch_update_catalog 2>/dev/null || true
 
@@ -30,30 +29,27 @@ tool_hub_pick_tool_slug() {
   cui_section "$(msg tools.hub_pick_title)" "$(msg tools.hub_pick_body)"
   echo ""
 
+  lines=()
   for i in "${!TOOL_SLUGS[@]}"; do
     slug="${TOOL_SLUGS[$i]}"
     source="${TOOL_SOURCES[$i]}"
     name="$(get_tool_name "$slug")"
     status="$(tool_catalog_status_label "$source")"
-    labels+=("$((i + 1))) $name  [$status]")
-    slugs+=("$slug")
+    label="$((i + 1))) $name  [$status]"
+    lines+=("${slug}|${label}")
   done
 
-  labels+=("$(msg tools.hub_refresh)")
-  slugs+=("__refresh__")
-  labels+=("$(msg action.opt_back)")
-  slugs+=("")
+  lines+=("__refresh__|$(msg tools.hub_refresh)")
+  lines+=("|$(msg action.opt_back)")
 
-  selected="$(cui_choose_searchable "$(msg tools.hub_pick_hint)" "$(msg tools.hub_search_hint)" "${labels[@]}")" || true
+  selected="$(crk_autocomplete "$(msg tools.hub_pick_hint)" "$(msg tools.hub_search_hint)" "" "${lines[@]}")" || selected=""
 
-  for i in "${!labels[@]}"; do
-    if [[ "${labels[$i]}" == "$selected" ]]; then
-      TOOL_HUB_PICKED_SLUG="${slugs[$i]}"
-      return 0
-    fi
-  done
+  if [[ -z "$selected" ]]; then
+    TOOL_HUB_PICKED_SLUG=""
+    return 0
+  fi
 
-  TOOL_HUB_PICKED_SLUG=""
+  TOOL_HUB_PICKED_SLUG="$selected"
 }
 
 tool_hub_dispatch() {
@@ -104,10 +100,10 @@ tool_hub_resolve_slug() {
     fi
     discover_tools || true
     tool_hub_pick_tool_slug
+    slug="$TOOL_HUB_PICKED_SLUG"
   fi
 }
 
-# action empty → pick action after tool
 tool_hub_run() {
   local action="${1:-}"
   local slug
@@ -145,53 +141,41 @@ tool_hub_interactive() {
   tool_hub_run ""
 }
 
-# Für Deinstallation: kein Download-Framing, Auto-Select bei einem Tool
 tool_hub_run_uninstall() {
   discover_tools 2>/dev/null || true
 
-  local slug=""
+  local slug="" lines=() selected="" i name desc label
 
   if [[ "${#TOOL_SLUGS[@]}" -eq 1 ]]; then
-    # Nur ein Tool bekannt → direkt auswählen
     slug="${TOOL_SLUGS[0]}"
     log_info "$(msgf tools.hub_auto_pick "$(get_tool_name "$slug")")"
   elif [[ "${#TOOL_SLUGS[@]}" -gt 1 ]]; then
-    # Mehrere Tools → vereinfachter Picker (kein Download-Hinweis)
-    local labels=() slugs=() i name desc selected
-
     echo ""
     cui_section "$(msg tools.hub_uninstall_pick_title)"
     echo ""
 
+    lines=()
     for i in "${!TOOL_SLUGS[@]}"; do
       slug="${TOOL_SLUGS[$i]}"
       name="$(get_tool_name "$slug")"
       desc="$(get_tool_desc "$slug")"
       if [[ -n "$desc" ]]; then
-        labels+=("$((i + 1))) $name – $desc")
+        label="$((i + 1))) $name – $desc"
       else
-        labels+=("$((i + 1))) $name")
+        label="$((i + 1))) $name"
       fi
-      slugs+=("$slug")
+      lines+=("${slug}|${label}")
     done
-    labels+=("$(msg action.opt_back)")
-    slugs+=("")
+    lines+=("|$(msg action.opt_back)")
 
-    selected="$(cui_choose "$(msg wizard.choose_hint)" 0 "${labels[@]}")" || true
-    slug=""
-    for i in "${!labels[@]}"; do
-      if [[ "${labels[$i]}" == "$selected" ]]; then
-        slug="${slugs[$i]}"
-        break
-      fi
-    done
+    selected="$(crk_select "$(msg wizard.choose_hint)" "" "${lines[@]}")" || selected=""
+    slug="${selected:-}"
   fi
 
   if [[ -z "$slug" ]]; then
     log_info "$(msg install.cancelled)"
-    return 0
+    return 1
   fi
 
-  # Dispatch direkt mit uninstall – kein ensure_ready, kein Download
   tool_hub_dispatch "$slug" "uninstall"
 }

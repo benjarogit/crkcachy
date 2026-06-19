@@ -80,16 +80,22 @@ run_pc_fix() {
   _pc_fix_done_panel
 }
 
-# Menü-Picker (@clack/prompts)
+# Menü-Picker (@clack/prompts) – gibt gewählten value zurück oder leer bei Abbruch
 _menu_choose() {
   local header="$1"
   shift
-  local lines=()
-  local opt
+  local lines=() opt key label
   for opt in "$@"; do
-    lines+=("${opt}|${opt}")
+    key="${opt%%|*}"
+    label="${opt#*|}"
+    if [[ "$key" == "$label" ]]; then
+      lines+=("${opt}|${opt}")
+    else
+      lines+=("${key}|${label}")
+    fi
   done
-  crk_select "$header" "" "${lines[@]}"
+  crk_select "$header" "" "${lines[@]}" || return 1
+  return 0
 }
 
 _pc_fix_done_panel() {
@@ -105,23 +111,24 @@ _pc_fix_done_panel() {
 
 _after_pc_fix_menu() {
   echo ""
-  local pick
+  local pick=""
   pick="$(_menu_choose "$(msg assess.after_pc_title)" \
-    "$(msg assess.after_pc_install)" \
-    "$(msg assess.after_pc_menu)" \
-    "$(msg assess.after_pc_exit)")"
+    "install|$(msg assess.after_pc_install)" \
+    "menu|$(msg assess.after_pc_menu)" \
+    "exit|$(msg assess.after_pc_exit)")" || pick=""
 
   echo ""
   case "${pick:-}" in
-    "$(msg assess.after_pc_install)")
-      run_game_setup || true
-      _after_install_menu
+    install)
+      if run_game_setup; then
+        _after_install_menu
+      fi
       ;;
-    "$(msg assess.after_pc_menu)")
+    menu)
       cui_screen_clear
       show_wizard_menu || true
       ;;
-    "$(msg assess.after_pc_exit)")
+    exit)
       echo ""
       log_ok "$(msg install.goodbye)"
       ;;
@@ -145,28 +152,33 @@ run_game_setup() {
 
 run_game_uninstall() {
   ui_step "$(msg uninstall.title)"
-  tool_hub_run_uninstall || true
+  tool_hub_run_uninstall
   echo ""
-  return 0
 }
 
 _after_uninstall_menu() {
   echo ""
-  local pick
+  local pick=""
   pick="$(_menu_choose "$(msg wizard.after_uninstall_title)" \
-    "$(msg wizard.after_uninstall_menu)" \
-    "$(msg wizard.after_uninstall_install)" \
-    "$(msg wizard.after_uninstall_exit)")"
+    "menu|$(msg wizard.after_uninstall_menu)" \
+    "install|$(msg wizard.after_uninstall_install)" \
+    "exit|$(msg wizard.after_uninstall_exit)")" || pick=""
 
   echo ""
   case "${pick:-}" in
-    "$(msg wizard.after_uninstall_menu)")
+    menu)
       show_wizard_menu || true
       ;;
-    "$(msg wizard.after_uninstall_install)")
-      run_game_setup || true
+    install)
+      if run_game_setup; then
+        _after_install_menu
+      fi
+      ;;
+    exit)
+      exit 0
       ;;
     *)
+      log_info "$(msg install.cancelled)"
       exit 0
       ;;
   esac
@@ -175,19 +187,23 @@ _after_uninstall_menu() {
 
 _after_install_menu() {
   echo ""
-  local _pick
+  local _pick=""
   _pick="$(_menu_choose "$(msg install.after_title)" \
-    "$(msg install.after_menu)" \
-    "$(msg install.after_exit)")"
+    "menu|$(msg install.after_menu)" \
+    "exit|$(msg install.after_exit)")" || _pick=""
 
   echo ""
   case "${_pick:-}" in
-    "$(msg install.after_menu)")
+    menu)
       show_wizard_menu || true
       ;;
-    *)
+    exit)
       echo ""
       log_ok "$(msg install.goodbye)"
+      ;;
+    *)
+      log_info "$(msg install.cancelled)"
+      show_wizard_menu || true
       ;;
   esac
 }
@@ -221,7 +237,6 @@ show_wizard_menu() {
     echo ""
 
     if [[ -z "${choice:-}" ]]; then
-      log_info "$(msg install.cancelled)"
       continue
     fi
 
@@ -253,9 +268,10 @@ show_wizard_menu() {
         assess_print_next_step
         ;;
       5)
-        run_game_uninstall || true
-        _after_uninstall_menu
-        return 0
+        if run_game_uninstall; then
+          _after_uninstall_menu
+          return 0
+        fi
         ;;
       *)
         log_warn "$(msg wizard.invalid)"

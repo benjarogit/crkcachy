@@ -51,18 +51,15 @@ tool_action_pick_menu() {
   cui_section "$(msg action.menu_title)" "$(msgf action.menu_teaser "$tool_name")"
   echo ""
 
-  selected="$(cui_choose "$(msg action.menu_hint)" 0 \
-    "$(msg action.opt_install)" \
-    "$(msg action.opt_uninstall)" \
-    "$(msg action.opt_check)" \
-    "$(msg action.opt_reset)" \
-    "$(msg action.opt_back)")"
+  selected="$(crk_select "$(msg action.menu_hint)" "install" \
+    "install|$(msg action.opt_install)" \
+    "uninstall|$(msg action.opt_uninstall)" \
+    "check|$(msg action.opt_check)" \
+    "reset|$(msg action.opt_reset)" \
+    "back|$(msg action.opt_back)")" || selected=""
 
-  case "$selected" in
-    "$(msg action.opt_install)") TOOL_ACTION_PICKED="install" ;;
-    "$(msg action.opt_uninstall)") TOOL_ACTION_PICKED="uninstall" ;;
-    "$(msg action.opt_check)") TOOL_ACTION_PICKED="check" ;;
-    "$(msg action.opt_reset)") TOOL_ACTION_PICKED="reset" ;;
+  case "${selected:-back}" in
+    install|uninstall|check|reset) TOOL_ACTION_PICKED="$selected" ;;
     *) TOOL_ACTION_PICKED="back" ;;
   esac
 }
@@ -182,7 +179,7 @@ tool_prompt_game_dir() {
   lines+=("manual|${_manual_opt}")
 
   local _selected
-  _selected="$(crk_select "$(msg game_dir.picker_prompt)" "" "${lines[@]}")"
+  _selected="$(crk_select "$(msg game_dir.picker_prompt)" "" "${lines[@]}")" || _selected=""
 
   local _chosen_path=""
 
@@ -261,7 +258,7 @@ _tool_offer_copy_game() {
   _choice="$(crk_select "$(msg game_dir.copy_prompt)" "" \
     "yes|$(msg game_dir.copy_opt_yes)" \
     "manual|$(msg game_dir.copy_opt_manual)" \
-    "no|$(msg game_dir.copy_opt_no)")"
+    "no|$(msg game_dir.copy_opt_no)")" || _choice=""
 
   case "${_choice:-}" in
     yes)

@@ -122,7 +122,7 @@ _cui_github_version_check() {
 
   if [[ "$_latest" == "$CRKCACHY_VERSION" ]]; then
     _cui_echo "$CUI_C_SUCCESS" "  ✓ $(msgf banner.version_ok "v${CRKCACHY_VERSION}")"
-  else
+  elif [[ "$(printf '%s\n' "$_latest" "$CRKCACHY_VERSION" | sort -V | tail -1)" == "$_latest" ]]; then
     _cui_echo "$CUI_C_WARNING" "  ↑ $(msgf banner.update_available "v${CRKCACHY_VERSION}" "v${_latest}")"
     _cui_echo "$CUI_C_MUTED" "    github.com/benjarogit/crkcachy/releases/latest"
   fi
@@ -300,24 +300,26 @@ cui_choose() {
   local header="$1"
   local selected_idx="$2"
   shift 2
-  local i=0 initial="" lines=()
+  local i=0 initial="" lines=() val
   for opt in "$@"; do
     lines+=("${opt}|${opt}")
     if [[ "$i" -eq "$selected_idx" ]]; then initial="$opt"; fi
     i=$((i + 1))
   done
-  crk_select "$header" "$initial" "${lines[@]}"
+  val="$(crk_select "$header" "$initial" "${lines[@]}")" || val=""
+  printf '%s' "$val"
 }
 
 cui_filter() {
   local header="$1"
-  local _placeholder="$2"
+  local placeholder="$2"
   shift 2
-  local lines=()
+  local lines=() val
   for opt in "$@"; do
     lines+=("${opt}|${opt}")
   done
-  crk_autocomplete "$header" "" "${lines[@]}"
+  val="$(crk_autocomplete "$header" "$placeholder" "" "${lines[@]}")" || val=""
+  printf '%s' "$val"
 }
 
 cui_spin() {

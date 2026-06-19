@@ -209,7 +209,7 @@ _maybe_remove_spacewar() {
   choice="$(crk_select "$(msg uninstall.spacewar_how)" "" \
     "auto|$(msg uninstall.spacewar_opt_auto)" \
     "manual|$(msg uninstall.spacewar_opt_manual)" \
-    "skip|$(msg uninstall.spacewar_opt_skip)")"
+    "skip|$(msg uninstall.spacewar_opt_skip)")" || choice=""
 
   echo ""
 

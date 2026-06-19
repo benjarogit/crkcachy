@@ -771,7 +771,7 @@ steam_offer_compat_tool_fix() {
     _choice="$(crk_select "$(msg steam.compat_how)" "" \
       "auto|$(msg steam.compat_opt_auto)" \
       "manual|$(msg steam.compat_opt_manual)" \
-      "skip|$(msg steam.compat_opt_skip)")"
+      "skip|$(msg steam.compat_opt_skip)")" || _choice=""
 
     case "${_choice:-}" in
       auto)

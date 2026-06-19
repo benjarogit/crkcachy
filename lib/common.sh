@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.82"
+CRKCACHY_VERSION="0.1.83"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -309,7 +309,7 @@ $(msg pkg.explain.footer)"
 
     pick="$(crk_select "$(msg glow.pick_title)" "" \
       "auto|$(msg glow.opt_auto)" \
-      "manual|$(msg glow.opt_manual)")"
+      "manual|$(msg glow.opt_manual)")" || pick=""
 
     case "${pick:-auto}" in
       auto) glow_choice=1 ;;
