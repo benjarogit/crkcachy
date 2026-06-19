@@ -483,7 +483,7 @@ _MSG[pkg.explain.steam_title]="Install Steam"
 _MSG[pkg.confirm_install]="Install now?"
 _MSG[pkg.explain.footer]=$'One-time install – PC may ask for password (sudo).\nThen we continue. Say No to run the command yourself.'
 _MSG[pkg.explain.fallback]="%s – needed for CRKCACHY."
-_MSG[pkg.explain.nodejs]=$'Node.js – arrow-key menus in the terminal (Clack, like OpenClaw).\nPick with ↑↓ and Enter.\nCRKCACHY needs it for all menus.'
+_MSG[pkg.explain.nodejs]=$'Node.js – arrow-key menus in the terminal.\nPick with ↑↓ and Enter.\nCRKCACHY needs it for all menus.'
 _MSG[pkg.explain.glow]=$'glow – shows guides in a readable layout.\nEasier than raw terminal text.\nCRKCACHY needs it for game guides.'
 _MSG[pkg.explain.steam]=$'Steam – play and launch games.\nCRKCACHY adds your game as non-Steam with Proton.'
 _MSG[pkg.explain.paru]=$'paru – installs programs on CachyOS/Arch.\nNeeded for some extra packages (AUR).'
@@ -605,15 +605,12 @@ _MSG[runtime.legal_ok]="OK – continue"
 _MSG[runtime.legal_abort]="Cancelled."
 _MSG[runtime.legal_hint]="Setup help only – no liability. docs/legal.md"
 
-_MSG[runtime.bootstrap_title]="CRKCACHY needs a couple programs"
-_MSG[runtime.bootstrap_body]=$'First two for the interface:\n• Node.js – arrow-key menus (Clack, like OpenClaw)\n• glow – readable guides\n\nLater: Steam, icon helpers, Proton … we explain each one.'
-_MSG[runtime.bootstrap_hint]="Missing something? You'll see what it is and why."
-_MSG[runtime.deps_cleanup_short]="gum no longer needed → sudo pacman -Rns gum"
-_MSG[runtime.deps_cleanup]=$'Packages – what you still need:\n\n✓ Required: nodejs, glow\n✗ No longer needed: gum (sudo pacman -Rns gum)\n\nCRKCACHY uses Node.js + @clack/prompts for menus.'
+_MSG[runtime.bootstrap_title]="Install glow"
+_MSG[runtime.bootstrap_body]=$'glow displays README and guides with formatting.'
 
-_MSG[node.what_is]="Node.js = menu UI (Clack)"
+_MSG[node.what_is]="Node.js = menu UI"
 _MSG[node.missing_title]="Install Node.js"
-_MSG[node.missing_body]=$'Arrow-key menus like OpenClaw.\nCRKCACHY needs Node.js for all menus.\nInstall once, then we continue.'
+_MSG[node.missing_body]=$'Arrow-key menus with ↑↓ and Enter.\nCRKCACHY needs Node.js for all menus.\nInstall once, then we continue.'
 _MSG[node.no_tty]="Open the terminal and run it there."
 _MSG[node.pick_title]="How to install?"
 _MSG[node.opt_auto]="Do it for me (recommended)"
@@ -628,23 +625,6 @@ _MSG[node.manual_wait]="When done: press Enter …"
 _MSG[node.still_missing]="Not there yet – try again."
 _MSG[node.version_old]="Node.js is too old – please use version 18 or newer."
 _MSG[node.prompter_missing]="Menu program missing – please get a fresh copy of CRKCACHY from the repo."
-
-_MSG[gum.what_is]="gum = arrow-key menus (↑↓ and Enter)"
-_MSG[gum.missing_title]="Install gum"
-_MSG[gum.missing_body]=$'gum lets you pick options with arrow keys – like a game menu.\nCRKCACHY needs it for all menus.\nInstall once, then we continue.'
-_MSG[gum.no_tty]="Open the terminal and run it there."
-_MSG[gum.pick_title]="How to install?"
-_MSG[gum.opt_auto]="Do it for me (recommended)"
-_MSG[gum.opt_manual]="I'll do it myself"
-_MSG[gum.pick_prompt]="1 or 2 (Enter = 1): "
-_MSG[gum.pick_invalid]="Enter 1 or 2."
-_MSG[gum.installed]="Good – continuing!"
-_MSG[gum.install_failed]="Didn't work – try option 2."
-_MSG[gum.password_hint]="PC may ask for your password."
-_MSG[gum.manual_steps_intro]="Type this in the terminal:"
-_MSG[gum.manual_pacman]="sudo pacman -S gum"
-_MSG[gum.manual_wait]="When done: press Enter …"
-_MSG[gum.still_missing]="Not there yet – try again."
 
 _MSG[glow.what_is]="glow = readable guides in the terminal"
 _MSG[glow.missing_title]="Install glow"

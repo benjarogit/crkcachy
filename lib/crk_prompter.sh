@@ -230,13 +230,6 @@ crk_spin() {
   _crk_prompter_run spin "$json" >/dev/null || _crk_prompter_fail
 }
 
-crk_print_deps_hint() {
-  local marker="${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/.deps_hint_v${CRKCACHY_VERSION}"
-  [[ -f "$marker" ]] && return 0
-  mkdir -p "$(dirname "$marker")"
-  touch "$marker"
-}
-
 ensure_node() {
   if ! _crk_has_interactive; then
     die "$(msg node.no_tty)"

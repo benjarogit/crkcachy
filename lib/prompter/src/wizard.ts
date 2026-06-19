@@ -11,7 +11,6 @@ import {
   loadContext,
   loadPreflightState,
   loadToolsList,
-  markDepsHint,
   mf,
   m,
   preflightFixRecommended,
@@ -26,12 +25,10 @@ import {
   WizardCancelledError,
 } from "./prompter";
 import {
-  colorizeStatusLines,
   iconOk,
   iconStep,
   iconWarn,
   styleHint,
-  styleInfo,
   styleLabel,
   styleMuted,
   styleSuccess,
@@ -118,25 +115,7 @@ function buildMenuOptions(ctx: WizardContext): { value: string; label: string; h
 
 function buildStyledStatusNote(ctx: WizardContext): string {
   if (ctx.assess.systemReady) {
-    const lines: string[] = [
-      `${iconOk()} ${styleSuccess(ctx.assess.hint)}`,
-    ];
-
-    if (!ctx.runtime.depsHintShown) {
-      lines.push("");
-      lines.push(styleInfo(m("", ctx, "runtime.deps_cleanup").split("\n")[0] ?? ""));
-      const depsBody = m("", ctx, "runtime.deps_cleanup")
-        .split("\n")
-        .slice(1)
-        .join("\n");
-      if (depsBody.trim()) {
-        lines.push(colorizeStatusLines(depsBody));
-      }
-      lines.push("");
-      lines.push(styleMuted(m("", ctx, "runtime.deps_cleanup_short")));
-    }
-
-    return lines.join("\n");
+    return `${iconOk()} ${styleSuccess(ctx.assess.hint)}`;
   }
 
   const lines = [
@@ -161,7 +140,7 @@ async function ensureGlowRuntime(root: string, ctx: WizardContext, p: ReturnType
   if (ctx.runtime.glowOk) return;
 
   await p.note(
-    `${m("", ctx, "runtime.bootstrap_body")}\n\n${m("", ctx, "runtime.bootstrap_hint")}`,
+    m("", ctx, "runtime.bootstrap_body"),
     m("", ctx, "runtime.bootstrap_title"),
   );
 
@@ -385,10 +364,6 @@ async function mainMenuLoop(root: string, p: ReturnType<typeof createCrkcachyPro
     }
 
     await p.note(buildStyledStatusNote(ctx), m("", ctx, "wizard.title"));
-
-    if (!ctx.runtime.depsHintShown && ctx.assess.systemReady) {
-      markDepsHint(root);
-    }
 
     const choice = await p.select({
       message: m("", ctx, "wizard.choose_hint"),

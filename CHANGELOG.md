@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.91] - 2026-06-17
+
+### Removed
+- gum-Migration-Hinweise und Paket-Checklisten im Wizard (irrelevant)
+- Abwärtskompatibilitäts-/OpenClaw-Texte in Bootstrap- und Node-Hinweisen
+
 ## [0.1.90] - 2026-06-17
 
 ### Changed

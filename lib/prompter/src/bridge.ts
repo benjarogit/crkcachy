@@ -13,7 +13,6 @@ export type WizardContext = {
     nodeOk: boolean;
     glowOk: boolean;
     nodeVersion: string;
-    depsHintShown: boolean;
     version: string;
   };
   assess: {
@@ -70,10 +69,6 @@ function parseJson<T>(raw: string): T {
 
 export async function loadContext(root: string): Promise<WizardContext> {
   return parseJson(runBridgeSync(root, ["context"]));
-}
-
-export function markDepsHint(root: string): void {
-  runBridgeSync(root, ["mark-deps-hint"]);
 }
 
 export function installGlow(root: string, mode: "auto" | "manual"): boolean {

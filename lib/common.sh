@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.90"
+CRKCACHY_VERSION="0.1.91"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -346,16 +346,8 @@ $(msg pkg.explain.footer)"
 }
 
 ensure_crkcachy_runtime() {
-  if ! command -v node >/dev/null 2>&1 || ! command_exists glow; then
-    explain_block "$(msg runtime.bootstrap_title)" "$(msg runtime.bootstrap_body)"
-    echo ""
-    log_hint "$(msg runtime.bootstrap_hint)"
-    echo ""
-  fi
-
   ensure_prompter
   ensure_glow
-  crk_print_deps_hint
 }
 
 print_banner() {

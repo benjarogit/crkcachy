@@ -757,7 +757,7 @@ _MSG[pkg.explain.steam_title]="Steam installieren"
 _MSG[pkg.confirm_install]="Jetzt installieren?"
 _MSG[pkg.explain.footer]=$'Einmal installieren – vielleicht Passwort (sudo).\nOder Nein → Befehl manuell.'
 _MSG[pkg.explain.fallback]="%s – brauchst du für CRKCACHY."
-_MSG[pkg.explain.nodejs]=$'Node.js – Menüs mit Pfeiltasten (↑↓) wie bei OpenClaw.\nOhne Node.js keine Auswahl-Menüs in CRKCACHY.'
+_MSG[pkg.explain.nodejs]=$'Node.js – Menüs mit Pfeiltasten (↑↓) in der Konsole.\nOhne Node.js keine Auswahl in CRKCACHY.'
 _MSG[pkg.explain.glow]=$'glow – Anleitungen lesbar anzeigen.\nOhne glow keine Spiel-Anleitungen.'
 _MSG[pkg.explain.steam]=$'Steam – Spiele starten.\nCRKCACHY richtet dein Spiel als Nicht-Steam-Spiel ein.'
 _MSG[pkg.explain.paru]=$'paru – installiert Programme auf CachyOS/Arch.\nFür manche Pakete aus dem AUR.'
@@ -879,15 +879,12 @@ _MSG[runtime.legal_ok]="OK"
 _MSG[runtime.legal_abort]="Abgebrochen."
 _MSG[runtime.legal_hint]="Nur Hilfe – keine Haftung. Siehe docs/legal.md"
 
-_MSG[runtime.bootstrap_title]="Oberfläche einrichten"
-_MSG[runtime.bootstrap_body]=$'CRKCACHY nutzt zwei Programme für die Oberfläche:\n\n• Node.js – Auswahlmenüs in der Konsole (Clack, wie OpenClaw)\n• glow – README und Anleitungen formatiert anzeigen\n\nWeitere Pakete (Steam, Proton, …) kommen später – jeweils mit Erklärung.'
-_MSG[runtime.bootstrap_hint]="Fehlt etwas, zeigen wir dir den Grund und den Installationsbefehl."
-_MSG[runtime.deps_cleanup_short]="gum nicht mehr nötig → sudo pacman -Rns gum"
-_MSG[runtime.deps_cleanup]=$'Pakete – was brauchst du noch?\n\n✓ Pflicht: nodejs, glow\n✗ Nicht mehr nötig: gum (sudo pacman -Rns gum)\n\nCRKCACHY nutzt Node.js + @clack/prompts für Menüs.'
+_MSG[runtime.bootstrap_title]="glow installieren"
+_MSG[runtime.bootstrap_body]=$'glow zeigt README und Anleitungen formatiert an.'
 
-_MSG[node.what_is]="Node.js = Menü-Oberfläche (Clack)"
+_MSG[node.what_is]="Node.js = Menü-Oberfläche"
 _MSG[node.missing_title]="Node.js installieren"
-_MSG[node.missing_body]=$'Menüs mit ↑↓ und Enter – wie bei OpenClaw.\nOhne Node.js keine Auswahl in CRKCACHY.'
+_MSG[node.missing_body]=$'Menüs mit ↑↓ und Enter.\nOhne Node.js keine Auswahl in CRKCACHY.'
 _MSG[node.no_tty]="Bitte im Terminal (Konsole) starten."
 _MSG[node.pick_title]="Wie installieren?"
 _MSG[node.opt_auto]="Automatisch (empfohlen)"
@@ -902,23 +899,6 @@ _MSG[node.manual_wait]="Fertig? Enter …"
 _MSG[node.still_missing]="Noch nicht da."
 _MSG[node.version_old]="Node.js ist zu alt – bitte Version 18 oder neuer."
 _MSG[node.prompter_missing]="Menü-Programm fehlt – bitte CRKCACHY neu aus dem Repo holen."
-
-_MSG[gum.what_is]="gum = Pfeil-Menüs"
-_MSG[gum.missing_title]="gum installieren"
-_MSG[gum.missing_body]=$'Menüs mit ↑↓ und Enter.\nOhne gum keine Auswahl in CRKCACHY.'
-_MSG[gum.no_tty]="Bitte im Terminal (Konsole) starten."
-_MSG[gum.pick_title]="Wie installieren?"
-_MSG[gum.opt_auto]="Automatisch (empfohlen)"
-_MSG[gum.opt_manual]="Ich mache es selbst"
-_MSG[gum.pick_prompt]="1 oder 2 (Enter = 1): "
-_MSG[gum.pick_invalid]="1 oder 2."
-_MSG[gum.installed]="Weiter geht's!"
-_MSG[gum.install_failed]="Nicht geklappt – Option 2."
-_MSG[gum.password_hint]="Vielleicht Passwort nötig."
-_MSG[gum.manual_steps_intro]="Im Terminal:"
-_MSG[gum.manual_pacman]="sudo pacman -S gum"
-_MSG[gum.manual_wait]="Fertig? Enter …"
-_MSG[gum.still_missing]="Noch nicht da."
 
 _MSG[glow.what_is]="glow = Anleitungen lesbar"
 _MSG[glow.missing_title]="glow installieren"

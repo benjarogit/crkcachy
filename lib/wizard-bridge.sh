@@ -62,9 +62,6 @@ assess.after_pc_exit
 assess.after_pc_hint
 runtime.bootstrap_title
 runtime.bootstrap_body
-runtime.bootstrap_hint
-runtime.deps_cleanup
-runtime.deps_cleanup_short
 runtime.fix_recommended
 runtime.cannot_continue
 runtime.legal_abort
@@ -169,12 +166,8 @@ _wizard_export_msgs_env() {
   done < <(_wizard_msg_keys)
 }
 
-_wizard_deps_marker() {
-  echo "${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/.deps_hint_v${CRKCACHY_VERSION}"
-}
-
 _wizard_runtime_json() {
-  local node_ok=false glow_ok=false node_ver="" marker
+  local node_ok=false glow_ok=false node_ver=""
   if command -v node >/dev/null 2>&1; then
     node_ver="$(node --version 2>/dev/null | sed 's/^v//' || echo "")"
     local major
@@ -182,9 +175,8 @@ _wizard_runtime_json() {
     [[ "${major:-0}" -ge 18 ]] && node_ok=true
   fi
   command_exists glow && glow_ok=true
-  marker="$(_wizard_deps_marker)"
-  python3 -c 'import json,sys; json.dump({"nodeOk":sys.argv[1]=="true","glowOk":sys.argv[2]=="true","nodeVersion":sys.argv[3],"depsHintShown":sys.argv[4]=="true","version":sys.argv[5]},sys.stdout)' \
-    "$node_ok" "$glow_ok" "$node_ver" "$([[ -f "$marker" ]] && echo true || echo false)" "$CRKCACHY_VERSION"
+  python3 -c 'import json,sys; json.dump({"nodeOk":sys.argv[1]=="true","glowOk":sys.argv[2]=="true","nodeVersion":sys.argv[3],"version":sys.argv[4]},sys.stdout)' \
+    "$node_ok" "$glow_ok" "$node_ver" "$CRKCACHY_VERSION"
 }
 
 _wizard_assess_issues_json() {
@@ -234,11 +226,6 @@ ctx = {
 }
 json.dump(ctx, sys.stdout, ensure_ascii=False)
 PY
-}
-
-wizard_bridge_mark_deps_hint() {
-  mkdir -p "$(dirname "$(_wizard_deps_marker)")"
-  touch "$(_wizard_deps_marker)"
 }
 
 wizard_bridge_install_glow() {
@@ -373,9 +360,6 @@ shift || true
 case "$cmd" in
   context)
     wizard_bridge_context
-    ;;
-  mark-deps-hint)
-    wizard_bridge_mark_deps_hint
     ;;
   runtime)
     _wizard_runtime_json
