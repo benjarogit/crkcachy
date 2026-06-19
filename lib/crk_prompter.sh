@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# CRKCACHY prompter – Bash bridge to @clack/prompts (Node/TypeScript).
+# CRKCACHY prompter – Bash bridge to @clack/prompts (Node/TypeScript). Kein Bash-Fallback.
 
 set -euo pipefail
 
@@ -17,18 +17,8 @@ _crk_has_interactive() {
   return 1
 }
 
-# Eingabe – auch wenn stdin keine TTY ist (Konsole/Cursor: oft nur stdout ist TTY)
-_crk_read() {
-  local prompt="$1"
-  local __var="$2"
-  if [[ -t 0 ]]; then
-    read -r -p "$prompt" "$__var"
-    return 0
-  fi
-  if [[ -r /dev/tty ]]; then
-    read -r -p "$prompt" "$__var" < /dev/tty
-    return 0
-  fi
+_crk_prompter_fail() {
+  log_error "$(msg wizard.pick_failed)"
   return 1
 }
 
@@ -67,17 +57,19 @@ _crk_prompter_run() {
     return 1
   }
 
+  if ! _crk_has_interactive; then
+    log_error "$(msg node.no_tty)"
+    return 1
+  fi
+
   tmp="$(mktemp "${TMPDIR:-/tmp}/crkcachy.prompt.XXXXXX")"
   err_file="${tmp}.err"
   printf '%s' "$json" > "$tmp"
 
   if [[ -t 0 && -t 1 ]]; then
     node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" || rc=$?
-  elif [[ -r /dev/tty && -w /dev/tty ]]; then
-    node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 0</dev/tty > /dev/tty 2>"$err_file" || rc=$?
   else
-    rm -f "$tmp" "$err_file"
-    return 1
+    node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 0</dev/tty > /dev/tty 2>"$err_file" || rc=$?
   fi
   tput cnorm 2>/dev/null || true
   out="$(cat "$err_file" 2>/dev/null || true)"
@@ -98,63 +90,10 @@ _crk_prompter_run() {
   return 0
 }
 
-# Fallback: nummeriertes Bash-Menü (value|label Zeilen)
-_crk_bash_pick() {
-  local message="$1"
-  local initial_value="${2:-}"
-  shift 2
-  local -a keys=() labels=()
-  local line key label i pick idx
-
-  echo ""
-  printf '%b%s%b\n' "${_C_BOLD}" "$message" "${_C_RESET}"
-  i=1
-  for line in "$@"; do
-    key="${line%%|*}"
-    label="${line#*|}"
-    keys+=("$key")
-    labels+=("$label")
-    printf '  %2d) %s\n' "$i" "$label"
-    i=$((i + 1))
-  done
-  echo ""
-
-  if [[ -n "$initial_value" ]]; then
-    for idx in "${!keys[@]}"; do
-      if [[ "${keys[$idx]}" == "$initial_value" ]]; then
-        printf '%b' "${_C_DIM}"
-        printf '  (Enter = %s)\n' "${labels[$idx]}"
-        printf '%b' "${_C_RESET}"
-        break
-      fi
-    done
-  fi
-
-  if ! _crk_read "$(msg ui.bash_pick_prompt) " pick; then
-    log_error "$(msg node.no_tty)"
-    return 1
-  fi
-  if [[ -z "${pick:-}" && -n "$initial_value" ]]; then
-    printf '%s' "$initial_value"
-    return 0
-  fi
-
-  if [[ "${pick:-}" =~ ^[0-9]+$ ]] && (( pick >= 1 && pick <= ${#keys[@]} )); then
-    printf '%s' "${keys[$((pick - 1))]}"
-    return 0
-  fi
-
-  return 1
-}
-
 _crk_prompter_value() {
   local cmd="$1"
   local json="$2"
   local out val rc=0
-
-  if ! _crk_has_interactive; then
-    return 1
-  fi
 
   _crk_prompter_prepare
   out="$(_crk_prompter_run "$cmd" "$json")" || rc=$?
@@ -194,12 +133,16 @@ PY
 }
 
 crk_intro() {
+  local json
   _crk_prompter_prepare
-  _crk_prompter_run intro "$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1]}))' "$1")" >/dev/null || true
+  json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1]}))' "$1")"
+  _crk_prompter_run intro "$json" >/dev/null || _crk_prompter_fail
 }
 
 crk_outro() {
-  _crk_prompter_run outro "$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1]}))' "$1")" >/dev/null || true
+  local json
+  json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1]}))' "$1")"
+  _crk_prompter_run outro "$json" >/dev/null || _crk_prompter_fail
 }
 
 crk_note() {
@@ -208,7 +151,7 @@ crk_note() {
   local json
   _crk_prompter_prepare
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"title":sys.argv[2] or None}))' "$body" "$title")"
-  _crk_prompter_run note "$json" >/dev/null || true
+  _crk_prompter_run note "$json" >/dev/null || _crk_prompter_fail
 }
 
 crk_select() {
@@ -218,7 +161,7 @@ crk_select() {
   local json val
 
   json="$(_crk_build_select_json "$message" "" "$initial_value" "$@")"
-  val="$(_crk_prompter_value select "$json")" || val="$(_crk_bash_pick "$message" "$initial_value" "$@")" || return 1
+  val="$(_crk_prompter_value select "$json")" || _crk_prompter_fail || return 1
   printf '%s' "$val"
 }
 
@@ -230,46 +173,18 @@ crk_autocomplete() {
   local json val
 
   json="$(_crk_build_select_json "$message" "$placeholder" "$initial_value" "$@")"
-  val="$(_crk_prompter_value autocomplete "$json")" || val="$(_crk_bash_pick "$message" "$initial_value" "$@")" || return 1
+  val="$(_crk_prompter_value autocomplete "$json")" || _crk_prompter_fail || return 1
   printf '%s' "$val"
 }
 
 crk_confirm() {
   local message="$1"
   local default_yes="${2:-false}"
-  local json val rc=0 prompt answer
-
-  if ! _crk_has_interactive; then
-    return 1
-  fi
+  local json val
 
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"initialValueConfirm": sys.argv[2] in ("true","1","yes")}))' "$message" "$default_yes")"
-  val="$(_crk_prompter_value confirm "$json")" || rc=$?
-
-  if [[ "$rc" -eq 0 ]]; then
-    [[ "$val" == "true" ]]
-    return
-  fi
-
-  _crk_prompter_prepare
-  if [[ "$default_yes" == true ]]; then
-    prompt="$(msg ui.confirm_yes_default)"
-  else
-    prompt="$(msg ui.confirm_no_default)"
-  fi
-  if ! _crk_read "$prompt " answer; then
-    return 1
-  fi
-  case "${answer:-}" in
-    j|J|y|Y|ja|yes) return 0 ;;
-    n|N|no|nein) return 1 ;;
-    "")
-      [[ "$default_yes" == true ]]
-      ;;
-    *)
-      return 1
-      ;;
-  esac
+  val="$(_crk_prompter_value confirm "$json")" || _crk_prompter_fail || return 1
+  [[ "$val" == "true" ]]
 }
 
 crk_text() {
@@ -279,13 +194,7 @@ crk_text() {
   local json val
 
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"placeholder":sys.argv[2],"defaultValue":sys.argv[3]}))' "$message" "$placeholder" "$default")"
-  val="$(_crk_prompter_value text "$json")" || {
-    _crk_prompter_prepare
-    if ! _crk_read "$message " val; then
-      return 1
-    fi
-    val="${val:-$default}"
-  }
+  val="$(_crk_prompter_value text "$json")" || _crk_prompter_fail || return 1
   printf '%s' "$val"
 }
 
@@ -296,11 +205,7 @@ crk_continue() {
 
   _crk_prompter_prepare
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"title":sys.argv[2]}))' "$message" "$label")"
-  if _crk_prompter_run continue "$json" >/dev/null; then
-    return 0
-  fi
-  echo ""
-  _crk_read "${label} … " _ || return 1
+  _crk_prompter_run continue "$json" >/dev/null || _crk_prompter_fail
 }
 
 crk_gate_menu() {
@@ -322,11 +227,7 @@ crk_spin() {
   local json
 
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"command":sys.argv[2]}))' "$title" "$cmd")"
-  if _crk_prompter_run spin "$json" >/dev/null; then
-    return 0
-  fi
-  log_info "$title …"
-  eval "$cmd"
+  _crk_prompter_run spin "$json" >/dev/null || _crk_prompter_fail
 }
 
 crk_print_deps_hint() {
@@ -347,61 +248,34 @@ ensure_node() {
     if [[ "${ver:-0}" -ge 18 ]]; then
       return 0
     fi
-    log_warn "$(msg node.version_old)"
+    die "$(msg node.version_old)"
   fi
 
   explain_block "$(msg node.missing_title)" "$(package_explain_text nodejs)
 
 $(msg pkg.explain.footer)"
+  echo ""
+  log_hint "$(msg node.password_hint)"
 
-  while ! command -v node >/dev/null 2>&1; do
-    echo -e "${_C_BOLD}$(msg node.pick_title)${_C_RESET}"
-    echo "  1) $(msg node.opt_auto)"
-    echo "  2) $(msg node.opt_manual)"
-    echo ""
-    if ! _crk_read "$(msg node.pick_prompt) " node_choice; then
-      die "$(msg node.no_tty)"
-    fi
-
-    case "${node_choice:-1}" in
-      1|j|y|ja|yes)
-        log_hint "$(msg node.password_hint)"
-        if _ensure_logical_repo_package nodejs; then
-          hash -r 2>/dev/null || true
-        else
-          log_warn "$(msg node.install_failed)"
-        fi
-        if command -v node >/dev/null 2>&1; then
-          log_ok "$(msg node.installed)"
-          break
-        fi
-        log_warn "$(msg node.still_missing)"
-        ;;
-      2|n|no|nein)
-        ;;
-      *)
-        log_warn "$(msg node.pick_invalid)"
-        continue
-        ;;
-    esac
-
-    echo ""
-    log_hint "$(msg node.manual_steps_intro)"
-    log_hint "$(platform_manual_install_cmd_logical nodejs)"
-    echo ""
-    if ! _crk_read "$(msg node.manual_wait) " _; then
-      die "$(msg node.no_tty)"
-    fi
+  if _ensure_logical_repo_package nodejs; then
     hash -r 2>/dev/null || true
+  else
+    log_warn "$(msg node.install_failed)"
+  fi
 
-    if command -v node >/dev/null 2>&1; then
+  if command -v node >/dev/null 2>&1; then
+    local ver
+    ver="$(node -p "process.versions.node.split('.').map(Number)[0]" 2>/dev/null || echo 0)"
+    if [[ "${ver:-0}" -ge 18 ]]; then
       log_ok "$(msg node.installed)"
-      break
+      return 0
     fi
+  fi
 
-    log_warn "$(msg node.still_missing)"
-    echo ""
-  done
+  die "$(msg node.still_missing)
+
+$(msg node.manual_steps_intro)
+$(platform_manual_install_cmd_logical nodejs)"
 }
 
 ensure_prompter() {

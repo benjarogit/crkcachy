@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.88"
+CRKCACHY_VERSION="0.1.89"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -299,26 +299,19 @@ ensure_glow() {
     return 0
   fi
 
-  explain_block "$(msg glow.missing_title)" "$(package_explain_text glow)
+  while ! command_exists glow; do
+    explain_block "$(msg glow.missing_title)" "$(package_explain_text glow)
 
 $(msg pkg.explain.footer)"
-  echo ""
+    echo ""
 
-  while ! command_exists glow; do
-    local glow_choice pick
-
+    local pick
     pick="$(crk_select "$(msg glow.pick_title)" "" \
       "auto|$(msg glow.opt_auto)" \
-      "manual|$(msg glow.opt_manual)")" || pick=""
+      "manual|$(msg glow.opt_manual)")"
 
-    case "${pick:-auto}" in
-      auto) glow_choice=1 ;;
-      manual) glow_choice=2 ;;
-      *) glow_choice=1 ;;
-    esac
-
-    case "${glow_choice:-1}" in
-      1|j|y|ja|yes|"$(msg glow.opt_auto)")
+    case "$pick" in
+      auto)
         log_hint "$(msg glow.password_hint)"
         if _ensure_logical_repo_package glow; then
           hash -r 2>/dev/null || true
@@ -331,27 +324,23 @@ $(msg pkg.explain.footer)"
         fi
         log_warn "$(msg glow.still_missing)"
         ;;
-      2|n|no|nein|"$(msg glow.opt_manual)")
+      manual)
+        echo ""
+        log_hint "$(msg glow.manual_steps_intro)"
+        log_hint "$(platform_manual_install_cmd_logical glow)"
+        echo ""
+        crk_continue "$(msg glow.manual_wait)" "$(msg ui.ok_label)"
+        hash -r 2>/dev/null || true
+        if command_exists glow; then
+          log_ok "$(msg glow.installed)"
+          break
+        fi
+        log_warn "$(msg glow.still_missing)"
         ;;
       *)
-        log_warn "$(msg glow.pick_invalid)"
-        continue
+        die "$(msg wizard.pick_failed)"
         ;;
     esac
-
-    echo ""
-    log_hint "$(msg glow.manual_steps_intro)"
-    log_hint "$(platform_manual_install_cmd_logical glow)"
-    echo ""
-    crk_continue "$(msg glow.manual_wait)" "$(msg ui.ok_label)"
-    hash -r 2>/dev/null || true
-
-    if command_exists glow; then
-      log_ok "$(msg glow.installed)"
-      break
-    fi
-
-    log_warn "$(msg glow.still_missing)"
     echo ""
   done
 }

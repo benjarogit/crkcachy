@@ -50,16 +50,7 @@ tui_wizard_pick() {
   tui_wizard_build_lines
   lines=("${WIZARD_PICK_LINES[@]}")
 
-  # Clack-Select (ohne vorheriges intro/note)
-  if [[ "${CRKCACHY_BASH_UI:-0}" != "1" ]]; then
-    selected="$(crk_select "$(msg wizard.choose_hint)" "${ASSESS_RECOMMENDED}" "${lines[@]}")" || selected=""
-  fi
-
-  # Immer sichtbares Fallback – nie leere Konsole
-  if [[ -z "$selected" ]]; then
-    selected="$(_crk_bash_pick "$(msg wizard.choose_hint)" "${ASSESS_RECOMMENDED}" "${lines[@]}")" || selected=""
-  fi
-
+  selected="$(crk_select "$(msg wizard.choose_hint)" "${ASSESS_RECOMMENDED}" "${lines[@]}")"
   result="${selected:-}"
 
   if [[ -n "$_out" ]]; then
@@ -90,11 +81,7 @@ tui_tool_pick() {
 
   lines+=("|$(msg tools.opt_skip)")
 
-  selected="$(crk_autocomplete "$(msg tools.choose_hint)" "$(msg tools.hub_search_hint)" "" "${lines[@]}")" || selected=""
-  if [[ -z "$selected" ]]; then
-    selected="$(_crk_bash_pick "$(msg tools.choose_hint)" "" "${lines[@]}")" || selected=""
-  fi
-
+  selected="$(crk_autocomplete "$(msg tools.choose_hint)" "$(msg tools.hub_search_hint)" "" "${lines[@]}")"
   result="${selected:-}"
 
   if [[ -n "$_out" ]]; then
