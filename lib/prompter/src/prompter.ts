@@ -13,7 +13,7 @@ import {
   spinner,
   type Option,
 } from "@clack/prompts";
-import { styleHint, styleMessage, styleTitle, theme } from "./theme";
+import { styleHint, styleLabel, styleMessage, styleSuccess, styleTitle, theme } from "./theme";
 
 export class WizardCancelledError extends Error {
   readonly name = "WizardCancelledError";
@@ -46,6 +46,7 @@ export type CrkcachyPrompter = {
   }) => Promise<string>;
   confirm: (message: string, initialValue?: boolean) => Promise<boolean>;
   spin: (label: string, run: () => Promise<void>) => Promise<void>;
+  pressContinue: (message?: string, label?: string) => Promise<void>;
 };
 
 function toClackOptions(options: SelectOption[]): Option<string>[] {
@@ -106,6 +107,15 @@ export function createCrkcachyPrompter(): CrkcachyPrompter {
         spin.stop(`${theme.error}Fehler${theme.reset}`);
         throw err;
       }
+    },
+    pressContinue: async (message, label = "Weiter") => {
+      guardCancel(
+        await select({
+          message: message ? styleMessage(message) : styleHint("Fortfahren"),
+          options: [{ value: "ok", label: styleLabel(label) }],
+          initialValue: "ok",
+        }),
+      );
     },
   };
 }

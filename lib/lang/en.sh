@@ -53,6 +53,7 @@ _MSG[tool.house-of-ashes.name]="House of Ashes"
 _MSG[tool.house-of-ashes.desc]="The Dark Pictures – Steam + Proton + multiplayer"
 
 _MSG[wizard.title]="What do you want to do?"
+_MSG[wizard.status_title]="System check"
 _MSG[wizard.intro]="CRKCACHY %s"
 _MSG[wizard.choose_hint]="↑↓ pick · Enter confirms"
 _MSG[wizard.pick_retry]="Menu unavailable – please try again."
@@ -501,7 +502,7 @@ _MSG[onboard.title]="Let's go"
 _MSG[onboard.subtitle]="We check your PC and run the right tools."
 
 _MSG[runtime.intro_title]="What CRKCACHY does"
-_MSG[runtime.intro_body]=$'Gets Windows games running on Linux.\n\nQuick check:\n• Arrow-key menu (we set that up)\n• Steam for your game\n• Anything still missing on your PC'
+_MSG[runtime.intro_body]=$'CRKCACHY sets up Windows games via Steam and Proton.\n\nPick your next step in the menu below.'
 _MSG[runtime.check_title]="Startup check"
 _MSG[runtime.check_subtitle]="Checks if CRKCACHY can run on your PC."
 _MSG[runtime.check_title_tools]="CRKCACHY tools"

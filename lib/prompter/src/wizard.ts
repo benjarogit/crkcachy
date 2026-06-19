@@ -98,7 +98,6 @@ function buildMenuOptions(ctx: WizardContext): { value: string; label: string; h
     options.push({
       value: String(n),
       label: styledLabel,
-      hint: isRec ? styleHint(recommendedHint(ctx)) : undefined,
     });
   };
 
@@ -350,6 +349,29 @@ async function afterUninstallMenu(root: string, p: ReturnType<typeof createCrkca
   return pick as "menu" | "install" | "exit";
 }
 
+async function runSessionWelcome(
+  root: string,
+  ctx: WizardContext,
+  p: ReturnType<typeof createCrkcachyPrompter>,
+): Promise<void> {
+  await printBrandHeader(ctx);
+  await p.intro(mf("", ctx, "wizard.intro", `v${ctx.runtime.version}`));
+
+  if (!ctx.assess.systemReady) {
+    await p.note(buildStyledStatusNote(ctx), m("", ctx, "wizard.status_title"));
+  } else {
+    const body = [
+      `${iconOk()} ${styleSuccess(ctx.assess.hint)}`,
+      "",
+      styleMuted(m("", ctx, "runtime.intro_body")),
+    ].join("\n");
+    await p.note(body, m("", ctx, "runtime.intro_title"));
+  }
+
+  await p.pressContinue(m("", ctx, "ui.press_enter"), m("", ctx, "ui.ok_label"));
+  restoreTerminalGap();
+}
+
 async function mainMenuLoop(root: string, p: ReturnType<typeof createCrkcachyPrompter>): Promise<void> {
   let firstScreen = true;
 
@@ -357,16 +379,14 @@ async function mainMenuLoop(root: string, p: ReturnType<typeof createCrkcachyPro
     const ctx = await loadContext(root);
 
     if (firstScreen) {
-      await printBrandHeader(ctx);
+      await runSessionWelcome(root, ctx, p);
       firstScreen = false;
     } else {
       printMenuDivider();
     }
 
-    await p.note(buildStyledStatusNote(ctx), m("", ctx, "wizard.title"));
-
     const choice = await p.select({
-      message: m("", ctx, "wizard.choose_hint"),
+      message: `${m("", ctx, "wizard.title")}\n${styleHint(m("", ctx, "wizard.choose_hint"))}`,
       options: buildMenuOptions(ctx),
       initialValue: String(ctx.assess.recommended),
     });

@@ -38,6 +38,7 @@ _wizard_msg_keys() {
 wizard.intro
 wizard.choose_hint
 wizard.title
+wizard.status_title
 wizard.hint_ready
 wizard.hint_fix
 wizard.hint_full
@@ -62,6 +63,8 @@ assess.after_pc_exit
 assess.after_pc_hint
 runtime.bootstrap_title
 runtime.bootstrap_body
+runtime.intro_title
+runtime.intro_body
 runtime.fix_recommended
 runtime.cannot_continue
 runtime.legal_abort

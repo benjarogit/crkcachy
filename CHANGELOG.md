@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.92] - 2026-06-17
+
+### Changed
+- Wizard-Start: Willkommen → Weiter → dann Menü (nicht sofort Hauptmenü)
+- Kein „Du hast die neueste Version“ bei jedem Start (nur Update-Hinweis)
+- Keine doppelte Status-Box + Menü-Hint mehr
+
 ## [0.1.91] - 2026-06-17
 
 ### Removed

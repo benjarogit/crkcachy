@@ -1,5 +1,5 @@
 import { m, mf, type WizardContext } from "./bridge";
-import { styleMuted, styleSuccess, styleWarning, theme } from "./theme";
+import { styleMuted, styleWarning, theme } from "./theme";
 
 async function fetchLatestVersion(): Promise<string | null> {
   try {
@@ -41,13 +41,8 @@ export async function printBrandHeader(ctx: WizardContext): Promise<void> {
     process.stdout.write(
       `  ${styleMuted("    github.com/benjarogit/crkcachy/releases/latest")}\n`,
     );
-  } else if (latest) {
-    process.stdout.write(
-      `\n  ${styleSuccess(`✓ ${mf("", ctx, "banner.version_ok", `v${v}`)}`)}\n`,
-    );
+    process.stdout.write("\n");
   }
-
-  process.stdout.write("\n");
 }
 
 export function printMenuDivider(): void {

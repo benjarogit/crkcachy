@@ -53,6 +53,7 @@ _MSG[tool.house-of-ashes.name]="House of Ashes"
 _MSG[tool.house-of-ashes.desc]="The Dark Pictures – Steam + Proton + Multiplayer"
 
 _MSG[wizard.title]="Was möchtest du tun?"
+_MSG[wizard.status_title]="System-Check"
 _MSG[wizard.intro]="CRKCACHY %s"
 _MSG[wizard.choose_hint]="↑↓ wählen · Enter bestätigt"
 _MSG[wizard.pick_retry]="Menü nicht erreichbar – bitte erneut versuchen."
@@ -775,7 +776,7 @@ _MSG[onboard.title]="Los geht's"
 _MSG[onboard.subtitle]="PC prüfen, Tools starten."
 
 _MSG[runtime.intro_title]="Willkommen"
-_MSG[runtime.intro_body]=$'CRKCACHY hilft dir, Windows-Spiele über Steam und Proton einzurichten.\n\nZuerst prüfen wir kurz, ob Menü, Anleitungen und Paketmanager verfügbar sind.'
+_MSG[runtime.intro_body]=$'CRKCACHY richtet Windows-Spiele über Steam und Proton ein.\n\nIm Menü wählst du den nächsten Schritt.'
 _MSG[runtime.check_title]="Voraussetzungen auf diesem PC"
 _MSG[runtime.check_subtitle]="Diese Komponenten braucht CRKCACHY für Menüs und Installationen"
 _MSG[runtime.check_title_tools]="CRKCACHY-Werkzeuge"
