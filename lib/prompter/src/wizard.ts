@@ -19,11 +19,24 @@ import {
   type WizardContext,
   type ToolListItem,
 } from "./bridge";
+import { printBrandHeader, printMenuDivider } from "./brand";
 import {
   createCrkcachyPrompter,
   restoreTerminalGap,
   WizardCancelledError,
 } from "./prompter";
+import {
+  colorizeStatusLines,
+  iconOk,
+  iconStep,
+  iconWarn,
+  styleHint,
+  styleInfo,
+  styleLabel,
+  styleMuted,
+  styleSuccess,
+  styleWarning,
+} from "./theme";
 
 function parseArgs(argv: string[]): { root: string; lang?: string } {
   let root = process.env.CRKCACHY_ROOT ?? "";
@@ -60,18 +73,36 @@ function hasInteractiveTty(): boolean {
   }
 }
 
-function buildMenuOptions(ctx: WizardContext): { value: string; label: string }[] {
+function recommendedHint(ctx: WizardContext): string {
+  switch (ctx.assess.recommended) {
+    case 3:
+      return m("", ctx, "wizard.hint_ready");
+    case 2:
+      return m("", ctx, "wizard.hint_fix");
+    default:
+      return m("", ctx, "wizard.hint_full");
+  }
+}
+
+function buildMenuOptions(ctx: WizardContext): { value: string; label: string; hint?: string }[] {
   const badge = m("", ctx, "ui.badge_recommended");
   const rec = String(ctx.assess.recommended);
-  const options: { value: string; label: string }[] = [];
+  const options: { value: string; label: string; hint?: string }[] = [];
 
   const addOpt = (n: number) => {
     const label = m("", ctx, `wizard.opt${n}`);
-    if (String(n) === rec) {
-      options.push({ value: String(n), label: `${badge}  ${label}` });
-    } else {
-      options.push({ value: String(n), label });
-    }
+    const isRec = String(n) === rec;
+    const styledLabel = isRec
+      ? `${iconStep()} ${styleSuccess(badge)}  ${styleLabel(label)}`
+      : n === 5
+        ? `${styleWarning("○")} ${styleLabel(label)}`
+        : styleLabel(label);
+
+    options.push({
+      value: String(n),
+      label: styledLabel,
+      hint: isRec ? styleHint(recommendedHint(ctx)) : undefined,
+    });
   };
 
   addOpt(ctx.assess.recommended);
@@ -81,28 +112,48 @@ function buildMenuOptions(ctx: WizardContext): { value: string; label: string }[
   if (ctx.assess.recommended !== 4) {
     addOpt(4);
   }
-  options.push({ value: "5", label: m("", ctx, "wizard.opt5") });
+  addOpt(5);
   return options;
 }
 
-function buildStatusNote(ctx: WizardContext): string {
+function buildStyledStatusNote(ctx: WizardContext): string {
   if (ctx.assess.systemReady) {
-    let note = ctx.assess.hint;
+    const lines: string[] = [
+      `${iconOk()} ${styleSuccess(ctx.assess.hint)}`,
+    ];
+
     if (!ctx.runtime.depsHintShown) {
-      note += `\n\n${m("", ctx, "runtime.deps_cleanup")}`;
+      lines.push("");
+      lines.push(styleInfo(m("", ctx, "runtime.deps_cleanup").split("\n")[0] ?? ""));
+      const depsBody = m("", ctx, "runtime.deps_cleanup")
+        .split("\n")
+        .slice(1)
+        .join("\n");
+      if (depsBody.trim()) {
+        lines.push(colorizeStatusLines(depsBody));
+      }
+      lines.push("");
+      lines.push(styleMuted(m("", ctx, "runtime.deps_cleanup_short")));
     }
-    return note;
+
+    return lines.join("\n");
   }
 
   const lines = [
-    mf("", ctx, "wizard.status_fix", ctx.assess.score),
+    `${iconWarn()} ${styleWarning(mf("", ctx, "wizard.status_fix", ctx.assess.score))}`,
     "",
   ];
+
   if (ctx.assess.issues.length > 0) {
+    lines.push(styleMuted("Offene Punkte:"));
     for (const issue of ctx.assess.issues) {
-      lines.push(`○ ${issue}`);
+      lines.push(`  ${iconWarn()} ${styleMuted(issue)}`);
     }
   }
+
+  lines.push("");
+  lines.push(styleHint(recommendedHint(ctx)));
+
   return lines.join("\n");
 }
 
@@ -321,12 +372,19 @@ async function afterUninstallMenu(root: string, p: ReturnType<typeof createCrkca
 }
 
 async function mainMenuLoop(root: string, p: ReturnType<typeof createCrkcachyPrompter>): Promise<void> {
+  let firstScreen = true;
+
   while (true) {
     const ctx = await loadContext(root);
-    const introTitle = mf("", ctx, "wizard.intro", `v${ctx.runtime.version}`);
 
-    await p.intro(introTitle);
-    await p.note(buildStatusNote(ctx), m("", ctx, "wizard.title"));
+    if (firstScreen) {
+      await printBrandHeader(ctx);
+      firstScreen = false;
+    } else {
+      printMenuDivider();
+    }
+
+    await p.note(buildStyledStatusNote(ctx), m("", ctx, "wizard.title"));
 
     if (!ctx.runtime.depsHintShown && ctx.assess.systemReady) {
       markDepsHint(root);

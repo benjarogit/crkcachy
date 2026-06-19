@@ -80,6 +80,9 @@ glow.still_missing
 glow.install_failed
 pkg.explain.footer
 ui.badge_recommended
+banner.subtitle
+banner.version_ok
+banner.update_available
 ui.ok_label
 legal.step1_title
 legal.step1_body

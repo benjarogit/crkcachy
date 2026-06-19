@@ -1,5 +1,5 @@
 /**
- * Clack-backed prompter – OpenClaw-style guardCancel + WizardPrompter.
+ * Clack-backed prompter – CRKCACHY theme (OpenClaw-style styling).
  */
 import {
   autocomplete,
@@ -13,6 +13,7 @@ import {
   spinner,
   type Option,
 } from "@clack/prompts";
+import { styleHint, styleMessage, styleTitle, theme } from "./theme";
 
 export class WizardCancelledError extends Error {
   readonly name = "WizardCancelledError";
@@ -20,7 +21,7 @@ export class WizardCancelledError extends Error {
 
 function guardCancel<T>(value: T | symbol, cancelledLabel = "Abgebrochen."): T {
   if (isCancel(value)) {
-    cancel(cancelledLabel);
+    cancel(styleTitle(cancelledLabel));
     throw new WizardCancelledError();
   }
   return value;
@@ -50,25 +51,28 @@ export type CrkcachyPrompter = {
 function toClackOptions(options: SelectOption[]): Option<string>[] {
   return options.map((opt) => {
     const base: Option<string> = { value: opt.value, label: opt.label };
-    return opt.hint ? { ...base, hint: opt.hint } : base;
+    if (opt.hint) {
+      return { ...base, hint: opt.hint };
+    }
+    return base;
   });
 }
 
 export function createCrkcachyPrompter(): CrkcachyPrompter {
   return {
     intro: async (title) => {
-      intro(title);
+      intro(styleTitle(title));
     },
     outro: async (message) => {
-      outro(message);
+      outro(styleSuccess(message));
     },
     note: async (message, title) => {
-      note(message, title);
+      note(message, title ? styleTitle(title) : undefined);
     },
     select: async ({ message, options, initialValue }) => {
       return guardCancel(
         await select({
-          message,
+          message: styleMessage(message),
           options: toClackOptions(options),
           initialValue,
         }),
@@ -77,29 +81,29 @@ export function createCrkcachyPrompter(): CrkcachyPrompter {
     autocomplete: async ({ message, options, initialValue, placeholder }) => {
       return guardCancel(
         await autocomplete({
-          message,
+          message: styleMessage(message),
           options: toClackOptions(options),
           initialValue,
-          placeholder,
+          placeholder: placeholder ? styleHint(placeholder) : undefined,
         }),
       );
     },
     confirm: async (message, initialValue = false) => {
       return guardCancel(
         await confirm({
-          message,
+          message: styleMessage(message),
           initialValue,
         }),
       );
     },
     spin: async (label, run) => {
       const spin = spinner();
-      spin.start(label);
+      spin.start(`${theme.brand}${label}${theme.reset}`);
       try {
         await run();
-        spin.stop(label);
+        spin.stop(styleSuccess(label));
       } catch (err) {
-        spin.stop("Fehler");
+        spin.stop(`${theme.error}Fehler${theme.reset}`);
         throw err;
       }
     },

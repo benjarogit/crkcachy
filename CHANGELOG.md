@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.90] - 2026-06-17
+
+### Changed
+- **Wizard-Branding:** CRKCACHY-Header (wie `cui_brand_header`) beim Start
+- **Farbschema** aus `cui.sh` (Brand, Erfolg, Warnung, Info, gedimmt) in Menüs, Notes und Status
+- Empfohlene Option mit ◆/★ in Grün, Deinstall mit Warnfarbe, ✓/✗/○ farbig in Paket-Infos
+
 ## [0.1.89] - 2026-06-17
 
 ### Removed

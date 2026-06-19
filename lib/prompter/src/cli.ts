@@ -18,6 +18,7 @@ import {
   type Option,
 } from "@clack/prompts";
 import { spawnSync } from "node:child_process";
+import { styleMessage, styleTitle, theme } from "./theme";
 
 type SelectOption = { value: string; label: string; hint?: string };
 
@@ -60,7 +61,7 @@ function writeOk(value: unknown): void {
 }
 
 function failCancel(): void {
-  cancel("Abgebrochen.");
+  cancel(styleTitle("Abgebrochen."));
   writeResult({ ok: false, cancelled: true });
   process.exit(1);
 }
@@ -100,15 +101,15 @@ async function main(): Promise<void> {
 
   switch (cmd) {
     case "intro":
-      intro(data.message ?? "");
+      intro(styleTitle(data.message ?? ""));
       break;
 
     case "outro":
-      outro(data.message ?? "");
+      outro(styleTitle(data.message ?? ""));
       break;
 
     case "note":
-      note(data.message ?? "", data.title);
+      note(data.message ?? "", data.title ? styleTitle(data.title) : undefined);
       break;
 
     case "select": {
@@ -116,7 +117,7 @@ async function main(): Promise<void> {
       requireOptions(options, "select");
       const val = guard(
         await select({
-          message: data.message ?? "",
+          message: styleMessage(data.message ?? ""),
           options: toClackOptions(options),
           initialValue: data.initialValue,
         }),
@@ -130,7 +131,7 @@ async function main(): Promise<void> {
       requireOptions(options, "autocomplete");
       const val = guard(
         await autocomplete({
-          message: data.message ?? "",
+          message: styleMessage(data.message ?? ""),
           options: toClackOptions(options),
           initialValue: data.initialValue,
           placeholder: data.placeholder,
@@ -143,7 +144,7 @@ async function main(): Promise<void> {
     case "confirm": {
       const val = guard(
         await confirm({
-          message: data.message ?? "",
+          message: styleMessage(data.message ?? ""),
           initialValue: data.initialValueConfirm ?? false,
         }),
       );
@@ -154,7 +155,7 @@ async function main(): Promise<void> {
     case "text": {
       const val = guard(
         await text({
-          message: data.message ?? "",
+          message: styleMessage(data.message ?? ""),
           placeholder: data.placeholder,
           defaultValue: data.defaultValue,
         }),
@@ -167,7 +168,7 @@ async function main(): Promise<void> {
       const label = data.message ?? "Weiter";
       const val = guard(
         await select({
-          message: label,
+          message: styleMessage(label),
           options: [{ value: "ok", label: data.title ?? "Weiter" }],
         }),
       );
