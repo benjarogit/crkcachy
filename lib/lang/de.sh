@@ -54,6 +54,7 @@ _MSG[tool.house-of-ashes.desc]="The Dark Pictures – Steam + Proton + Multiplay
 
 _MSG[wizard.title]="Was möchtest du tun?"
 _MSG[wizard.choose_hint]="↑↓ wählen · Enter bestätigt"
+_MSG[wizard.pick_retry]="Menü nicht erreichbar – bitte erneut versuchen."
 _MSG[wizard.hint_ready]="System bereit – Spiel-Tool als Nächstes."
 _MSG[wizard.hint_fix]="Noch etwas am PC fehlt – zuerst reparieren."
 _MSG[wizard.hint_full]="Ersteinrichtung: PC und Spiel in einem Durchlauf."
@@ -144,6 +145,9 @@ _MSG[ui.done]="Fertig: %s"
 _MSG[ui.wizard_track]="Schritt %s von %s"
 _MSG[ui.press_enter]="Fortfahren"
 _MSG[ui.ok_label]="Weiter"
+_MSG[ui.bash_pick_prompt]="Nummer (Enter = Standard): "
+_MSG[ui.confirm_yes_default]="Ja/Nein (Enter = Ja): "
+_MSG[ui.confirm_no_default]="Ja/Nein (Enter = Nein): "
 _MSG[ui.markdown_scroll_hint]="Mausrad = scrollen"
 _MSG[ui.badge_recommended]="★ EMPFOHLEN"
 _MSG[cui.choice_yes]="✓ Ja"
@@ -876,6 +880,7 @@ _MSG[runtime.legal_hint]="Nur Hilfe – keine Haftung. Siehe docs/legal.md"
 _MSG[runtime.bootstrap_title]="Oberfläche einrichten"
 _MSG[runtime.bootstrap_body]=$'CRKCACHY nutzt zwei Programme für die Oberfläche:\n\n• Node.js – Auswahlmenüs in der Konsole (Clack, wie OpenClaw)\n• glow – README und Anleitungen formatiert anzeigen\n\nWeitere Pakete (Steam, Proton, …) kommen später – jeweils mit Erklärung.'
 _MSG[runtime.bootstrap_hint]="Fehlt etwas, zeigen wir dir den Grund und den Installationsbefehl."
+_MSG[runtime.deps_cleanup]=$'Pakete – was brauchst du noch?\n\n✓ Pflicht: nodejs, glow\n✗ Nicht mehr nötig: gum (sudo pacman -Rns gum)\n\nCRKCACHY nutzt Node.js + @clack/prompts für Menüs.'
 
 _MSG[node.what_is]="Node.js = Menü-Oberfläche (Clack)"
 _MSG[node.missing_title]="Node.js installieren"

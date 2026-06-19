@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # CRKCACHY prompter – Bash bridge to @clack/prompts (Node/TypeScript).
-# Kein gum. Alle interaktiven Menüs laufen über lib/prompter/dist/cli.js
 
 set -euo pipefail
 
 CRK_PROMPTER_JS="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}/lib/prompter/dist/cli.js"
+
+_crk_prompter_prepare() {
+  tput cnorm 2>/dev/null || true
+  printf '\n'
+}
 
 _crk_prompt_need_tty() {
   if [[ ! -t 0 || ! -t 1 ]]; then
@@ -53,14 +57,13 @@ _crk_prompter_run() {
   err_file="${tmp}.err"
   printf '%s' "$json" > "$tmp"
 
-  # stdout = Clack-TUI, JSON-Ergebnis auf stderr
   node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" || rc=$?
   out="$(cat "$err_file" 2>/dev/null || true)"
   rm -f "$tmp" "$err_file"
 
   if [[ "$rc" -ne 0 ]]; then
     if [[ "${CRKCACHY_DEBUG:-0}" == 1 && -n "$out" ]]; then
-      log_debug "prompter stderr: $out"
+      log_debug "prompter: $out"
     fi
     return "$rc"
   fi
@@ -73,6 +76,52 @@ _crk_prompter_run() {
   return 0
 }
 
+# Fallback: nummeriertes Bash-Menü (value|label Zeilen)
+_crk_bash_pick() {
+  local message="$1"
+  local initial_value="${2:-}"
+  shift 2
+  local -a keys=() labels=()
+  local line key label i pick idx
+
+  echo ""
+  printf '%b%s%b\n' "${_C_BOLD}" "$message" "${_C_RESET}"
+  i=1
+  for line in "$@"; do
+    key="${line%%|*}"
+    label="${line#*|}"
+    keys+=("$key")
+    labels+=("$label")
+    printf '  %2d) %s\n' "$i" "$label"
+    i=$((i + 1))
+  done
+  echo ""
+
+  if [[ -n "$initial_value" ]]; then
+    for idx in "${!keys[@]}"; do
+      if [[ "${keys[$idx]}" == "$initial_value" ]]; then
+        printf '%b' "${_C_DIM}"
+        printf '  (Enter = %s)\n' "${labels[$idx]}"
+        printf '%b' "${_C_RESET}"
+        break
+      fi
+    done
+  fi
+
+  read -r -p "$(msg ui.bash_pick_prompt) " pick
+  if [[ -z "${pick:-}" && -n "$initial_value" ]]; then
+    printf '%s' "$initial_value"
+    return 0
+  fi
+
+  if [[ "${pick:-}" =~ ^[0-9]+$ ]] && (( pick >= 1 && pick <= ${#keys[@]} )); then
+    printf '%s' "${keys[$((pick - 1))]}"
+    return 0
+  fi
+
+  return 1
+}
+
 _crk_prompter_value() {
   local cmd="$1"
   local json="$2"
@@ -82,6 +131,7 @@ _crk_prompter_value() {
     return 1
   fi
 
+  _crk_prompter_prepare
   out="$(_crk_prompter_run "$cmd" "$json")" || rc=$?
   if [[ "$rc" -ne 0 || -z "$out" ]]; then
     return 1
@@ -91,7 +141,6 @@ _crk_prompter_value() {
   printf '%s' "$val"
 }
 
-# Optionen: value|label|hint (hint optional)
 _crk_build_select_json() {
   local message="$1"
   local placeholder="${2:-}"
@@ -120,6 +169,7 @@ PY
 }
 
 crk_intro() {
+  _crk_prompter_prepare
   _crk_prompter_run intro "$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1]}))' "$1")" >/dev/null || true
 }
 
@@ -131,6 +181,7 @@ crk_note() {
   local body="$1"
   local title="${2:-}"
   local json
+  _crk_prompter_prepare
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"title":sys.argv[2] or None}))' "$body" "$title")"
   _crk_prompter_run note "$json" >/dev/null || true
 }
@@ -139,9 +190,11 @@ crk_select() {
   local message="$1"
   local initial_value="${2:-}"
   shift 2
-  local json
+  local json val
+
   json="$(_crk_build_select_json "$message" "" "$initial_value" "$@")"
-  _crk_prompter_value select "$json"
+  val="$(_crk_prompter_value select "$json")" || val="$(_crk_bash_pick "$message" "$initial_value" "$@")" || return 1
+  printf '%s' "$val"
 }
 
 crk_autocomplete() {
@@ -149,41 +202,78 @@ crk_autocomplete() {
   local placeholder="${2:-}"
   local initial_value="${3:-}"
   shift 3
-  local json
+  local json val
+
   json="$(_crk_build_select_json "$message" "$placeholder" "$initial_value" "$@")"
-  _crk_prompter_value autocomplete "$json"
+  val="$(_crk_prompter_value autocomplete "$json")" || val="$(_crk_bash_pick "$message" "$initial_value" "$@")" || return 1
+  printf '%s' "$val"
 }
 
 crk_confirm() {
   local message="$1"
   local default_yes="${2:-false}"
-  local json val rc=0
-  json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"initialValueConfirm": sys.argv[2] in ("true","1","yes")}))' "$message" "$default_yes")"
-  val="$(_crk_prompter_value confirm "$json")" || rc=$?
-  if [[ "$rc" -ne 0 ]]; then
+  local json val rc=0 prompt
+
+  if ! _crk_prompt_need_tty; then
     return 1
   fi
-  [[ "$val" == "true" ]]
+
+  json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"initialValueConfirm": sys.argv[2] in ("true","1","yes")}))' "$message" "$default_yes")"
+  val="$(_crk_prompter_value confirm "$json")" || rc=$?
+
+  if [[ "$rc" -eq 0 ]]; then
+    [[ "$val" == "true" ]]
+    return
+  fi
+
+  _crk_prompter_prepare
+  if [[ "$default_yes" == true ]]; then
+    prompt="$(msg ui.confirm_yes_default)"
+  else
+    prompt="$(msg ui.confirm_no_default)"
+  fi
+  read -r -p "$prompt " answer
+  case "${answer:-}" in
+    j|J|y|Y|ja|yes) return 0 ;;
+    n|N|no|nein) return 1 ;;
+    "")
+      [[ "$default_yes" == true ]]
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 crk_text() {
   local message="$1"
   local placeholder="${2:-}"
   local default="${3:-}"
-  local json
+  local json val
+
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"placeholder":sys.argv[2],"defaultValue":sys.argv[3]}))' "$message" "$placeholder" "$default")"
-  _crk_prompter_value text "$json"
+  val="$(_crk_prompter_value text "$json")" || {
+    _crk_prompter_prepare
+    read -r -p "$message " val
+    val="${val:-$default}"
+  }
+  printf '%s' "$val"
 }
 
 crk_continue() {
   local message="${1:-$(msg ui.press_enter)}"
   local label="${2:-$(msg ui.ok_label)}"
   local json
+
+  _crk_prompter_prepare
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"title":sys.argv[2]}))' "$message" "$label")"
-  _crk_prompter_run continue "$json" >/dev/null || true
+  if _crk_prompter_run continue "$json" >/dev/null; then
+    return 0
+  fi
+  echo ""
+  read -r -p "${label} … " _
 }
 
-# Gate-Menü: Werte auto|manual|skip oder open|manual|skip
 crk_gate_menu() {
   local title="$1"
   local body="$2"
@@ -201,8 +291,22 @@ crk_spin() {
   shift
   local cmd="$*"
   local json
+
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"command":sys.argv[2]}))' "$title" "$cmd")"
-  _crk_prompter_run spin "$json" >/dev/null
+  if _crk_prompter_run spin "$json" >/dev/null; then
+    return 0
+  fi
+  log_info "$title …"
+  eval "$cmd"
+}
+
+crk_print_deps_hint() {
+  local marker="${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/.deps_hint_v${CRKCACHY_VERSION}"
+  [[ -f "$marker" ]] && return 0
+  echo ""
+  crk_note "$(msg runtime.deps_cleanup)"
+  mkdir -p "$(dirname "$marker")"
+  touch "$marker"
 }
 
 ensure_node() {

@@ -229,17 +229,25 @@ show_wizard_menu() {
   while true; do
     assess_run
     cui_screen_clear
-    cui_wizard_main_header "$(assess_recommended_hint)"
-    tui_assess_panel || true
+
+    crk_intro "$(msg wizard.title)"
+
+    if [[ "$ASSESS_SYSTEM_READY" == true ]]; then
+      crk_note "$(assess_recommended_hint)"
+    else
+      crk_note "$(msgf wizard.status_fix "$(msgf assess.score "${ASSESS_OK:-0}" "${ASSESS_FAIL:-1}")")"
+      tui_assess_panel || true
+    fi
 
     local choice=""
     tui_wizard_pick choice
-    echo ""
 
     if [[ -z "${choice:-}" ]]; then
+      log_warn "$(msg wizard.pick_retry)"
       continue
     fi
 
+    echo ""
     announce_choice "${choice}"
 
     case "${choice}" in

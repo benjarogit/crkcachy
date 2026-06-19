@@ -95,10 +95,9 @@ cui_divider() { echo ""; cui_rule; echo ""; }
 
 cui_brand_header() {
   echo ""
-  printf '%b\n' "${_C_BOLD}$(_cui_fg "$CUI_C_BRAND")"
-  printf '  ╔══════════════════════════════════╗%b\n' "${_C_RESET}"
-  printf '  ║%b   C R K C A C H Y   %b║\n' "$(_cui_fg "$CUI_C_BRAND")" "${_C_RESET}"
-  printf '  ╚══════════════════════════════════╝%b\n' "${_C_RESET}"
+  printf '  %b╔══════════════════════════════════╗%b\n' "$(_cui_fg "$CUI_C_BRAND")" "${_C_RESET}"
+  printf '  %b║   C R K C A C H Y   %b║\n' "$(_cui_fg "$CUI_C_BRAND")" "${_C_RESET}"
+  printf '  %b╚══════════════════════════════════╝%b\n' "$(_cui_fg "$CUI_C_BRAND")" "${_C_RESET}"
   echo ""
   _cui_echo "$CUI_C_MUTED" "  v${CRKCACHY_VERSION}  ·  $(msg banner.subtitle)"
   echo ""
@@ -177,14 +176,11 @@ cui_status_chip() {
   local text="$2"
   echo ""
   if [[ "$ok" == true ]]; then
-  printf '  %b╭────────────────────────────────────────╮%b\n' "$(_cui_fg "$CUI_C_SUCCESS")" "${_C_RESET}"
-  printf '  %b│ %s  %s │%b\n' "$(_cui_fg "$CUI_C_SUCCESS")" "$CUI_ICON_OK" "$text" "${_C_RESET}"
-  printf '  %b╰────────────────────────────────────────╯%b\n' "$(_cui_fg "$CUI_C_SUCCESS")" "${_C_RESET}"
+    printf '  %b%s%b  %s\n' "$_C_GREEN" "$CUI_ICON_OK" "$_C_RESET" "$text"
   else
-  printf '  %b╭────────────────────────────────────────╮%b\n' "$(_cui_fg "$CUI_C_WARNING")" "${_C_RESET}"
-  printf '  %b│ %s  %s │%b\n' "$(_cui_fg "$CUI_C_WARNING")" "$CUI_ICON_WARN" "$text" "${_C_RESET}"
-  printf '  %b╰────────────────────────────────────────╯%b\n' "$(_cui_fg "$CUI_C_WARNING")" "${_C_RESET}"
+    printf '  %b%s%b  %s\n' "$_C_YELLOW" "$CUI_ICON_WARN" "$_C_RESET" "$text"
   fi
+  echo ""
 }
 
 cui_progress_track() {

@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.83"
+CRKCACHY_VERSION="0.1.84"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -366,6 +366,7 @@ ensure_crkcachy_runtime() {
 
   ensure_prompter
   ensure_glow
+  crk_print_deps_hint
 }
 
 print_banner() {
