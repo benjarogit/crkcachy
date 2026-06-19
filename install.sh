@@ -340,11 +340,26 @@ main() {
     exit $?
   fi
 
-  ensure_crkcachy_runtime
-  print_banner
-  preflight_onboard
+  # Interactive wizard – OpenClaw-style Node/TypeScript (@clack/prompts)
+  local wizard_js="${CRKCACHY_ROOT}/lib/prompter/dist/wizard.js"
 
-  show_wizard_menu || true
+  if ! command -v node >/dev/null 2>&1; then
+    # shellcheck source=lib/crk_prompter.sh
+    source "${CRKCACHY_ROOT}/lib/crk_prompter.sh"
+    ensure_node
+  fi
+
+  if [[ ! -f "$wizard_js" ]]; then
+    die "$(msg node.prompter_missing)"
+  fi
+
+  local -a wiz_args=(--root "$CRKCACHY_ROOT")
+  if [[ -n "${CRKCACHY_LANG:-}" ]]; then
+    wiz_args+=(--lang "$CRKCACHY_LANG")
+  fi
+
+  node "$wizard_js" "${wiz_args[@]}"
+  exit $?
 }
 
 main "${FILTERED_CLI_ARGS[@]:-${FILTERED_ARGS[@]}}"

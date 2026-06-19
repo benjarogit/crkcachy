@@ -3,7 +3,7 @@
   "private": true,
   "description": "CRKCACHY CLI prompter (@clack/prompts) – OpenClaw-style wizards",
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --platform=node --target=node18 --outfile=dist/cli.js --format=cjs --banner:js='#!/usr/bin/env node'"
+    "build": "esbuild src/cli.ts --bundle --platform=node --target=node18 --outfile=dist/cli.js --format=cjs --banner:js='#!/usr/bin/env node' && esbuild src/wizard.ts --bundle --platform=node --target=node18 --outfile=dist/wizard.js --format=cjs --banner:js='#!/usr/bin/env node'"
   },
   "dependencies": {
     "@clack/prompts": "^1.5.1"
