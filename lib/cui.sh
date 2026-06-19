@@ -1,34 +1,26 @@
 #!/usr/bin/env bash
-# CRKCACHY Design System
+# CRKCACHY Design System – @clack/prompts via lib/crk_prompter.sh (OpenClaw-style)
 #
-# Inspiriert von: create-next-app, Volta, Bun, Charm/gum demos
-# Prinzipien:
-#   1. Semantische Farbtokens – keine Magic Numbers im Code
-#   2. Konsistente Komponenten – ein Konzept, eine Funktion
-#   3. Ausgerichtete Tabellen für Checklisten (wie Volta "Your toolchain:")
-#   4. stdout-Capture-Sicherheit: cui_choose/filter sind $()-safe;
-#      Wrapper mit UI-Output nutzen globale Variablen (→ siehe ARCHITEKTUR unten)
+# Interaktion: Node + @clack/prompts (kein gum)
+# Statisches Styling: ANSI
 #
 set -euo pipefail
 
-# ── Farbtokens ────────────────────────────────────────────────────────────────
-# 256-Color-Codes die gum --foreground/--border-foreground akzeptiert
+# ── Farbtokens (ANSI 256) ─────────────────────────────────────────────────────
 
-CUI_C_BRAND=99       # violet   – CRKCACHY Markenfarbe
-CUI_C_SUCCESS=76     # green    – ✓ Alles OK
-CUI_C_WARNING=214    # amber    – ○ Empfohlen, fehlt
-CUI_C_ERROR=196      # red      – ✗ Pflicht, fehlt
-CUI_C_INFO=117       # blue     – Info
-CUI_C_MUTED=245      # gray     – Subtexte, Hints
-CUI_C_DIM=238        # dark     – Trennlinien
-CUI_C_STEP=147       # lavender – Schrittnummern
+CUI_C_BRAND=99
+CUI_C_SUCCESS=76
+CUI_C_WARNING=214
+CUI_C_ERROR=196
+CUI_C_INFO=117
+CUI_C_MUTED=245
+CUI_C_DIM=238
+CUI_C_STEP=147
 
-# Legacy-Aliases (werden von altem Code benutzt)
 CUI_ACCENT="${CUI_C_BRAND}"
 CUI_MUTED="${CUI_C_MUTED}"
 CUI_OK="${CUI_C_SUCCESS}"
 
-# ── Icon-Tokens ───────────────────────────────────────────────────────────────
 CUI_ICON_OK="✓"
 CUI_ICON_WARN="○"
 CUI_ICON_FAIL="✗"
@@ -36,56 +28,84 @@ CUI_ICON_ARROW="›"
 CUI_ICON_BULLET="•"
 CUI_ICON_STEP="◆"
 
-# ── Primitive: Text-Ausgabe ───────────────────────────────────────────────────
-
-# Überschrift (fett)
-cui_heading() {
-  gum style --bold --margin "0" "${1}"
+_cui_box_lines() {
+  local color="$1"
+  local body="$2"
+  local line
+  echo ""
+  printf '  %b╭────────────────────────────────────────╮%b\n' "$(_cui_fg "$color")" "${_C_RESET}"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+  printf '  %b│%b  %s\n' "$(_cui_fg "$color")" "${_C_RESET}" "$line"
+  done <<< "$body"
+  printf '  %b╰────────────────────────────────────────╯%b\n' "$(_cui_fg "$color")" "${_C_RESET}"
+  echo ""
 }
 
-# Untertitel / muted body
+cui_muted_block() {
+  local body="$1"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    _cui_echo "$CUI_C_MUTED" "  $line"
+  done <<< "$body"
+}
+
+cui_warning_box() {
+  _cui_box_lines "$CUI_C_WARNING" "$1"
+}
+
+cui_info_box() {
+  _cui_box_lines "$CUI_C_BRAND" "$1"
+}
+
+_cui_fg() {
+  printf '\033[38;5;%sm' "$1"
+}
+
+_cui_echo() {
+  local color="$1"
+  shift
+  printf '%b%b%b\n' "$(_cui_fg "$color")" "$*" "${_C_RESET}"
+}
+
+_cui_echo_bold() {
+  printf '%b%b%b\n' "${_C_BOLD}" "$*" "${_C_RESET}"
+}
+
+# ── Primitive ─────────────────────────────────────────────────────────────────
+
+cui_heading() {
+  _cui_echo_bold "$1"
+}
+
 cui_sub() {
   if [[ -n "${1:-}" ]]; then
-    gum style --foreground "$CUI_C_MUTED" "${1}"
+    _cui_echo "$CUI_C_MUTED" "$1"
   fi
 }
 
-# Schwache Trennlinie (wie Volta)
 cui_rule() {
   local width line
   width="$(tput cols 2>/dev/null || echo 72)"
   if [[ "$width" -gt 72 ]]; then width=72; fi
   line="$(python3 -c "print('─'*${width})" 2>/dev/null || printf '%0.s─' $(seq 1 "$width"))"
-  gum style --foreground "$CUI_C_DIM" "$line"
+  _cui_echo "$CUI_C_DIM" "$line"
 }
 
 cui_spacer() { echo ""; }
 cui_divider() { echo ""; cui_rule; echo ""; }
 
-# ── Banner ────────────────────────────────────────────────────────────────────
-# Nur einmal pro Session, ganz oben
-
 cui_brand_header() {
   echo ""
-  # Logo: Letter-Spacing-Stil – lesbar in jedem Terminal, kein figlet nötig
-  gum style \
-    --bold \
-    --foreground "$CUI_C_BRAND" \
-    --border "double" \
-    --border-foreground "$CUI_C_BRAND" \
-    --padding "1 6" \
-    --align center \
-    "C R K C A C H Y"
+  printf '%b\n' "${_C_BOLD}$(_cui_fg "$CUI_C_BRAND")"
+  printf '  ╔══════════════════════════════════╗%b\n' "${_C_RESET}"
+  printf '  ║%b   C R K C A C H Y   %b║\n' "$(_cui_fg "$CUI_C_BRAND")" "${_C_RESET}"
+  printf '  ╚══════════════════════════════════╝%b\n' "${_C_RESET}"
   echo ""
-  gum style --foreground "$CUI_C_MUTED" \
-    "  v${CRKCACHY_VERSION}  ·  $(msg banner.subtitle)"
+  _cui_echo "$CUI_C_MUTED" "  v${CRKCACHY_VERSION}  ·  $(msg banner.subtitle)"
   echo ""
   _cui_github_version_check
   echo ""
 }
 
-# Prüft ob eine neuere Version auf GitHub verfügbar ist.
-# Benötigt curl. Fehler werden ignoriert (kein Internet = kein Problem).
 _cui_github_version_check() {
   command -v curl >/dev/null 2>&1 || return 0
   command -v grep >/dev/null 2>&1 || return 0
@@ -101,34 +121,24 @@ _cui_github_version_check() {
   [[ -n "$_latest" ]] || return 0
 
   if [[ "$_latest" == "$CRKCACHY_VERSION" ]]; then
-    gum style --foreground "$CUI_C_SUCCESS" \
-      "  ✓ $(msgf banner.version_ok "v${CRKCACHY_VERSION}")"
+    _cui_echo "$CUI_C_SUCCESS" "  ✓ $(msgf banner.version_ok "v${CRKCACHY_VERSION}")"
   else
-    gum style --foreground "$CUI_C_WARNING" \
-      "  ↑ $(msgf banner.update_available "v${CRKCACHY_VERSION}" "v${_latest}")"
-    gum style --foreground "$CUI_C_MUTED" \
-      "    github.com/benjarogit/crkcachy/releases/latest"
+    _cui_echo "$CUI_C_WARNING" "  ↑ $(msgf banner.update_available "v${CRKCACHY_VERSION}" "v${_latest}")"
+    _cui_echo "$CUI_C_MUTED" "    github.com/benjarogit/crkcachy/releases/latest"
   fi
 }
-
-# ── Section-Header (wie create-next-app Kategorien) ──────────────────────────
 
 cui_section() {
   local title="$1"
   local sub="${2:-}"
   echo ""
-  gum style --bold "$title"
+  _cui_echo_bold "$title"
   if [[ -n "$sub" ]]; then
-    gum style --foreground "$CUI_C_MUTED" "$sub"
+    _cui_echo "$CUI_C_MUTED" "$sub"
   fi
 }
 
 cui_panel() { cui_section "$@"; }
-
-# ── Check-Tabellenzeile (wie Volta "Your toolchain:") ────────────────────────
-# Argumente: state(ok|warn|fail) name value [detail]
-# Ausgabe:   ✓  Steam               installiert     /home/.../Steam
-#            ○  Spacewar (App 480)  fehlt           in Steam installieren
 
 cui_check_row() {
   local state="$1"
@@ -157,42 +167,29 @@ cui_check_row() {
   fi
 }
 
-# Kategorie-Label (eingerückt, klein)
 cui_check_category() {
   echo ""
-  gum style --bold --foreground "$CUI_C_STEP" "  ${1}"
+  printf '%b%b  %s%b\n' "${_C_BOLD}" "$(_cui_fg "$CUI_C_STEP")" "$1" "${_C_RESET}"
 }
-
-# ── Status-Chip ───────────────────────────────────────────────────────────────
-# Abgerundete Box – nur für Gesamt-Ergebnis
 
 cui_status_chip() {
   local ok="$1"
   local text="$2"
   echo ""
   if [[ "$ok" == true ]]; then
-    gum style \
-      --border rounded \
-      --border-foreground "$CUI_C_SUCCESS" \
-      --foreground "$CUI_C_SUCCESS" \
-      --padding "0 1" \
-      "$CUI_ICON_OK  ${text}"
+  printf '  %b╭────────────────────────────────────────╮%b\n' "$(_cui_fg "$CUI_C_SUCCESS")" "${_C_RESET}"
+  printf '  %b│ %s  %s │%b\n' "$(_cui_fg "$CUI_C_SUCCESS")" "$CUI_ICON_OK" "$text" "${_C_RESET}"
+  printf '  %b╰────────────────────────────────────────╯%b\n' "$(_cui_fg "$CUI_C_SUCCESS")" "${_C_RESET}"
   else
-    gum style \
-      --border rounded \
-      --border-foreground "$CUI_C_WARNING" \
-      --foreground "$CUI_C_WARNING" \
-      --padding "0 1" \
-      "$CUI_ICON_WARN  ${text}"
+  printf '  %b╭────────────────────────────────────────╮%b\n' "$(_cui_fg "$CUI_C_WARNING")" "${_C_RESET}"
+  printf '  %b│ %s  %s │%b\n' "$(_cui_fg "$CUI_C_WARNING")" "$CUI_ICON_WARN" "$text" "${_C_RESET}"
+  printf '  %b╰────────────────────────────────────────╯%b\n' "$(_cui_fg "$CUI_C_WARNING")" "${_C_RESET}"
   fi
 }
-
-# ── Fortschrittsanzeige (wie create-next-app "Step 1 of 4") ──────────────────
 
 cui_progress_track() {
   local step="$1"
   local total="$2"
-
   local bar="" i token
   for ((i = 1; i <= total; i++)); do
     if   (( i < step ));  then token="●"
@@ -201,34 +198,23 @@ cui_progress_track() {
     fi
     bar+="${token} "
   done
-
   echo ""
-  gum style --foreground "$CUI_C_STEP" \
-    "  $(msgf ui.wizard_track "$step" "$total")   ${bar}"
+  printf '%b  %s   %s%b\n' "$(_cui_fg "$CUI_C_STEP")" "$(msgf ui.wizard_track "$step" "$total")" "$bar" "${_C_RESET}"
   cui_rule
 }
 
-# ── Karte / Info-Box ─────────────────────────────────────────────────────────
-
 cui_card() {
   local body="$1"
-  local color="${2:-$CUI_C_MUTED}"
-  gum style \
-    --border rounded \
-    --padding "1 2" \
-    --foreground "$color" \
-    "$body"
+  local _color="${2:-$CUI_C_MUTED}"
+  echo ""
+  crk_note "$body"
 }
-
-# ── Screen-Clear (nur bei TTY, kein Garbage in Pipes) ────────────────────────
 
 cui_screen_clear() {
   if [[ -t 1 ]] && [[ "${CRKCACHY_NO_CLEAR:-0}" != "1" ]]; then
     tput clear 2>/dev/null || clear 2>/dev/null || true
   fi
 }
-
-# ── Wizard-Screen (Info-Seite mit Weiter) ─────────────────────────────────────
 
 cui_wizard_screen() {
   local step_num="$1"
@@ -239,55 +225,47 @@ cui_wizard_screen() {
   cui_screen_clear
   cui_progress_track "$step_num" "$step_total"
   echo ""
-  gum style --bold "$title"
+  _cui_echo_bold "$title"
   echo ""
-  cui_card "$body"
+  crk_note "$body"
   echo ""
-  cui_continue
+  crk_continue "$(msg ui.press_enter)" "$(msg ui.ok_label)"
 }
 
 cui_step_screen() { cui_wizard_screen "$@"; }
-
-# ── Wizard-Intro (Trennlinie vor Intro-Screens) ───────────────────────────────
 
 cui_wizard_intro() {
   echo ""
   cui_rule
   echo ""
-  gum style --bold "$(msg install.legal_title)"
+  _cui_echo_bold "$(msg install.legal_title)"
   echo ""
-  gum style --foreground "$CUI_C_MUTED" "$(msg install.legal_teaser)"
+  _cui_echo "$CUI_C_MUTED" "$(msg install.legal_teaser)"
   echo ""
 }
-
-# ── Haupt-Menü-Header ─────────────────────────────────────────────────────────
-# Kompakt – kein doppelter Status-Chip wenn System bereit
 
 cui_wizard_main_header() {
   local hint="$1"
   echo ""
   cui_rule
-  gum style --bold "$(msg wizard.title)"
+  _cui_echo_bold "$(msg wizard.title)"
   echo ""
   if [[ "${ASSESS_SYSTEM_READY:-false}" == true ]]; then
-    gum style --foreground "$CUI_C_MUTED" "$hint"
+    _cui_echo "$CUI_C_MUTED" "$hint"
   else
     cui_status_chip false \
       "$(msgf wizard.status_fix "$(msgf assess.score "${ASSESS_OK:-0}" "${ASSESS_FAIL:-1}")")"
     echo ""
-    gum style --foreground "$CUI_C_MUTED" "$hint"
+    _cui_echo "$CUI_C_MUTED" "$hint"
   fi
   echo ""
 }
-
-# ── Zusammenfassung (Ende eines Flows) ───────────────────────────────────────
-# Wie Volta/Bun: was wurde gemacht, was ist offen
 
 cui_summary_panel() {
   local title="$1"
   local body="$2"
   echo ""
-  gum style --bold "$title"
+  _cui_echo_bold "$title"
   echo ""
   while IFS= read -r line || [[ -n "$line" ]]; do
     if [[ -z "$line" ]]; then echo ""; continue; fi
@@ -296,101 +274,57 @@ cui_summary_panel() {
   echo ""
 }
 
-# ── Interaktion ───────────────────────────────────────────────────────────────
+# ── Interaktion (@clack) ──────────────────────────────────────────────────────
 
 cui_yes_no() {
   local prompt="$1"
   local default_no="${2:-true}"
-  local selected=0
-  if [[ "$default_no" == "true" ]]; then selected=1; fi
-
-  local pick
-  pick="$(gum choose \
-    --selected "$selected" \
-    --header "$prompt" \
-    --cursor "› " \
-    "$(msg cui.choice_yes)" \
-    "$(msg cui.choice_no)")"
-
-  [[ "$pick" == "$(msg cui.choice_yes)" ]]
+  local default_yes=false
+  if [[ "$default_no" != true ]]; then default_yes=true; fi
+  crk_confirm "$prompt" "$default_yes"
 }
 
 cui_continue() {
-  gum choose \
-    --selected 0 \
-    --height 1 \
-    --header "$(msg ui.press_enter)" \
-    "$(msg ui.ok_label)"
+  crk_continue "${1:-$(msg ui.press_enter)}" "${2:-$(msg ui.ok_label)}"
 }
-
-# ── ARCHITEKTUR-REGEL: stdout-Capture-Sicherheit ─────────────────────────────
-#
-# SICHER mit selected="$(...)":
-#   cui_choose, cui_filter, cui_choose_searchable, cui_input
-#   → Nur der Auswahlwert geht an stdout; gum nutzt /dev/tty für das UI
-#
-# NIEMALS mit var="$(wrapper_func ...)" wenn die Funktion echo/log_*/
-# cui_section o.ä. enthält → UI-Text landet im Wert!
-#
-# Muster für Wrapper-Funktionen:
-#   wrapper_func args    # setzt globale Variable
-#   var="$WRAPPER_VAR"
-#
-# Bekannte Wrapper → globale Variable:
-#   tool_hub_pick_tool_slug  → TOOL_HUB_PICKED_SLUG
-#   tool_hub_resolve_slug    → TOOL_HUB_PICKED_SLUG
-#   tool_action_pick_menu    → TOOL_ACTION_PICKED
-#
-# ─────────────────────────────────────────────────────────────────────────────
 
 cui_choose_searchable() { cui_filter "$@"; }
 
 cui_input() {
   local placeholder="${1:-}"
   local default="${2:-}"
-  gum input \
-    --placeholder "$placeholder" \
-    --value "$default" \
-    --width 70 \
-    --prompt "$(msg cui.input_prompt) "
+  crk_text "$(msg cui.input_prompt)" "$placeholder" "$default"
 }
 
 cui_choose() {
   local header="$1"
   local selected_idx="$2"
   shift 2
-  gum choose \
-    --height "$#" \
-    --selected "$selected_idx" \
-    --header "$header" \
-    --cursor "› " \
-    "$@"
+  local i=0 initial="" lines=()
+  for opt in "$@"; do
+    lines+=("${opt}|${opt}")
+    if [[ "$i" -eq "$selected_idx" ]]; then initial="$opt"; fi
+    i=$((i + 1))
+  done
+  crk_select "$header" "$initial" "${lines[@]}"
 }
 
 cui_filter() {
   local header="$1"
-  local placeholder="$2"
+  local _placeholder="$2"
   shift 2
-  local count="${#@}"
-  local height=8
-  if [[ "$count" -gt "$height" ]]; then height="$count"; fi
-  if [[ "$height" -lt 6 ]]; then height=6; fi
-  gum filter \
-    --height "$height" \
-    --header "$header" \
-    --placeholder "$placeholder" \
-    --indicator "› " \
-    --prompt "🔍 " \
-    "$@"
+  local lines=()
+  for opt in "$@"; do
+    lines+=("${opt}|${opt}")
+  done
+  crk_autocomplete "$header" "" "${lines[@]}"
 }
 
 cui_spin() {
   local title="$1"
   shift
-  gum spin --spinner dot --title "$title" -- "$@"
+  crk_spin "$title" "$*"
 }
-
-# ── Markdown ──────────────────────────────────────────────────────────────────
 
 cui_show_markdown() {
   local file="$1"
@@ -450,8 +384,6 @@ cui_offer_markdown() {
   fi
 }
 
-# ── Onboard-Gate ─────────────────────────────────────────────────────────────
-
 crkcachy_onboard_file() {
   echo "${CRKCACHY_CACHE_ROOT:-${HOME}/.local/share/crkcachy}/onboard.accepted"
 }
@@ -485,7 +417,7 @@ cui_legal_gate() {
   cui_wizard_screen 4 "$total" "$(msg legal.step4_title)" "$(msg legal.step4_body)"
 
   echo ""
-  cui_card "$(msg install.legal_summary)" "$CUI_C_MUTED"
+  crk_note "$(msg install.legal_summary)"
   echo ""
   if ! cui_yes_no "$(msg ui.legal_confirm)" false; then
     die "$(msg runtime.legal_abort)"
@@ -493,8 +425,6 @@ cui_legal_gate() {
 
   cui_onboard_mark_done
 }
-
-# ── Sonstige Helper ───────────────────────────────────────────────────────────
 
 cui_result_line() {
   local state="$1" label="$2" detail="${3:-}"
@@ -512,7 +442,7 @@ cui_install_plan() {
   shift 2
   local line
   echo ""
-  gum style --bold "$title"
+  _cui_echo_bold "$title"
   if [[ -n "$intro" ]]; then echo ""; echo "  $intro"; echo ""; fi
   for line in "$@"; do echo "  $line"; done
   echo ""
@@ -529,5 +459,4 @@ cui_checklist() {
   cui_list "$@"
 }
 
-# Legacy
 cui_columns() { cui_section "$1"; cui_sub "$2"; }

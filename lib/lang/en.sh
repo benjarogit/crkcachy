@@ -304,7 +304,7 @@ _MSG[install.run_setup]="Start setup: ./install.sh"
 
 _MSG[ui.step_progress]="Step %s of %s"
 _MSG[legal.step1_title]="What did CRKCACHY just check?"
-_MSG[legal.step1_body]=$'The results above show a quick check – here is what each item means:\n\nCRKCACHY tools (all must be ✓):\n  gum – interactive menus\n  glow – display guides\n  pacman/paru – install packages\n\nGaming stack (should all be ✓):\n  Steam – game client\n  Steam library – so games can be found\n  GE-Proton – Windows games on Linux\n  Spacewar (App 480) – required by online fixes\n  vkd3d, gamemode, winetricks – game compatibility\n\nRed ✗ = blocking issue. Yellow ○ = recommended, not required.'
+_MSG[legal.step1_body]=$'The results above show a quick check – here is what each item means:\n\nCRKCACHY tools (all must be ✓):\n  Node.js – interactive menus (Clack)\n  glow – display guides\n  pacman/paru – install packages\n\nGaming stack (should all be ✓):\n  Steam – game client\n  Steam library – so games can be found\n  GE-Proton – Windows games on Linux\n  Spacewar (App 480) – required by online fixes\n  vkd3d, gamemode, winetricks – game compatibility\n\nRed ✗ = blocking issue. Yellow ○ = recommended, not required.'
 _MSG[legal.step2_title]="What CRKCACHY does for you"
 _MSG[legal.step2_body]=$'Step by step – you confirm each step:\n\n① Pick game folder\n   Tell CRKCACHY where your game is extracted (e.g. ~/Downloads/…)\n   CRKCACHY checks: .exe, fix DLLs, OnlineFix.ini – read-only, nothing changed\n\n② Add game to Steam\n   Automatic or manual – CRKCACHY writes the shortcut\n\n③ Steam auto-setup\n   Display name, launch options, icon from .exe → all in one step\n   Steam closes briefly and restarts\n\n④ Desktop entry (optional)\n   Launches via Steam – no direct .exe start'
 _MSG[legal.step3_title]="What you prepare yourself"
@@ -477,7 +477,7 @@ _MSG[pkg.explain.steam_title]="Install Steam"
 _MSG[pkg.confirm_install]="Install now?"
 _MSG[pkg.explain.footer]=$'One-time install – PC may ask for password (sudo).\nThen we continue. Say No to run the command yourself.'
 _MSG[pkg.explain.fallback]="%s – needed for CRKCACHY."
-_MSG[pkg.explain.gum]=$'gum – arrow-key menus in the terminal.\nPick with ↑↓ and Enter.\nCRKCACHY needs it for all menus.'
+_MSG[pkg.explain.nodejs]=$'Node.js – arrow-key menus in the terminal (Clack, like OpenClaw).\nPick with ↑↓ and Enter.\nCRKCACHY needs it for all menus.'
 _MSG[pkg.explain.glow]=$'glow – shows guides in a readable layout.\nEasier than raw terminal text.\nCRKCACHY needs it for game guides.'
 _MSG[pkg.explain.steam]=$'Steam – play and launch games.\nCRKCACHY adds your game as non-Steam with Proton.'
 _MSG[pkg.explain.paru]=$'paru – installs programs on CachyOS/Arch.\nNeeded for some extra packages (AUR).'
@@ -504,7 +504,7 @@ _MSG[runtime.check_all_ok]="All checks passed – system ready"
 _MSG[runtime.check_fail_required]="%s required component(s) missing – setup not possible"
 _MSG[runtime.check_warn_recommended]="%s recommended component(s) missing – some features limited"
 _MSG[runtime.missing_suffix]="still missing"
-_MSG[runtime.item_menu]="interactive menus (gum)"
+_MSG[runtime.item_menu]="interactive menus (Node.js / Clack)"
 _MSG[runtime.item_reader]="show guides (glow)"
 _MSG[runtime.item_packages]="package manager (pacman/paru)"
 _MSG[runtime.item_paru]="paru (AUR helper, recommended on Arch/CachyOS)"
@@ -600,8 +600,26 @@ _MSG[runtime.legal_abort]="Cancelled."
 _MSG[runtime.legal_hint]="Setup help only – no liability. docs/legal.md"
 
 _MSG[runtime.bootstrap_title]="CRKCACHY needs a couple programs"
-_MSG[runtime.bootstrap_body]=$'First two for the interface:\n• gum – arrow-key menus (↑↓)\n• glow – readable guides\n\nLater: Steam, icon helpers, Proton … we explain each one.'
+_MSG[runtime.bootstrap_body]=$'First two for the interface:\n• Node.js – arrow-key menus (Clack, like OpenClaw)\n• glow – readable guides\n\nLater: Steam, icon helpers, Proton … we explain each one.'
 _MSG[runtime.bootstrap_hint]="Missing something? You'll see what it is and why."
+
+_MSG[node.what_is]="Node.js = menu UI (Clack)"
+_MSG[node.missing_title]="Install Node.js"
+_MSG[node.missing_body]=$'Arrow-key menus like OpenClaw.\nCRKCACHY needs Node.js for all menus.\nInstall once, then we continue.'
+_MSG[node.no_tty]="Open the terminal and run it there."
+_MSG[node.pick_title]="How to install?"
+_MSG[node.opt_auto]="Do it for me (recommended)"
+_MSG[node.opt_manual]="I'll do it myself"
+_MSG[node.pick_prompt]="1 or 2 (Enter = 1): "
+_MSG[node.pick_invalid]="Enter 1 or 2."
+_MSG[node.installed]="Good – continuing!"
+_MSG[node.install_failed]="Didn't work – try option 2."
+_MSG[node.password_hint]="PC may ask for your password."
+_MSG[node.manual_steps_intro]="Type this in the terminal:"
+_MSG[node.manual_wait]="When done: press Enter …"
+_MSG[node.still_missing]="Not there yet – try again."
+_MSG[node.version_old]="Node.js is too old – please use version 18 or newer."
+_MSG[node.prompter_missing]="Menu program missing – please get a fresh copy of CRKCACHY from the repo."
 
 _MSG[gum.what_is]="gum = arrow-key menus (↑↓ and Enter)"
 _MSG[gum.missing_title]="Install gum"
@@ -888,7 +906,7 @@ _MSG[pkg.install_plan_intro]="We install now (one-time, password may be asked):"
 _MSG[pkg.explain_short.python-vdf]="Read Steam list → name & launch options"
 _MSG[pkg.explain_short.icoutils]="Read icon from .exe"
 _MSG[pkg.explain_short.imagemagick]="Format icon as PNG for Steam"
-_MSG[pkg.explain_short.gum]="Arrow menus in CRKCACHY"
+_MSG[pkg.explain_short.nodejs]="Clack menus in CRKCACHY"
 _MSG[pkg.explain_short.glow]="Readable guides"
 _MSG[pkg.explain_short.steam]="Launch games"
 _MSG[pkg.explain_short.paru]="Install programs (Arch/CachyOS)"

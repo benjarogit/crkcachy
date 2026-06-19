@@ -3,3 +3,4 @@
 dev/
 docs/test-install.md
 lib/__pycache__/
+lib/prompter/node_modules/

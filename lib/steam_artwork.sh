@@ -768,15 +768,13 @@ steam_offer_compat_tool_fix() {
       return 0
     fi
 
-    _choice="$(gum choose \
-      --header "$(msg steam.compat_how)" \
-      --cursor "› " \
-      "$(msg steam.compat_opt_auto)" \
-      "$(msg steam.compat_opt_manual)" \
-      "$(msg steam.compat_opt_skip)")" 2>/dev/null || _choice=""
+    _choice="$(crk_select "$(msg steam.compat_how)" "" \
+      "auto|$(msg steam.compat_opt_auto)" \
+      "manual|$(msg steam.compat_opt_manual)" \
+      "skip|$(msg steam.compat_opt_skip)")"
 
     case "${_choice:-}" in
-      "$(msg steam.compat_opt_auto)")
+      auto)
         if ! steam_ensure_closed_for_edit; then
           log_warn "$(msg steam.compat_steam_busy)"
           continue
@@ -790,11 +788,8 @@ steam_offer_compat_tool_fix() {
         fi
         log_warn "$(msg steam.compat_auto_failed)"
         ;;
-      "$(msg steam.compat_opt_manual)")
-        echo ""
-        gum style --border rounded --border-foreground "$CUI_C_WARNING" --padding "1 2" \
-          "$(msgf steam.compat_tool_manual "$tool_name")"
-        echo ""
+      manual)
+        cui_warning_box "$(msgf steam.compat_tool_manual "$tool_name")"
         cui_continue "$(msg steam.compat_manual_continue)"
         if steam_verify_compat_tool "$exe_linux_path" "$exe_basename" "$tool_name"; then
           cui_check_row true "$(msg steam.summary_compat)" "$tool_name"
@@ -897,7 +892,7 @@ steam_print_setup_finish_checklist() {
   if [[ "$name_ok" == true && "$launch_ok" == true && "$icon_ok" == true && "$compat_ok" == true ]]; then
     log_ok "$(msg steam.finish_all_ok)"
     echo ""
-    gum style --foreground "$CUI_C_MUTED" "$(msg steam.finish_play_hint)"
+    cui_muted_block "$(msg steam.finish_play_hint)"
     echo ""
     return 0
   fi

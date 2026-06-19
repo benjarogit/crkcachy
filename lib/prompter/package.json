@@ -1,0 +1,16 @@
+{
+  "name": "crkcachy-prompter",
+  "private": true,
+  "description": "CRKCACHY CLI prompter (@clack/prompts) – OpenClaw-style wizards",
+  "scripts": {
+    "build": "esbuild src/cli.ts --bundle --platform=node --target=node18 --outfile=dist/cli.js --format=cjs --banner:js='#!/usr/bin/env node'"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "esbuild": "^0.25.5",
+    "typescript": "^5.8.3"
+  }
+}

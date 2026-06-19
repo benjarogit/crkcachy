@@ -240,7 +240,7 @@ assess_print_report() {
     log_hint "$(msg assess.all_ready_hint)"
     log_hint "$(msgf assess.score "$ASSESS_OK" "$ASSESS_FAIL")"
     echo ""
-    gum style --border rounded --padding "1 2" --foreground "$CUI_MUTED" "$(msg wizard.checks_body)"
+    crk_note "$(msg wizard.checks_body)"
     echo ""
     return 0
   fi

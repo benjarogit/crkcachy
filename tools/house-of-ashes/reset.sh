@@ -35,7 +35,7 @@ main() {
   echo ""
   cui_heading "$(msg ha.reset_mode_title)"
   echo ""
-  gum style --foreground "${CUI_MUTED}" "$(msg ha.reset_mode_body)"
+  cui_muted_block "$(msg ha.reset_mode_body)"
   echo ""
 
   local mode

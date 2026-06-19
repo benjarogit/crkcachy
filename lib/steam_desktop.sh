@@ -258,6 +258,6 @@ steam_offer_desktop_launcher() {
     echo ""
     cui_status_chip false "$(msg steam.desktop_verify_failed)"
     echo ""
-    gum style --foreground "$CUI_C_MUTED" "$(msg steam.desktop_manual_hint)"
+    cui_muted_block "$(msg steam.desktop_manual_hint)"
   fi
 }

@@ -194,10 +194,9 @@ run_ha_install() {
     echo ""
     cui_status_chip false "$(msg ha.fix_check_failed)"
     echo ""
-    gum style --foreground "$CUI_C_MUTED" "$(msg ha.fix_guide_body)"
+    cui_muted_block "$(msg ha.fix_guide_body)"
     echo ""
-    gum style --border rounded --padding "0 2" \
-      "$(msg ha.fix_guide_steps)"
+    cui_info_box "$(msg ha.fix_guide_steps)"
     echo ""
     if cui_yes_no "$(msg ha.fix_guide_done)" true; then
       echo ""
@@ -269,8 +268,7 @@ run_ha_install() {
 
   if cui_yes_no "$(msg ha.show_tips)" false; then
     echo ""
-    gum style --border rounded --padding "1 2" --foreground "$CUI_C_MUTED" \
-      "$(msg ha.user_tips_body)"
+    crk_note "$(msg ha.user_tips_body)"
     echo ""
   fi
 }

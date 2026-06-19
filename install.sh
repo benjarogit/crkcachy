@@ -80,39 +80,16 @@ run_pc_fix() {
   _pc_fix_done_panel
 }
 
-# Robuster Menü-Picker – Fallback wenn gum nach Steam-Dialog nicht rendert.
+# Menü-Picker (@clack/prompts)
 _menu_choose() {
   local header="$1"
   shift
-  local options=("$@")
-  local pick=""
-
-  if command -v gum >/dev/null 2>&1 && [[ -t 0 ]] && [[ -t 1 ]]; then
-    pick="$(gum choose \
-      --header "$header" \
-      --cursor "› " \
-      --height "${#options[@]}" \
-      "${options[@]}")" || pick=""
-  fi
-
-  if [[ -n "$pick" ]]; then
-    echo "$pick"
-    return 0
-  fi
-
-  echo ""
-  echo "$header"
-  local i=1 opt
-  for opt in "${options[@]}"; do
-    echo "  $i) $opt"
-    i=$((i + 1))
+  local lines=()
+  local opt
+  for opt in "$@"; do
+    lines+=("${opt}|${opt}")
   done
-  echo ""
-  local reply
-  read -r -p "> " reply
-  if [[ "$reply" =~ ^[0-9]+$ ]] && [[ "$reply" -ge 1 ]] && [[ "$reply" -le "${#options[@]}" ]]; then
-    echo "${options[$((reply - 1))]}"
-  fi
+  crk_select "$header" "" "${lines[@]}"
 }
 
 _pc_fix_done_panel() {
@@ -162,9 +139,8 @@ run_game_setup() {
     return 1
   fi
 
-  tool_hub_interactive || true
+  tool_hub_interactive
   echo ""
-  return 0
 }
 
 run_game_uninstall() {
@@ -177,12 +153,10 @@ run_game_uninstall() {
 _after_uninstall_menu() {
   echo ""
   local pick
-  pick="$(gum choose \
-    --header "$(msg wizard.after_uninstall_title)" \
-    --cursor "› " \
+  pick="$(_menu_choose "$(msg wizard.after_uninstall_title)" \
     "$(msg wizard.after_uninstall_menu)" \
     "$(msg wizard.after_uninstall_install)" \
-    "$(msg wizard.after_uninstall_exit)")" 2>/dev/null || true
+    "$(msg wizard.after_uninstall_exit)")"
 
   echo ""
   case "${pick:-}" in
@@ -236,60 +210,58 @@ print_status() {
 }
 
 show_wizard_menu() {
-  assess_run
-  cui_screen_clear
-  cui_wizard_main_header "$(assess_recommended_hint)"
-  tui_assess_panel || true
+  while true; do
+    assess_run
+    cui_screen_clear
+    cui_wizard_main_header "$(assess_recommended_hint)"
+    tui_assess_panel || true
 
-  local choice
-  tui_wizard_pick choice
-  echo ""
+    local choice=""
+    tui_wizard_pick choice
+    echo ""
 
-  announce_choice "${choice:-}"
+    if [[ -z "${choice:-}" ]]; then
+      log_info "$(msg install.cancelled)"
+      continue
+    fi
 
-  case "${choice:-}" in
-    1)
-      run_pc_fix || true
-      run_game_setup || true
-      ;;
-    2)
-      run_pc_fix || true
-      _after_pc_fix_menu
-      ;;
-    3)
-      if ! run_game_setup; then
-        log_warn "$(msg assess.block_game_still)"
-      fi
-      ;;
-    4)
-      assess_run
-      assess_print_report || true
-      print_wizard_options
-      assess_print_next_step
-      return 0
-      ;;
-    5)
-      run_game_uninstall || true
-      _after_uninstall_menu
-      ;;
-    "")
-      case "$ASSESS_RECOMMENDED" in
-        3)
-          if ! run_game_setup; then
-            log_warn "$(msg assess.block_game_still)"
-          fi
-          ;;
-        2) run_pc_fix || true; _after_pc_fix_menu ;;
-        *) run_pc_fix || true; run_game_setup || true ;;
-      esac
-      ;;
-    *)
-      log_warn "$(msg wizard.invalid)"
-      return 1
-      ;;
-  esac
+    announce_choice "${choice}"
 
-  return 0
+    case "${choice}" in
+      1)
+        run_pc_fix || true
+        if run_game_setup; then
+          _after_install_menu
+          return 0
+        fi
+        ;;
+      2)
+        run_pc_fix || true
+        _after_pc_fix_menu
+        return 0
+        ;;
+      3)
+        if run_game_setup; then
+          _after_install_menu
+          return 0
+        fi
+        ;;
+      4)
+        assess_run
+        assess_print_report || true
+        print_wizard_options
+        assess_print_next_step
+        ;;
+      5)
+        run_game_uninstall || true
+        _after_uninstall_menu
+        return 0
+        ;;
+      *)
+        log_warn "$(msg wizard.invalid)"
+        ;;
+    esac
+  done
 }
 
 has_flag() {
@@ -330,12 +302,7 @@ main() {
   print_banner
   preflight_onboard
 
-  if ! show_wizard_menu; then
-    log_info "$(msg install.cancelled)"
-    exit 0
-  fi
-
-  _after_install_menu
+  show_wizard_menu || true
 }
 
 main "${FILTERED_CLI_ARGS[@]:-${FILTERED_ARGS[@]}}"

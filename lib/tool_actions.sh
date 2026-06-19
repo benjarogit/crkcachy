@@ -170,50 +170,28 @@ tool_prompt_game_dir() {
   fi
 
   # ── Build picker options ────────────────────────────────────────────
-  local -a _opts=()
-  local i
+  local -a lines=()
+  local i _manual_opt
+  _manual_opt="$(msg game_dir.opt_manual)"
   for i in "${!_paths[@]}"; do
     local _src_lbl _short
     _src_lbl="$(_tool_game_dir_source_label "${_tags[$i]}" "${_paths[$i]}")"
     _short="$(_tool_short_path "${_paths[$i]}")"
-    _opts+=("${_short}   [${_src_lbl}]")
+    lines+=("${_paths[$i]}|${_short}   [${_src_lbl}]")
   done
-  local _manual_opt
-  _manual_opt="$(msg game_dir.opt_manual)"
-  _opts+=("$_manual_opt")
+  lines+=("manual|${_manual_opt}")
 
-  # ── gum choose ─────────────────────────────────────────────────────
-  # WICHTIG: 2>/dev/null darf NICHT innerhalb von $() stehen – sonst
-  # unterdrückt es das interactive TUI von gum und der Cursor hängt.
   local _selected
-  _selected="$(gum choose \
-    --header "$(msg game_dir.picker_prompt)" \
-    --height "$(( ${#_opts[@]} + 2 ))" \
-    --cursor "› " \
-    "${_opts[@]}")" 2>/dev/null || _selected=""
+  _selected="$(crk_select "$(msg game_dir.picker_prompt)" "" "${lines[@]}")"
 
   local _chosen_path=""
 
-  if [[ -z "$_selected" || "$_selected" == "$_manual_opt" ]]; then
+  if [[ -z "$_selected" || "$_selected" == "manual" ]]; then
     _tool_prompt_game_dir_manual "$game_exe"
     _chosen_path="$TOOL_GAME_DIR"
     TOOL_GAME_DIR=""
   else
-    # Map selected label back to full path
-    for i in "${!_paths[@]}"; do
-      local _src_lbl _short
-      _src_lbl="$(_tool_game_dir_source_label "${_tags[$i]}" "${_paths[$i]}")"
-      _short="$(_tool_short_path "${_paths[$i]}")"
-      if [[ "$_selected" == "${_short}   [${_src_lbl}]" ]]; then
-        _chosen_path="${_paths[$i]}"
-        break
-      fi
-    done
-    # Fallback: strip the " [...]" suffix
-    if [[ -z "$_chosen_path" ]]; then
-      _chosen_path="${_selected%%   [*}"
-      _chosen_path="$(crkcachy_expand_user_path "${_chosen_path/#\~/$HOME}")"
-    fi
+    _chosen_path="$_selected"
   fi
 
   _chosen_path="$(crkcachy_expand_user_path "${_chosen_path:-$HOME}")"
@@ -276,30 +254,21 @@ _tool_offer_copy_game() {
   echo ""
   log_warn "$(msgf game_dir.no_exe_in_chosen "$game_exe")"
   echo ""
-  gum style \
-    --border rounded \
-    --border-foreground "$CUI_C_BRAND" \
-    --padding "0 1" \
-    "$(msgf game_dir.copy_from "$src")" \
-    "$(msgf game_dir.copy_to   "$dst")"
+  cui_info_box "$(msgf game_dir.copy_from "$src")$(printf '\n')$(msgf game_dir.copy_to "$dst")"
   echo ""
 
   local _choice
-  _choice="$(gum choose \
-    --header "$(msg game_dir.copy_prompt)" \
-    --height 5 \
-    --cursor "› " \
-    "$(msg game_dir.copy_opt_yes)" \
-    "$(msg game_dir.copy_opt_manual)" \
-    "$(msg game_dir.copy_opt_no)")" 2>/dev/null || _choice=""
+  _choice="$(crk_select "$(msg game_dir.copy_prompt)" "" \
+    "yes|$(msg game_dir.copy_opt_yes)" \
+    "manual|$(msg game_dir.copy_opt_manual)" \
+    "no|$(msg game_dir.copy_opt_no)")"
 
-  case "$_choice" in
-    "$(msg game_dir.copy_opt_yes)")
+  case "${_choice:-}" in
+    yes)
       _tool_do_copy_game "$src" "$dst" "$game_exe"
       ;;
-    "$(msg game_dir.copy_opt_manual)")
+    manual)
       _tool_prompt_game_dir_manual "$game_exe"
-      # Result left in TOOL_GAME_DIR by _tool_prompt_game_dir_manual
       ;;
     *)
       log_hint "$(msg game_dir.copy_skipped)"
@@ -318,16 +287,12 @@ _tool_do_copy_game() {
   mkdir -p "$dst"
 
   if command -v rsync >/dev/null 2>&1; then
-    gum spin \
-      --spinner dot \
-      --title "$(msgf game_dir.copy_running "$dst") …" \
-      -- rsync -a --no-inc-recursive "${src%/}/" "${dst%/}/" 2>/dev/null \
+    cui_spin "$(msgf game_dir.copy_running "$dst") …" \
+      rsync -a --no-inc-recursive "${src%/}/" "${dst%/}/" 2>/dev/null \
     || { log_error "$(msg game_dir.copy_failed)"; TOOL_GAME_DIR=""; return 1; }
   else
-    gum spin \
-      --spinner dot \
-      --title "$(msgf game_dir.copy_running "$dst") …" \
-      -- cp -r "${src%/}/." "${dst%/}/" 2>/dev/null \
+    cui_spin "$(msgf game_dir.copy_running "$dst") …" \
+      cp -r "${src%/}/." "${dst%/}/" 2>/dev/null \
     || { log_error "$(msg game_dir.copy_failed)"; TOOL_GAME_DIR=""; return 1; }
   fi
 

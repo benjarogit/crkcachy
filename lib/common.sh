@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.80"
+CRKCACHY_VERSION="0.1.82"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -78,7 +78,7 @@ source "${CRKCACHY_ROOT}/lib/tool_fetch.sh"
 # shellcheck source=lib/tool_hub.sh
 source "${CRKCACHY_ROOT}/lib/tool_hub.sh"
 
-# Plain prompt before gum is available (bootstrap only)
+# Plain prompt before Node/Clack is available (bootstrap only)
 bootstrap_confirm() {
   local prompt="${1:-}"
   local default_no="${2:-true}"
@@ -119,7 +119,7 @@ pacman_installed() {
   package_is_installed "$1"
 }
 
-# Run a package installer command with optional gum spinner.
+# Run a package installer command with optional Clack spinner.
 _run_package_installer() {
   local use_spin="${1:-true}"
   shift
@@ -127,7 +127,7 @@ _run_package_installer() {
   shift
   local packages=("$@")
 
-  if [[ "$use_spin" == "true" ]] && command_exists gum && [[ -t 0 && -t 1 ]]; then
+  if [[ "$use_spin" == "true" ]] && [[ -t 0 && -t 1 ]]; then
     cui_spin "$(msg paru.installing)" "${installer[@]}" "${packages[@]}"
   else
     log_info "$(msg paru.installing)"
@@ -191,7 +191,7 @@ install_repo_packages() {
   _run_package_installer "$use_spin" "${installer[@]}" "${resolved[@]}"
 }
 
-# Install one logical package from official repos (gum/glow bootstrap).
+# Install one logical package from official repos (Node/glow bootstrap).
 _ensure_logical_repo_package() {
   local logical="$1"
   local -a pkgs=()
@@ -259,6 +259,8 @@ offer_package_install() {
 
 # shellcheck source=lib/ui.sh
 source "${CRKCACHY_ROOT}/lib/ui.sh"
+# shellcheck source=lib/crk_prompter.sh
+source "${CRKCACHY_ROOT}/lib/crk_prompter.sh"
 # shellcheck source=lib/cui.sh
 source "${CRKCACHY_ROOT}/lib/cui.sh"
 # shellcheck source=lib/tui.sh
@@ -288,65 +290,6 @@ install_packages_repo() {
   offer_logical_packages false "$@"
 }
 
-ensure_gum() {
-  if [[ ! -t 0 || ! -t 1 ]]; then
-    die "$(msg gum.no_tty)"
-  fi
-
-  if command_exists gum; then
-    return 0
-  fi
-
-  explain_block "$(msg gum.missing_title)" "$(package_explain_text gum)
-
-$(msg pkg.explain.footer)"
-
-  while ! command_exists gum; do
-    echo -e "${_C_BOLD}$(msg gum.pick_title)${_C_RESET}"
-    echo "  1) $(msg gum.opt_auto)"
-    echo "  2) $(msg gum.opt_manual)"
-    echo ""
-    read -r -p "$(msg gum.pick_prompt) " gum_choice
-
-    case "${gum_choice:-1}" in
-      1|j|y|ja|yes)
-        log_hint "$(msg gum.password_hint)"
-        if _ensure_logical_repo_package gum; then
-          hash -r 2>/dev/null || true
-        else
-          log_warn "$(msg gum.install_failed)"
-        fi
-        if command_exists gum; then
-          log_ok "$(msg gum.installed)"
-          break
-        fi
-        log_warn "$(msg gum.still_missing)"
-        ;;
-      2|n|no|nein)
-        ;;
-      *)
-        log_warn "$(msg gum.pick_invalid)"
-        continue
-        ;;
-    esac
-
-    echo ""
-    log_hint "$(msg gum.manual_steps_intro)"
-    log_hint "$(platform_manual_install_cmd_logical gum)"
-    echo ""
-    read -r -p "$(msg gum.manual_wait) " _
-    hash -r 2>/dev/null || true
-
-    if command_exists gum; then
-      log_ok "$(msg gum.installed)"
-      break
-    fi
-
-    log_warn "$(msg gum.still_missing)"
-    echo ""
-  done
-}
-
 ensure_glow() {
   if [[ ! -t 0 || ! -t 1 ]]; then
     die "$(msg glow.no_tty)"
@@ -356,39 +299,23 @@ ensure_glow() {
     return 0
   fi
 
-  if command_exists gum; then
-    cui_panel "$(msg glow.missing_title)" "$(package_explain_text glow)
+  explain_block "$(msg glow.missing_title)" "$(package_explain_text glow)
 
 $(msg pkg.explain.footer)"
-    echo ""
-  else
-    explain_block "$(msg glow.missing_title)" "$(package_explain_text glow)
-
-$(msg pkg.explain.footer)"
-  fi
+  echo ""
 
   while ! command_exists glow; do
     local glow_choice pick
 
-    if command_exists gum; then
-      pick="$(gum choose --selected 0 \
-        --header "$(msg glow.pick_title)" \
-        --cursor "› " \
-        "$(msg glow.opt_auto)" \
-        "$(msg glow.opt_manual)")"
+    pick="$(crk_select "$(msg glow.pick_title)" "" \
+      "auto|$(msg glow.opt_auto)" \
+      "manual|$(msg glow.opt_manual)")"
 
-      case "$pick" in
-        "$(msg glow.opt_auto)") glow_choice=1 ;;
-        "$(msg glow.opt_manual)") glow_choice=2 ;;
-        *) glow_choice=1 ;;
-      esac
-    else
-      echo -e "${_C_BOLD}$(msg glow.pick_title)${_C_RESET}"
-      echo "  1) $(msg glow.opt_auto)"
-      echo "  2) $(msg glow.opt_manual)"
-      echo ""
-      read -r -p "$(msg glow.pick_prompt) " glow_choice
-    fi
+    case "${pick:-auto}" in
+      auto) glow_choice=1 ;;
+      manual) glow_choice=2 ;;
+      *) glow_choice=1 ;;
+    esac
 
     case "${glow_choice:-1}" in
       1|j|y|ja|yes|"$(msg glow.opt_auto)")
@@ -416,11 +343,7 @@ $(msg pkg.explain.footer)"
     log_hint "$(msg glow.manual_steps_intro)"
     log_hint "$(platform_manual_install_cmd_logical glow)"
     echo ""
-    if command_exists gum; then
-      cui_continue
-    else
-      read -r -p "$(msg glow.manual_wait) " _
-    fi
+    crk_continue "$(msg glow.manual_wait)" "$(msg ui.ok_label)"
     hash -r 2>/dev/null || true
 
     if command_exists glow; then
@@ -434,14 +357,14 @@ $(msg pkg.explain.footer)"
 }
 
 ensure_crkcachy_runtime() {
-  if ! command_exists gum || ! command_exists glow; then
+  if ! command -v node >/dev/null 2>&1 || ! command_exists glow; then
     explain_block "$(msg runtime.bootstrap_title)" "$(msg runtime.bootstrap_body)"
     echo ""
     log_hint "$(msg runtime.bootstrap_hint)"
     echo ""
   fi
 
-  ensure_gum
+  ensure_prompter
   ensure_glow
 }
 

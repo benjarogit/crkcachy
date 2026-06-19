@@ -5,23 +5,15 @@ set -euo pipefail
 
 PREFLIGHT_REQUIRED_FAIL=0
 PREFLIGHT_RECOMMENDED_FAIL=0
-GUM_MIN_VERSION="0.14.0"
+NODE_MIN_MAJOR=18
 
-preflight_version_ge() {
-  local have="$1"
-  local need="$2"
-  [[ "$(printf '%s\n' "$need" "$have" | sort -V | head -1)" == "$need" ]]
-}
-
-preflight_gum_version() {
-  if ! command_exists gum; then
+preflight_node_version() {
+  if ! command -v node >/dev/null 2>&1; then
     return 1
   fi
-  local raw ver
-  raw="$(gum --version 2>/dev/null | head -1)"
-  ver="$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' <<< "$raw" | head -1)"
-  [[ -n "$ver" ]] || return 1
-  preflight_version_ge "$ver" "$GUM_MIN_VERSION"
+  local major
+  major="$(node -p "process.versions.node.split('.').map(Number)[0]" 2>/dev/null || echo 0)"
+  [[ "${major:-0}" -ge "$NODE_MIN_MAJOR" ]]
 }
 
 preflight_run() {
@@ -41,20 +33,20 @@ preflight_has_installer() {
 #   value = Spalte 2 (28 Zeichen)
 #   detail= Spalte 3, gedimmt
 
-# Always show the full CRKCACHY-tool check (gum, glow, pacman/paru, OS).
+# Always show the full CRKCACHY-tool check (Node.js, glow, pacman/paru, OS).
 preflight_print_tool_checks() {
-  local ok gum_ver os_label
+  local ok node_ver os_label
 
   cui_check_category "$(msg runtime.check_title_tools)"
 
-  # gum
+  # Node.js (Clack-Prompter)
   ok=true
-  command_exists gum && preflight_gum_version || ok=false
-  gum_ver="$(gum --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || echo "")"
+  command_exists node && preflight_node_version || ok=false
+  node_ver="$(node --version 2>/dev/null | sed 's/^v//' || echo "")"
   if [[ "$ok" == true ]]; then
-    cui_check_row ok "gum ${gum_ver}" "$(msg runtime.item_menu)"
+    cui_check_row ok "Node.js ${node_ver}" "$(msg runtime.item_menu)"
   else
-    cui_check_row fail "gum" "$(msg runtime.item_menu)"
+    cui_check_row fail "Node.js" "$(msg runtime.item_menu)"
     PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1))
   fi
 
@@ -167,7 +159,7 @@ preflight_print_gaming_checks() {
 _preflight_count_silent() {
   local ok
 
-  command_exists gum && preflight_gum_version || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
+  command_exists node && preflight_node_version || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
   command_exists glow || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
   preflight_has_installer || { PREFLIGHT_REQUIRED_FAIL=$((PREFLIGHT_REQUIRED_FAIL+1)); }
 
@@ -207,45 +199,32 @@ _preflight_spacewar_installed() {
 }
 
 preflight_fix_spacewar() {
-  echo ""
-  gum style --bold "$(msg runtime.spacewar_gate_title)"
-  echo ""
-  gum style --foreground "$CUI_MUTED" "$(msg runtime.spacewar_gate_body)"
-  echo ""
-
   local choice
-  choice="$(gum choose \
-    --header "$(msg runtime.spacewar_gate_prompt)" \
-    "$(msg runtime.spacewar_opt_auto)" \
-    "$(msg runtime.spacewar_opt_manual)" \
-    "$(msg runtime.spacewar_opt_skip)")" 2>/dev/null || choice=""
+  choice="$(crk_gate_menu \
+    "$(msg runtime.spacewar_gate_title)" \
+    "$(msg runtime.spacewar_gate_body)" \
+    "$(msg runtime.spacewar_gate_prompt)" \
+    "auto|$(msg runtime.spacewar_opt_auto)" \
+    "manual|$(msg runtime.spacewar_opt_manual)" \
+    "skip|$(msg runtime.spacewar_opt_skip)")"
 
-  case "$choice" in
-    "$(msg runtime.spacewar_opt_auto)")
+  case "${choice:-}" in
+    auto)
       if command_exists steam || platform_logical_installed steam 2>/dev/null; then
         log_info "$(msg runtime.spacewar_launching)"
         steam steam://install/480 >/dev/null 2>&1 &
         disown 2>/dev/null || true
-        echo ""
-        gum style \
-          --border rounded \
-          --border-foreground "$CUI_C_WARNING" \
-          --padding "1 2" \
-          "$(msg runtime.spacewar_auto_hint)"
-        echo ""
+        cui_warning_box "$(msg runtime.spacewar_auto_hint)"
         cui_continue "$(msg runtime.spacewar_wait_continue)"
       else
         log_warn "$(msg runtime.spacewar_no_steam)"
         return 1
       fi
       ;;
-    "$(msg runtime.spacewar_opt_manual)")
-      echo ""
-      gum style --border rounded --padding "0 2" \
-        "$(msg runtime.spacewar_manual_steps)"
-      echo ""
+    manual)
+      cui_info_box "$(msg runtime.spacewar_manual_steps)"
       ;;
-    *)
+    skip|*)
       log_warn "$(msg runtime.spacewar_skipped)"
       return 1
       ;;
@@ -283,21 +262,17 @@ preflight_fix_spacewar() {
 # ── Gate: protonup-rs ────────────────────────────────────────────────────────
 
 preflight_fix_protonup() {
-  echo ""
-  gum style --bold "$(msg runtime.protonup_gate_title)"
-  echo ""
-  gum style --foreground "$CUI_MUTED" "$(msg runtime.protonup_gate_body)"
-  echo ""
-
   local choice
-  choice="$(gum choose \
-    --header "$(msg runtime.protonup_gate_prompt)" \
-    "$(msg runtime.protonup_opt_auto)" \
-    "$(msg runtime.protonup_opt_manual)" \
-    "$(msg runtime.protonup_opt_skip)")" 2>/dev/null || choice=""
+  choice="$(crk_gate_menu \
+    "$(msg runtime.protonup_gate_title)" \
+    "$(msg runtime.protonup_gate_body)" \
+    "$(msg runtime.protonup_gate_prompt)" \
+    "auto|$(msg runtime.protonup_opt_auto)" \
+    "manual|$(msg runtime.protonup_opt_manual)" \
+    "skip|$(msg runtime.protonup_opt_skip)")"
 
-  case "$choice" in
-    "$(msg runtime.protonup_opt_auto)")
+  case "${choice:-}" in
+    auto)
       log_info "$(msg runtime.protonup_installing)"
       if offer_logical_packages false protonup 2>/dev/null; then
         echo ""
@@ -306,9 +281,7 @@ preflight_fix_protonup() {
       else
         echo ""
         log_warn "$(msg runtime.protonup_install_failed)"
-        echo ""
-        gum style --border rounded --padding "0 2" "$(msg runtime.protonup_manual_steps)"
-        echo ""
+        cui_info_box "$(msg runtime.protonup_manual_steps)"
         if confirm "$(msg runtime.protonup_manual_done)" true; then
           if command_exists protonup-rs; then
             echo ""
@@ -320,10 +293,8 @@ preflight_fix_protonup() {
         fi
       fi
       ;;
-    "$(msg runtime.protonup_opt_manual)")
-      echo ""
-      gum style --border rounded --padding "0 2" "$(msg runtime.protonup_manual_steps)"
-      echo ""
+    manual)
+      cui_info_box "$(msg runtime.protonup_manual_steps)"
       if confirm "$(msg runtime.protonup_manual_done)" true; then
         if command_exists protonup-rs; then
           echo ""
@@ -345,26 +316,22 @@ preflight_fix_protonup() {
 # ── Gate: GE-Proton ──────────────────────────────────────────────────────────
 
 preflight_fix_ge_proton() {
-  echo ""
-  gum style --bold "$(msg runtime.ge_proton_gate_title)"
-  echo ""
-  gum style --foreground "$CUI_MUTED" "$(msg runtime.ge_proton_gate_body)"
-  echo ""
-
   if ! command_exists protonup-rs; then
     log_warn "$(msg runtime.ge_proton_needs_protonup)"
     return 1
   fi
 
   local choice
-  choice="$(gum choose \
-    --header "$(msg runtime.ge_proton_gate_prompt)" \
-    "$(msg runtime.ge_proton_opt_auto)" \
-    "$(msg runtime.ge_proton_opt_manual)" \
-    "$(msg runtime.ge_proton_opt_skip)")" 2>/dev/null || choice=""
+  choice="$(crk_gate_menu \
+    "$(msg runtime.ge_proton_gate_title)" \
+    "$(msg runtime.ge_proton_gate_body)" \
+    "$(msg runtime.ge_proton_gate_prompt)" \
+    "auto|$(msg runtime.ge_proton_opt_auto)" \
+    "manual|$(msg runtime.ge_proton_opt_manual)" \
+    "skip|$(msg runtime.ge_proton_opt_skip)")"
 
-  case "$choice" in
-    "$(msg runtime.ge_proton_opt_auto)")
+  case "${choice:-}" in
+    auto)
       echo ""
       log_info "$(msg runtime.ge_proton_installing)"
       if protonup-rs -q --tool GEProton --version latest --for steam 2>/dev/null; then
@@ -373,9 +340,7 @@ preflight_fix_ge_proton() {
         return 0
       else
         log_warn "$(msg runtime.ge_proton_install_failed)"
-        echo ""
-        gum style --border rounded --padding "0 2" "$(msg runtime.ge_proton_manual_steps)"
-        echo ""
+        cui_info_box "$(msg runtime.ge_proton_manual_steps)"
         if confirm "$(msg runtime.ge_proton_manual_done)" true; then
           if list_ge_proton >/dev/null 2>&1; then
             echo ""
@@ -387,10 +352,8 @@ preflight_fix_ge_proton() {
         fi
       fi
       ;;
-    "$(msg runtime.ge_proton_opt_manual)")
-      echo ""
-      gum style --border rounded --padding "0 2" "$(msg runtime.ge_proton_manual_steps)"
-      echo ""
+    manual)
+      cui_info_box "$(msg runtime.ge_proton_manual_steps)"
       if confirm "$(msg runtime.ge_proton_manual_done)" true; then
         if list_ge_proton >/dev/null 2>&1; then
           echo ""
@@ -412,18 +375,14 @@ preflight_fix_ge_proton() {
 # ── Gate: Steam-Bibliothek (nicht eingeloggt) ─────────────────────────────
 
 preflight_fix_steam_data() {
-  echo ""
-  gum style --bold "$(msg runtime.steam_data_gate_title)"
-  echo ""
-  gum style --foreground "$CUI_MUTED" "$(msg runtime.steam_data_gate_body)"
-  echo ""
-
   local choice
-  choice="$(gum choose \
-    --header "$(msg runtime.steam_data_gate_prompt)" \
-    "$(msg runtime.steam_data_opt_open)" \
-    "$(msg runtime.steam_data_opt_manual)" \
-    "$(msg runtime.steam_data_opt_skip)")" 2>/dev/null || choice=""
+  choice="$(crk_gate_menu \
+    "$(msg runtime.steam_data_gate_title)" \
+    "$(msg runtime.steam_data_gate_body)" \
+    "$(msg runtime.steam_data_gate_prompt)" \
+    "open|$(msg runtime.steam_data_opt_open)" \
+    "manual|$(msg runtime.steam_data_opt_manual)" \
+    "skip|$(msg runtime.steam_data_opt_skip)")"
 
   _steam_data_wait_and_verify() {
     local tries=0
@@ -448,8 +407,8 @@ preflight_fix_steam_data() {
     done
   }
 
-  case "$choice" in
-    "$(msg runtime.steam_data_opt_open)")
+  case "${choice:-}" in
+    open)
       log_info "$(msg runtime.steam_data_opening)"
       (command_exists steam && steam >/dev/null 2>&1 &) || true
       echo ""
@@ -457,11 +416,8 @@ preflight_fix_steam_data() {
       echo ""
       _steam_data_wait_and_verify
       ;;
-    "$(msg runtime.steam_data_opt_manual)")
-      echo ""
-      gum style --border rounded --padding "0 2" \
-        "$(msg runtime.steam_data_manual_steps)"
-      echo ""
+    manual)
+      cui_info_box "$(msg runtime.steam_data_manual_steps)"
       _steam_data_wait_and_verify
       ;;
     *)

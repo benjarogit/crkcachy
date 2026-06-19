@@ -12,7 +12,7 @@ PLATFORM_ROSETTA_ARCH_ONLY=(
 
 # All logical package keys in the Rosetta table
 PLATFORM_ROSETTA_LOGICAL=(
-  gum
+  nodejs
   glow
   steam
   paru
@@ -52,11 +52,9 @@ platform_resolve_packages() {
   local -a pkgs=()
 
   case "$logical" in
-    gum)
+    nodejs)
       case "$PLATFORM_FAMILY" in
-        arch) pkgs=(gum) ;;
-        fedora) pkgs=(gum) ;;
-        debian|suse) pkgs=() ;;
+        arch|debian|fedora|suse) pkgs=(nodejs) ;;
       esac
       ;;
     glow)

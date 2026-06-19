@@ -73,7 +73,7 @@ main() {
   else
     cui_check_row warn "$(msg uninstall.path_unknown)" "$(msg uninstall.path_unknown_hint)"
     echo ""
-    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.path_unknown_body)"
+    cui_muted_block "$(msg uninstall.path_unknown_body)"
   fi
 
   echo ""
@@ -198,28 +198,26 @@ _maybe_remove_spacewar() {
   echo ""
 
   if [[ "$by_crkcachy" == "1" ]]; then
-    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_info_tracked)"
+    cui_muted_block "$(msg uninstall.spacewar_info_tracked)"
   else
-    gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_info_unknown)"
+    cui_muted_block "$(msg uninstall.spacewar_info_unknown)"
   fi
 
   echo ""
 
   local choice
-  choice="$(gum choose \
-    --header "$(msg uninstall.spacewar_how)" \
-    --cursor "› " \
-    "$(msg uninstall.spacewar_opt_auto)" \
-    "$(msg uninstall.spacewar_opt_manual)" \
-    "$(msg uninstall.spacewar_opt_skip)")" 2>/dev/null || choice=""
+  choice="$(crk_select "$(msg uninstall.spacewar_how)" "" \
+    "auto|$(msg uninstall.spacewar_opt_auto)" \
+    "manual|$(msg uninstall.spacewar_opt_manual)" \
+    "skip|$(msg uninstall.spacewar_opt_skip)")"
 
   echo ""
 
   case "${choice:-}" in
-    "$(msg uninstall.spacewar_opt_auto)")
+    auto)
       _spacewar_remove_auto
       ;;
-    "$(msg uninstall.spacewar_opt_manual)")
+    manual)
       _spacewar_remove_manual
       ;;
     *)
@@ -243,12 +241,7 @@ _spacewar_remove_auto() {
   disown 2>/dev/null || true
   echo ""
 
-  # Klare Box-Anweisung – kein Ja/Nein, sondern echter Warte-Prompt
-  gum style \
-    --border rounded \
-    --border-foreground "$CUI_C_WARNING" \
-    --padding "1 2" \
-    "$(msg uninstall.spacewar_auto_hint)"
+  cui_warning_box "$(msg uninstall.spacewar_auto_hint)"
   echo ""
 
   # Warte auf Benutzer-Bestätigung NACHDEM Spacewar im Steam-Dialog bestätigt wurde
@@ -256,22 +249,15 @@ _spacewar_remove_auto() {
 }
 
 _spacewar_remove_manual() {
-  echo ""
-  gum style --border rounded --padding "0 2" \
-    "$(msg uninstall.spacewar_manual_steps)"
+  cui_info_box "$(msg uninstall.spacewar_manual_steps)"
   echo ""
 
   cui_continue "$(msg uninstall.spacewar_wait_continue)"
 }
 
 _spacewar_verify() {
-  # Etwas länger warten bis Steam das Manifest von Disk entfernt hat
   echo ""
-  if command -v gum >/dev/null 2>&1; then
-    gum spin --spinner dot --title "$(msg uninstall.spacewar_verify_waiting)" -- sleep 3
-  else
-    sleep 3
-  fi
+  cui_spin "$(msg uninstall.spacewar_verify_waiting)" sleep 3
   find_steam_root 2>/dev/null || true
 
   echo ""
@@ -282,21 +268,14 @@ _spacewar_verify() {
     return 0
   fi
 
-  # Noch installiert – einmalige Retry-Chance anbieten
   cui_check_row warn "Spacewar" "App 480" "$(msg uninstall.spacewar_verify_still)"
   echo ""
-  gum style --foreground "$CUI_C_MUTED" "$(msg uninstall.spacewar_verify_hint)"
+  cui_muted_block "$(msg uninstall.spacewar_verify_hint)"
   echo ""
 
-  # Nochmal warten lassen und erneut prüfen
   cui_continue "$(msg uninstall.spacewar_retry_continue)"
   echo ""
-  if command -v gum >/dev/null 2>&1; then
-    gum spin --spinner dot --title "$(msg uninstall.spacewar_verify_waiting)" -- sleep 3
-  else
-    sleep 3
-  fi
-  find_steam_root 2>/dev/null || true
+  cui_spin "$(msg uninstall.spacewar_verify_waiting)" sleep 3
 
   echo ""
   cui_check_category "Spacewar – Check"

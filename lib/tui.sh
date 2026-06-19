@@ -38,9 +38,16 @@ tui_wizard_pick() {
   labels+=("$(msg wizard.opt5)")
   values+=("5")
 
-  selected="$(cui_choose "$(msg wizard.choose_hint)" 0 "${labels[@]}")"
+  selected="$(cui_choose "$(msg wizard.choose_hint)" 0 "${labels[@]}")" || selected=""
 
-  result="$ASSESS_RECOMMENDED"
+  if [[ -z "$selected" ]]; then
+    if [[ -n "$_out" ]]; then
+      printf -v "$_out" '%s' ""
+    fi
+    return 0
+  fi
+
+  result=""
   for idx in "${!labels[@]}"; do
     if [[ "${labels[$idx]}" == "$selected" ]]; then
       result="${values[$idx]}"

@@ -119,7 +119,7 @@ tool_hub_run() {
 
   [[ -n "$slug" && "$slug" != "__refresh__" ]] || {
     log_info "$(msg install.cancelled)"
-    return 0
+    return 1
   }
 
   if [[ "$(tool_source_for_slug "$slug")" == "remote" ]] \
@@ -134,7 +134,7 @@ tool_hub_run() {
     action="$TOOL_ACTION_PICKED"
     [[ "$action" != "back" && -n "$action" ]] || {
       log_info "$(msg install.cancelled)"
-      return 0
+      return 1
     }
   fi
 
