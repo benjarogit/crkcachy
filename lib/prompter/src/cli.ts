@@ -89,13 +89,6 @@ function requireOptions(options: SelectOption[], cmd: string): void {
   }
 }
 
-function requireTty(cmd: string): void {
-  if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    writeResult({ ok: false, error: "no_tty" });
-    process.exit(1);
-  }
-}
-
 async function main(): Promise<void> {
   const cmd = process.argv[2];
   if (!cmd) {
@@ -104,11 +97,6 @@ async function main(): Promise<void> {
   }
 
   const data = readPayload();
-  const interactive = !["note", "intro", "outro"].includes(cmd);
-
-  if (interactive) {
-    requireTty(cmd);
-  }
 
   switch (cmd) {
     case "intro":

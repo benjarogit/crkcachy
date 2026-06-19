@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-CRKCACHY_VERSION="0.1.84"
+CRKCACHY_VERSION="0.1.85"
 CRKCACHY_ROOT="${CRKCACHY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 CRKCACHY_LANG_PRESET="${CRKCACHY_LANG_PRESET:-}"
 
@@ -291,7 +291,7 @@ install_packages_repo() {
 }
 
 ensure_glow() {
-  if [[ ! -t 0 || ! -t 1 ]]; then
+  if ! _crk_has_interactive; then
     die "$(msg glow.no_tty)"
   fi
 

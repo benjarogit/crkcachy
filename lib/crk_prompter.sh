@@ -10,12 +10,26 @@ _crk_prompter_prepare() {
   printf '\n'
 }
 
-_crk_prompt_need_tty() {
-  if [[ ! -t 0 || ! -t 1 ]]; then
-    log_error "$(msg node.no_tty)"
-    return 1
+_crk_has_interactive() {
+  [[ -t 0 && -t 1 ]] && return 0
+  [[ -t 1 && -r /dev/tty ]] && return 0
+  [[ -r /dev/tty && -w /dev/tty ]] && return 0
+  return 1
+}
+
+# Eingabe – auch wenn stdin keine TTY ist (Konsole/Cursor: oft nur stdout ist TTY)
+_crk_read() {
+  local prompt="$1"
+  local __var="$2"
+  if [[ -t 0 ]]; then
+    read -r -p "$prompt" "$__var"
+    return 0
   fi
-  return 0
+  if [[ -r /dev/tty ]]; then
+    read -r -p "$prompt" "$__var" < /dev/tty
+    return 0
+  fi
+  return 1
 }
 
 _crk_prompter_parse_result() {
@@ -57,7 +71,14 @@ _crk_prompter_run() {
   err_file="${tmp}.err"
   printf '%s' "$json" > "$tmp"
 
-  node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" || rc=$?
+  if [[ -t 0 ]]; then
+    node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" || rc=$?
+  elif [[ -r /dev/tty ]]; then
+    node "$CRK_PROMPTER_JS" "$cmd" --file "$tmp" 2>"$err_file" 0</dev/tty || rc=$?
+  else
+    rm -f "$tmp" "$err_file"
+    return 1
+  fi
   out="$(cat "$err_file" 2>/dev/null || true)"
   rm -f "$tmp" "$err_file"
 
@@ -108,7 +129,10 @@ _crk_bash_pick() {
     done
   fi
 
-  read -r -p "$(msg ui.bash_pick_prompt) " pick
+  if ! _crk_read "$(msg ui.bash_pick_prompt) " pick; then
+    log_error "$(msg node.no_tty)"
+    return 1
+  fi
   if [[ -z "${pick:-}" && -n "$initial_value" ]]; then
     printf '%s' "$initial_value"
     return 0
@@ -127,7 +151,7 @@ _crk_prompter_value() {
   local json="$2"
   local out val rc=0
 
-  if ! _crk_prompt_need_tty; then
+  if ! _crk_has_interactive; then
     return 1
   fi
 
@@ -212,9 +236,9 @@ crk_autocomplete() {
 crk_confirm() {
   local message="$1"
   local default_yes="${2:-false}"
-  local json val rc=0 prompt
+  local json val rc=0 prompt answer
 
-  if ! _crk_prompt_need_tty; then
+  if ! _crk_has_interactive; then
     return 1
   fi
 
@@ -232,7 +256,9 @@ crk_confirm() {
   else
     prompt="$(msg ui.confirm_no_default)"
   fi
-  read -r -p "$prompt " answer
+  if ! _crk_read "$prompt " answer; then
+    return 1
+  fi
   case "${answer:-}" in
     j|J|y|Y|ja|yes) return 0 ;;
     n|N|no|nein) return 1 ;;
@@ -254,7 +280,9 @@ crk_text() {
   json="$(python3 -c 'import json,sys; print(json.dumps({"message":sys.argv[1],"placeholder":sys.argv[2],"defaultValue":sys.argv[3]}))' "$message" "$placeholder" "$default")"
   val="$(_crk_prompter_value text "$json")" || {
     _crk_prompter_prepare
-    read -r -p "$message " val
+    if ! _crk_read "$message " val; then
+      return 1
+    fi
     val="${val:-$default}"
   }
   printf '%s' "$val"
@@ -271,7 +299,7 @@ crk_continue() {
     return 0
   fi
   echo ""
-  read -r -p "${label} … " _
+  _crk_read "${label} … " _ || return 1
 }
 
 crk_gate_menu() {
@@ -310,7 +338,7 @@ crk_print_deps_hint() {
 }
 
 ensure_node() {
-  if [[ ! -t 0 || ! -t 1 ]]; then
+  if ! _crk_has_interactive; then
     die "$(msg node.no_tty)"
   fi
 
@@ -332,7 +360,9 @@ $(msg pkg.explain.footer)"
     echo "  1) $(msg node.opt_auto)"
     echo "  2) $(msg node.opt_manual)"
     echo ""
-    read -r -p "$(msg node.pick_prompt) " node_choice
+    if ! _crk_read "$(msg node.pick_prompt) " node_choice; then
+      die "$(msg node.no_tty)"
+    fi
 
     case "${node_choice:-1}" in
       1|j|y|ja|yes)
@@ -360,7 +390,9 @@ $(msg pkg.explain.footer)"
     log_hint "$(msg node.manual_steps_intro)"
     log_hint "$(platform_manual_install_cmd_logical nodejs)"
     echo ""
-    read -r -p "$(msg node.manual_wait) " _
+    if ! _crk_read "$(msg node.manual_wait) " _; then
+      die "$(msg node.no_tty)"
+    fi
     hash -r 2>/dev/null || true
 
     if command -v node >/dev/null 2>&1; then
